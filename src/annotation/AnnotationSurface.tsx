@@ -3,6 +3,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
@@ -18,10 +19,9 @@ import {
   scaleAbout,
   translate,
   uniformFactors,
-  withinBounds,
   type Corner,
 } from './geometry'
-import { shapeAt, shapesAlong } from './hit'
+import { shapeAt, shapeNear, shapesAlong } from './hit'
 import { SelectionOverlay } from './Selection'
 import { ShapeView } from './ShapeView'
 import { load, save } from './storage'
@@ -250,7 +250,13 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       if (event.key === 'Escape') return setEditing(null)
 
       if (event.key === 'Enter') {
-        if (current.text.length > 0) commit((shapes) => [...shapes, current])
+        if (current.text.length > 0) {
+          commit((shapes) =>
+            shapes.some((shape) => shape.id === current.id)
+              ? shapes.map((shape) => (shape.id === current.id ? current : shape))
+              : [...shapes, current],
+          )
+        }
         return setEditing(null)
       }
 
@@ -295,9 +301,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
 
       // Picking uses the shape's outline; a shape already selected can also be
       // grabbed anywhere inside its box, which is how you move a thin one.
-      const hit =
-        shapeAt(state.shapes, point) ??
-        (selectedShape && withinBounds(selectedShape, point) ? selectedShape : null)
+      const hit = shapeNear(state.shapes, point)
 
       setSelected(hit?.id ?? null)
       if (!hit) return
@@ -319,6 +323,11 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     }
 
     if (tool === 'text') {
+      // Aiming at existing text retypes it rather than stacking a second label
+      // on top of the first.
+      const existing = shapeNear(state.shapes, point)
+      if (existing?.type === 'text') return setEditing(existing)
+
       // Typed straight onto the surface rather than through window.prompt: a
       // native dialog is unreliable while an element is fullscreen, which is
       // exactly where a board spends its time.
@@ -336,6 +345,17 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
 
     inProgress.current.set(event.pointerId, shape)
     setDraft(shape)
+  }
+
+  /** Double-click with the select tool retypes a label in place. */
+  function retypeText(event: ReactMouseEvent<SVGSVGElement>) {
+    if (tool !== 'select') return
+
+    const hit = shapeNear(state.shapes, pointFrom(event, event.currentTarget.getBoundingClientRect()))
+    if (hit?.type !== 'text') return
+
+    setSelected(null)
+    setEditing(hit)
   }
 
   function extendShape(event: ReactPointerEvent<SVGSVGElement>) {
@@ -472,14 +492,17 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
           onPointerMove={active ? extendShape : undefined}
           onPointerUp={active ? endShape : undefined}
           onPointerCancel={active ? cancelShape : undefined}
+          onDoubleClick={active ? retypeText : undefined}
         >
-          {state.shapes.map((shape) => (
+          {state.shapes
+            .filter((shape) => shape.id !== editing?.id)
+            .map((shape) => (
             /* Marked shapes fade rather than vanish, so a sweep can be seen
                before the pointer lifts and can still be cancelled. */
-            <g key={shape.id} data-marked={marked.includes(shape.id) ? '' : undefined}>
-              <ShapeView shape={shape} width={width} />
-            </g>
-          ))}
+              <g key={shape.id} data-marked={marked.includes(shape.id) ? '' : undefined}>
+                <ShapeView shape={shape} width={width} />
+              </g>
+            ))}
           {draft && <ShapeView shape={draft} width={width} />}
           {/* A trailing bar stands in for a caret while typing. */}
           {editing && (
