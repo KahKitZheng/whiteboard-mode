@@ -64,3 +64,73 @@ export function mapPoints(shape: Shape, move: (point: Point) => Point): Shape {
       return { ...shape, from: move(shape.from), to: move(shape.to) }
   }
 }
+
+export type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
+
+/** The box a shape occupies, in reference space. */
+export function bounds(shape: Shape): Bounds {
+  const points = outline(shape)
+  const xs = points.map((point) => point.x)
+  const ys = points.map((point) => point.y)
+
+  return {
+    minX: Math.min(...xs),
+    minY: Math.min(...ys),
+    maxX: Math.max(...xs),
+    maxY: Math.max(...ys),
+  }
+}
+
+export const CORNERS = ['nw', 'ne', 'se', 'sw'] as const
+
+export type Corner = (typeof CORNERS)[number]
+
+export function cornerPoint(box: Bounds, corner: Corner): Point {
+  const west = corner === 'nw' || corner === 'sw'
+  const north = corner === 'nw' || corner === 'ne'
+  return { x: west ? box.minX : box.maxX, y: north ? box.minY : box.maxY }
+}
+
+/** Resizing from a corner holds the opposite one still. */
+export function oppositeCorner(box: Bounds, corner: Corner): Point {
+  const opposite: Record<Corner, Corner> = { nw: 'se', ne: 'sw', se: 'nw', sw: 'ne' }
+  return cornerPoint(box, opposite[corner])
+}
+
+/** Half the width of a resize handle, in reference space. */
+export const HANDLE_REACH = 14
+
+/** The resize handle under a point, if any. */
+export function cornerAt(shape: Shape, point: Point): Corner | null {
+  const box = bounds(shape)
+
+  for (const corner of CORNERS) {
+    const at = cornerPoint(box, corner)
+    if (Math.abs(point.x - at.x) <= HANDLE_REACH && Math.abs(point.y - at.y) <= HANDLE_REACH) {
+      return corner
+    }
+  }
+  return null
+}
+
+/** Inside a shape's box, handle reach included. */
+export function withinBounds(shape: Shape, point: Point): boolean {
+  const box = bounds(shape)
+  return (
+    point.x >= box.minX - HANDLE_REACH &&
+    point.x <= box.maxX + HANDLE_REACH &&
+    point.y >= box.minY - HANDLE_REACH &&
+    point.y <= box.maxY + HANDLE_REACH
+  )
+}
+
+export function translate(shape: Shape, dx: number, dy: number): Shape {
+  return mapPoints(shape, (point) => ({ x: point.x + dx, y: point.y + dy }))
+}
+
+export function scaleAbout(shape: Shape, anchor: Point, fx: number, fy: number): Shape {
+  return mapPoints(shape, (point) => ({
+    x: anchor.x + (point.x - anchor.x) * fx,
+    y: anchor.y + (point.y - anchor.y) * fy,
+  }))
+}

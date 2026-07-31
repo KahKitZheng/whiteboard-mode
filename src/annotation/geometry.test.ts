@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { mapPoints, outline } from './geometry'
+import {
+  bounds,
+  cornerAt,
+  cornerPoint,
+  mapPoints,
+  oppositeCorner,
+  outline,
+  scaleAbout,
+  translate,
+  withinBounds,
+} from './geometry'
 import { shapeAt } from './hit'
 import type { Shape } from './types'
 
@@ -80,5 +90,58 @@ describe('mapPoints', () => {
 
   it('keeps a shape id stable', () => {
     expect(mapPoints(arrow, (point) => point).id).toBe('a')
+  })
+})
+
+describe('bounds and transforms', () => {
+  it('boxes a shape by its extremes', () => {
+    expect(bounds(rect)).toEqual({ minX: 100, minY: 100, maxX: 300, maxY: 200 })
+  })
+
+  it('picks the corner opposite the one being dragged', () => {
+    const box = bounds(rect)
+
+    expect(cornerPoint(box, 'nw')).toEqual({ x: 100, y: 100 })
+    expect(oppositeCorner(box, 'nw')).toEqual({ x: 300, y: 200 })
+    expect(oppositeCorner(box, 'se')).toEqual({ x: 100, y: 100 })
+  })
+
+  it('finds a handle only near a corner', () => {
+    expect(cornerAt(rect, { x: 102, y: 102 })).toBe('nw')
+    expect(cornerAt(rect, { x: 298, y: 198 })).toBe('se')
+    expect(cornerAt(rect, { x: 200, y: 150 })).toBeNull()
+  })
+
+  it('treats the box interior as within bounds', () => {
+    expect(withinBounds(rect, { x: 200, y: 150 })).toBe(true)
+    expect(withinBounds(rect, { x: 600, y: 150 })).toBe(false)
+  })
+
+  it('moves a shape without changing its size', () => {
+    const moved = translate(rect, 50, -20)
+
+    expect(bounds(moved)).toEqual({ minX: 150, minY: 80, maxX: 350, maxY: 180 })
+  })
+
+  it('scales about an anchor, holding the anchor still', () => {
+    const anchor = { x: 100, y: 100 }
+    const scaled = bounds(scaleAbout(rect, anchor, 2, 3))
+
+    expect(scaled.minX).toBe(100)
+    expect(scaled.minY).toBe(100)
+    expect(scaled.maxX).toBe(500)
+    expect(scaled.maxY).toBe(400)
+  })
+
+  it('scales a stroke point-by-point, not just its box', () => {
+    const stroke: Shape = {
+      id: 's',
+      type: 'stroke',
+      points: [{ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 20, y: 0 }],
+    }
+    const scaled = scaleAbout(stroke, { x: 0, y: 0 }, 2, 2)
+    if (scaled.type !== 'stroke') throw new Error('type changed')
+
+    expect(scaled.points).toEqual([{ x: 0, y: 0 }, { x: 20, y: 20 }, { x: 40, y: 0 }])
   })
 })
