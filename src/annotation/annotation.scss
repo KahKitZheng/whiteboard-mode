@@ -25,6 +25,25 @@
     cursor: cell;
   }
 
+  &[data-tool='select'] {
+    cursor: default;
+  }
+
+  .selection {
+    rect {
+      fill: none;
+      stroke: var(--accent);
+      stroke-dasharray: 6 4;
+    }
+
+    .handle {
+      fill: var(--bg);
+      stroke: var(--accent);
+      stroke-width: 1.5;
+      stroke-dasharray: none;
+    }
+  }
+
   // Freehand strokes are filled outlines; everything else is stroked.
   path {
     fill: #e5484d;
