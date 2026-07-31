@@ -74,7 +74,7 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
     case 'text': {
       const at_ = at(shape.at)
       return (
-        <text x={at_.x} y={at_.y} fontSize={shape.size * scale}>
+        <text x={at_.x} y={at_.y} fontSize={shape.size * scale} xmlSpace="preserve">
           {shape.text}
         </text>
       )
@@ -110,9 +110,9 @@ const CARET_WIDTH = 2
  */
 export function TextCaret({ shape, width }: { shape: Text; width: number }) {
   const scale = scaleFor(width)
-  const { width: typed } = textMetrics(shape.text, shape.size)
-  // An empty string has no ink to measure, so borrow a full line's extent.
-  const { ascent, descent } = textMetrics(shape.text || 'Mg', shape.size)
+  // Vertical extent comes from the font, not the string, so it is the same
+  // whatever has been typed — including nothing.
+  const { width: typed, ascent, descent } = textMetrics(shape.text, shape.size)
 
   return (
     <rect

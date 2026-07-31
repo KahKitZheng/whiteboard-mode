@@ -254,3 +254,30 @@ describe('resizing text', () => {
     expect(scaled.text).toBe('hello')
   })
 })
+
+describe('text metrics', () => {
+  const at = { x: 0, y: 100 }
+
+  it('gives the same height whatever the string says', () => {
+    const tall = bounds({ id: 'a', type: 'text', at, text: 'T', size: 28 })
+    const short = bounds({ id: 'b', type: 'text', at, text: 'o', size: 28 })
+    const descending = bounds({ id: 'c', type: 'text', at, text: 'g', size: 28 })
+
+    expect(short.maxY - short.minY).toBeCloseTo(tall.maxY - tall.minY)
+    expect(descending.maxY - descending.minY).toBeCloseTo(tall.maxY - tall.minY)
+  })
+
+  it('gives the same height for an empty string', () => {
+    const empty = bounds({ id: 'a', type: 'text', at, text: '', size: 28 })
+    const typed = bounds({ id: 'b', type: 'text', at, text: 'hello', size: 28 })
+
+    expect(empty.maxY - empty.minY).toBeCloseTo(typed.maxY - typed.minY)
+  })
+
+  it('scales the height with the size', () => {
+    const small = bounds({ id: 'a', type: 'text', at, text: 'x', size: 20 })
+    const large = bounds({ id: 'b', type: 'text', at, text: 'x', size: 40 })
+
+    expect(large.maxY - large.minY).toBeCloseTo((small.maxY - small.minY) * 2)
+  })
+})

@@ -53,8 +53,14 @@ export function textMetrics(
 
   return {
     width: metrics.width,
-    ascent: metrics.actualBoundingBoxAscent || size * ESTIMATED_ASCENT,
-    descent: metrics.actualBoundingBoxDescent || size * ESTIMATED_DESCENT,
+    /*
+      The font's line box, not the ink of this particular string. Measuring the
+      ink made the height depend on what had been typed — "T" gave 22px and "o"
+      gave 13px at the same size — so the caret changed shape as you wrote and
+      the selection box jumped between "test" and "TEST".
+    */
+    ascent: metrics.fontBoundingBoxAscent || size * ESTIMATED_ASCENT,
+    descent: metrics.fontBoundingBoxDescent || size * ESTIMATED_DESCENT,
   }
 }
 
