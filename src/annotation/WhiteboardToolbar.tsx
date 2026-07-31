@@ -4,7 +4,15 @@ import { Toolbar } from '@base-ui-components/react/toolbar'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './toolbar.scss'
 
-const TOOLS: Tool[] = ['pen', 'eraser']
+const TOOLS: { name: Tool; label: string }[] = [
+  { name: 'pen', label: 'Pen' },
+  { name: 'rect', label: 'Rect' },
+  { name: 'ellipse', label: 'Ellipse' },
+  { name: 'line', label: 'Line' },
+  { name: 'arrow', label: 'Arrow' },
+  { name: 'text', label: 'Text' },
+  { name: 'eraser', label: 'Eraser' },
+]
 
 export function WhiteboardToolbar() {
   const { active, setActive, tool, setTool, actions } = useWhiteboardMode()
@@ -24,9 +32,9 @@ export function WhiteboardToolbar() {
             onValueChange={([next]) => next && setTool(next as Tool)}
             className="tools"
           >
-            {TOOLS.map((name) => (
+            {TOOLS.map(({ name, label }) => (
               <Toolbar.Button key={name} render={<Toggle value={name} />}>
-                {name === 'pen' ? 'Pen' : 'Eraser'}
+                {label}
               </Toolbar.Button>
             ))}
           </ToggleGroup>
