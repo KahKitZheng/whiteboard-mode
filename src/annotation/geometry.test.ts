@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
+  aspectOf,
   bounds,
   cornerAt,
   cornerPoint,
   mapPoints,
   oppositeCorner,
+  keepAspect,
   outline,
   scaleAbout,
   translate,
+  uniformFactors,
   withinBounds,
 } from './geometry'
 import { shapeAt } from './hit'
@@ -143,5 +146,55 @@ describe('bounds and transforms', () => {
     if (scaled.type !== 'stroke') throw new Error('type changed')
 
     expect(scaled.points).toEqual([{ x: 0, y: 0 }, { x: 20, y: 20 }, { x: 40, y: 0 }])
+  })
+})
+
+describe('fixed proportions', () => {
+  const RATIO = 3 / 2
+
+  it('only constrains the types that need it', () => {
+    expect(aspectOf('timer')).toBeCloseTo(RATIO)
+    expect(aspectOf('rect')).toBeNull()
+    expect(aspectOf('stroke')).toBeNull()
+  })
+
+  it('snaps a dragged corner to the ratio', () => {
+    const to = keepAspect({ x: 0, y: 0 }, { x: 300, y: 40 }, RATIO)
+
+    expect(to.x / to.y).toBeCloseTo(RATIO)
+  })
+
+  it('follows whichever axis was dragged further', () => {
+    // Dragged far down but barely across — height wins, width follows it.
+    const to = keepAspect({ x: 0, y: 0 }, { x: 20, y: 200 }, RATIO)
+
+    expect(to.y).toBeCloseTo(200)
+    expect(to.x).toBeCloseTo(300)
+  })
+
+  it('keeps the drag direction when dragging up and left', () => {
+    const to = keepAspect({ x: 0, y: 0 }, { x: -300, y: -40 }, RATIO)
+
+    expect(to.x).toBeLessThan(0)
+    expect(to.y).toBeLessThan(0)
+    expect(Math.abs(to.x / to.y)).toBeCloseTo(RATIO)
+  })
+
+  it('reduces two resize factors to one magnitude', () => {
+    expect(uniformFactors(2, 0.5)).toEqual([2, 2])
+    expect(uniformFactors(0.5, 3)).toEqual([3, 3])
+  })
+
+  it('keeps each axis direction when a resize flips one', () => {
+    expect(uniformFactors(-2, 0.5)).toEqual([-2, 2])
+    expect(uniformFactors(1, -4)).toEqual([4, -4])
+  })
+
+  it('holds the ratio through a constrained resize', () => {
+    const timer: Shape = { id: 't', type: 'timer', from: { x: 0, y: 0 }, to: { x: 300, y: 200 } }
+    const [fx, fy] = uniformFactors(2, 0.4)
+    const box = bounds(scaleAbout(timer, { x: 0, y: 0 }, fx, fy))
+
+    expect((box.maxX - box.minX) / (box.maxY - box.minY)).toBeCloseTo(RATIO)
   })
 })

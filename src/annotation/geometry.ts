@@ -125,6 +125,42 @@ export function withinBounds(shape: Shape, point: Point): boolean {
   )
 }
 
+/**
+ * Types whose box has to keep its proportions. A timer lays its face and
+ * controls out against its own height, so an arbitrary box renders nonsense —
+ * and scaling its axes independently squashes it.
+ *
+ * This lives here rather than in the widget because it is a fact about the
+ * shape's geometry, alongside `outline` and `mapPoints`.
+ */
+const ASPECT: Partial<Record<Shape['type'], number>> = {
+  timer: 3 / 2,
+}
+
+export function aspectOf(type: Shape['type']): number | null {
+  return ASPECT[type] ?? null
+}
+
+/** A dragged corner pulled onto the nearest box of the required proportions. */
+export function keepAspect(from: Point, to: Point, ratio: number): Point {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  // Follow whichever axis was dragged further, so the box tracks the pointer
+  // rather than shrinking to the smaller one.
+  const width = Math.max(Math.abs(dx), Math.abs(dy) * ratio)
+
+  return {
+    x: from.x + (dx < 0 ? -width : width),
+    y: from.y + (dy < 0 ? -width / ratio : width / ratio),
+  }
+}
+
+/** Two scale factors reduced to one magnitude, keeping each axis's direction. */
+export function uniformFactors(fx: number, fy: number): [number, number] {
+  const size = Math.max(Math.abs(fx), Math.abs(fy))
+  return [fx < 0 ? -size : size, fy < 0 ? -size : size]
+}
+
 export function translate(shape: Shape, dx: number, dy: number): Shape {
   return mapPoints(shape, (point) => ({ x: point.x + dx, y: point.y + dy }))
 }
