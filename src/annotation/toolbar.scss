@@ -1,0 +1,44 @@
+.whiteboard-toolbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+
+  button {
+    font: inherit;
+    font-size: 15px;
+    padding: 6px 16px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+
+    &[data-pressed] {
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+
+  // Base UI renders the separator as a div[role="separator"], not an <hr>.
+  [role='separator'] {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+  }
+
+  .current-tool {
+    font-size: 15px;
+    padding: 6px 16px;
+    color: var(--accent);
+  }
+}
