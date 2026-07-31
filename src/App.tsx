@@ -3,6 +3,7 @@ import { AnnotationSurface } from './annotation/AnnotationSurface'
 import { WhiteboardModeProvider } from './annotation/WhiteboardMode'
 import { WhiteboardToolbar } from './annotation/WhiteboardToolbar'
 import { LESSONS } from './Lesson'
+import { LessonExtras } from './LessonExtras'
 import './App.scss'
 
 export default function App() {
@@ -34,15 +35,21 @@ function LessonRoute() {
 
   if (!lesson) return <Redirect to={`/lesson/${LESSONS[0].slug}`} />
 
-  // Each lesson is its own surface, so its annotations are its own.
+  // Each lesson is its own surface. The extras declare further surfaces
+  // alongside it — never inside it: a surface's layer covers its whole box, so
+  // nesting one surface in another leaves the inner one unreachable.
   return (
-    <AnnotationSurface id={`lesson-${lesson.slug}`} initialShapes={lesson.shapes}>
-      <article className="lesson">
-        <h1>{lesson.title}</h1>
-        {lesson.body.map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
-        ))}
-      </article>
-    </AnnotationSurface>
+    <>
+      <AnnotationSurface id={`lesson-${lesson.slug}`} initialShapes={lesson.shapes}>
+        <article className="lesson">
+          <h1>{lesson.title}</h1>
+          {lesson.body.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </article>
+      </AnnotationSurface>
+
+      <LessonExtras slug={lesson.slug} />
+    </>
   )
 }
