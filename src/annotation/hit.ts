@@ -43,3 +43,35 @@ export function shapeAt(shapes: Shape[], point: Point): Shape | null {
   }
   return null
 }
+
+/** How finely a pointer's path is sampled, in reference space. */
+const SAMPLE = 8
+
+/**
+ * Every shape the pointer swept over between two positions — not just the ones
+ * under its final resting place. A fast drag can jump a long way between
+ * events, and skipping a thin line the teacher clearly crossed reads as broken.
+ */
+export function shapesAlong(shapes: Shape[], from: Point, to: Point): Shape[] {
+  const distance = Math.hypot(to.x - from.x, to.y - from.y)
+  const steps = Math.max(1, Math.ceil(distance / SAMPLE))
+  const swept: Shape[] = []
+
+  // ponytail: samples the path rather than intersecting segment against
+  // segment. O(steps × shapes × points) — fine at annotation scale; if a very
+  // fast sweep across hundreds of shapes ever stutters, do the real
+  // segment-segment test instead.
+  for (let step = 0; step <= steps; step += 1) {
+    const along = step / steps
+    const at = {
+      x: from.x + (to.x - from.x) * along,
+      y: from.y + (to.y - from.y) * along,
+    }
+
+    for (const shape of shapes) {
+      if (!swept.includes(shape) && touches(shape, at)) swept.push(shape)
+    }
+  }
+
+  return swept
+}
