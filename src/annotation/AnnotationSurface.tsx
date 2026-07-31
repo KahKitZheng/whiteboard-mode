@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -6,6 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import { toReference, type Point } from './coords'
+import { load, save } from './storage'
 import { strokePath } from './stroke'
 import type { Shape } from './types'
 import { useWhiteboardMode } from './WhiteboardMode'
@@ -27,7 +29,9 @@ type Props = {
 export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
   const element = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
-  const [shapes, setShapes] = useState<Shape[]>(initialShapes)
+  // What was saved wins over the seed — the seed only furnishes a surface
+  // nobody has annotated yet.
+  const [shapes, setShapes] = useState<Shape[]>(() => load(id) ?? initialShapes)
   const { active } = useWhiteboardMode()
 
   // Points of strokes still being drawn, keyed by pointer. Only one pointer
@@ -46,6 +50,13 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
     observer.observe(observed)
     return () => observer.disconnect()
   }, [])
+
+  // `shapes` only changes when a stroke ends, so this never fires mid-stroke.
+  // The debounce is there for the bursts that undo and erase will produce.
+  useEffect(() => {
+    const timer = setTimeout(() => save(id, shapes), 500)
+    return () => clearTimeout(timer)
+  }, [id, shapes])
 
   function pointFrom(event: { clientX: number; clientY: number }, bounds: DOMRect): Point {
     return toReference({ x: event.clientX - bounds.left, y: event.clientY - bounds.top }, width)
