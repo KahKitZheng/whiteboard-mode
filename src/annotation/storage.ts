@@ -1,4 +1,5 @@
 import { REFERENCE_WIDTH } from './coords'
+import { mapPoints } from './geometry'
 import type { Shape } from './types'
 
 /**
@@ -41,10 +42,9 @@ export function load(surfaceId: string): Shape[] | null {
   // every shape. Rescale instead.
   if (stored.refWidth !== REFERENCE_WIDTH) {
     const factor = REFERENCE_WIDTH / stored.refWidth
-    return stored.shapes.map((shape) => ({
-      ...shape,
-      points: shape.points.map((point) => ({ x: point.x * factor, y: point.y * factor })),
-    }))
+    return stored.shapes.map((shape) =>
+      mapPoints(shape, (point) => ({ x: point.x * factor, y: point.y * factor })),
+    )
   }
 
   return stored.shapes

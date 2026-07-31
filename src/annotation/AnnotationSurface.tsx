@@ -8,11 +8,18 @@ import {
 } from 'react'
 import { toReference, type Point } from './coords'
 import { shapeAt } from './hit'
+import { ShapeView } from './ShapeView'
 import { load, save } from './storage'
-import { strokePath } from './stroke'
-import type { Shape } from './types'
+import type { Shape, Text } from './types'
 import { useWhiteboardMode } from './WhiteboardMode'
 import './annotation.scss'
+
+/** A tap that never moved, or an empty string, is not worth storing. */
+function worthKeeping(shape: Shape): boolean {
+  if (shape.type === 'stroke') return shape.points.length >= 2
+  if (shape.type === 'text') return shape.text.length > 0
+  return Math.hypot(shape.to.x - shape.from.x, shape.to.y - shape.from.y) > 4
+}
 
 type Props = {
   /** Stable across reloads — this is what annotations are persisted against. */
@@ -45,11 +52,12 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
     history: [],
   }))
 
-  // Points of strokes still being drawn, keyed by pointer. Only one pointer
-  // draws at a time today, but keying by id is what makes multi-pointer a Map
-  // lookup later rather than a rewrite.
-  const inProgress = useRef(new Map<number, Point[]>())
-  const [live, setLive] = useState<Point[]>([])
+  // Shapes still being drawn, keyed by pointer. Only one pointer draws at a
+  // time today, but keying by id is what makes multi-pointer a Map lookup later
+  // rather than a rewrite.
+  const inProgress = useRef(new Map<number, Shape>())
+  const [draft, setDraft] = useState<Shape | null>(null)
+  const [editing, setEditing] = useState<Text | null>(null)
 
   useLayoutEffect(() => {
     const observed = element.current
@@ -93,56 +101,111 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, publish, state.history.length])
 
+  // Text is typed onto the surface directly. Enter keeps it, Escape drops it.
+  useEffect(() => {
+    if (!editing) return
+
+    function onKeyDown(event: KeyboardEvent) {
+      const current = editing
+      if (!current) return
+      event.preventDefault()
+
+      if (event.key === 'Escape') return setEditing(null)
+
+      if (event.key === 'Enter') {
+        if (current.text.length > 0) commit((shapes) => [...shapes, current])
+        return setEditing(null)
+      }
+
+      if (event.key === 'Backspace') {
+        return setEditing({ ...current, text: current.text.slice(0, -1) })
+      }
+
+      if (event.key.length === 1) {
+        setEditing({ ...current, text: current.text + event.key })
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing])
+
   function pointFrom(event: { clientX: number; clientY: number }, bounds: DOMRect): Point {
     return toReference({ x: event.clientX - bounds.left, y: event.clientY - bounds.top }, width)
   }
 
   function handlePointerDown(event: ReactPointerEvent<SVGSVGElement>) {
     claim(id)
+    const point = pointFrom(event, event.currentTarget.getBoundingClientRect())
 
     if (tool === 'eraser') {
-      const hit = shapeAt(state.shapes, pointFrom(event, event.currentTarget.getBoundingClientRect()))
+      const hit = shapeAt(state.shapes, point)
       if (hit) commit((shapes) => shapes.filter((shape) => shape.id !== hit.id))
+      return
+    }
+
+    if (tool === 'text') {
+      // Typed straight onto the surface rather than through window.prompt: a
+      // native dialog is unreliable while an element is fullscreen, which is
+      // exactly where a board spends its time.
+      setEditing({ id: crypto.randomUUID(), type: 'text', at: point, text: '' })
       return
     }
 
     if (inProgress.current.size > 0) return
 
     event.currentTarget.setPointerCapture(event.pointerId)
-    const points = [pointFrom(event, event.currentTarget.getBoundingClientRect())]
-    inProgress.current.set(event.pointerId, points)
-    setLive([...points])
+    const shape: Shape =
+      tool === 'pen'
+        ? { id: crypto.randomUUID(), type: 'stroke', points: [point] }
+        : { id: crypto.randomUUID(), type: tool, from: point, to: point }
+
+    inProgress.current.set(event.pointerId, shape)
+    setDraft(shape)
   }
 
-  function extendStroke(event: ReactPointerEvent<SVGSVGElement>) {
-    const points = inProgress.current.get(event.pointerId)
-    if (!points) return
+  function extendShape(event: ReactPointerEvent<SVGSVGElement>) {
+    const shape = inProgress.current.get(event.pointerId)
+    if (!shape) return
 
     const bounds = event.currentTarget.getBoundingClientRect()
-    // Boards fire pointer events faster than frames render; the coalesced ones
-    // are the difference between a smooth curve and a chain of straight lines.
-    const coalesced = event.nativeEvent.getCoalescedEvents?.() ?? []
-    const moves = coalesced.length > 0 ? coalesced : [event.nativeEvent]
+    const next = grow(shape, event, bounds)
 
-    for (const move of moves) points.push(pointFrom(move, bounds))
-    setLive([...points])
+    inProgress.current.set(event.pointerId, next)
+    setDraft(next)
   }
 
-  function endStroke(event: ReactPointerEvent<SVGSVGElement>) {
-    const points = inProgress.current.get(event.pointerId)
-    if (!points) return
+  function grow(shape: Shape, event: ReactPointerEvent<SVGSVGElement>, bounds: DOMRect): Shape {
+    if (shape.type === 'text') return shape
 
-    inProgress.current.delete(event.pointerId)
-    setLive([])
+    if (shape.type === 'stroke') {
+      // Boards fire pointer events faster than frames render; the coalesced
+      // ones are the difference between a smooth curve and a chain of lines.
+      const coalesced = event.nativeEvent.getCoalescedEvents?.() ?? []
+      const moves = coalesced.length > 0 ? coalesced : [event.nativeEvent]
+      // ponytail: copies the array per move. Fine at annotation lengths; if a
+      // very long stroke ever stutters, accumulate in a ref and copy on commit.
+      return { ...shape, points: [...shape.points, ...moves.map((move) => pointFrom(move, bounds))] }
+    }
 
-    // A tap is not a stroke.
-    if (points.length < 2) return
-    commit((shapes) => [...shapes, { id: crypto.randomUUID(), type: 'stroke', points }])
+    // Everything else is dragged from one corner to the other.
+    return { ...shape, to: pointFrom(event, bounds) }
   }
 
-  function cancelStroke(event: ReactPointerEvent<SVGSVGElement>) {
+  function endShape(event: ReactPointerEvent<SVGSVGElement>) {
+    const shape = inProgress.current.get(event.pointerId)
+    if (!shape) return
+
     inProgress.current.delete(event.pointerId)
-    setLive([])
+    setDraft(null)
+
+    if (worthKeeping(shape)) commit((shapes) => [...shapes, shape])
+  }
+
+  function cancelShape(event: ReactPointerEvent<SVGSVGElement>) {
+    inProgress.current.delete(event.pointerId)
+    setDraft(null)
   }
 
   return (
@@ -156,14 +219,18 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
           data-tool={active ? tool : undefined}
           aria-hidden="true"
           onPointerDown={active ? handlePointerDown : undefined}
-          onPointerMove={active ? extendStroke : undefined}
-          onPointerUp={active ? endStroke : undefined}
-          onPointerCancel={active ? cancelStroke : undefined}
+          onPointerMove={active ? extendShape : undefined}
+          onPointerUp={active ? endShape : undefined}
+          onPointerCancel={active ? cancelShape : undefined}
         >
           {state.shapes.map((shape) => (
-            <path key={shape.id} d={strokePath(shape.points, width)} />
+            <ShapeView key={shape.id} shape={shape} width={width} />
           ))}
-          {live.length > 0 && <path d={strokePath(live, width)} />}
+          {draft && <ShapeView shape={draft} width={width} />}
+          {/* A trailing bar stands in for a caret while typing. */}
+          {editing && (
+            <ShapeView shape={{ ...editing, text: `${editing.text}|` }} width={width} />
+          )}
         </svg>
       )}
     </div>

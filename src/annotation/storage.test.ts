@@ -64,7 +64,29 @@ describe('storage', () => {
       JSON.stringify({ version: 1, refWidth: REFERENCE_WIDTH / 2, shapes: SHAPES }),
     )
 
-    expect(load('old')?.[0].points).toEqual([{ x: 20, y: 40 }, { x: 60, y: 80 }])
+    const restored = load('old')?.[0]
+    if (restored?.type !== 'stroke') throw new Error('expected a stroke')
+
+    expect(restored.points).toEqual([{ x: 20, y: 40 }, { x: 60, y: 80 }])
+  })
+
+  it('rescales primitives and text, not just strokes', () => {
+    const shapes: Shape[] = [
+      { id: 'r', type: 'rect', from: { x: 10, y: 10 }, to: { x: 50, y: 30 } },
+      { id: 't', type: 'text', at: { x: 100, y: 200 }, text: 'hello' },
+    ]
+    sessionStorage.setItem(
+      'wb:mixed',
+      JSON.stringify({ version: 1, refWidth: REFERENCE_WIDTH / 2, shapes }),
+    )
+
+    const [rect, text] = load('mixed') ?? []
+    if (rect?.type !== 'rect' || text?.type !== 'text') throw new Error('wrong shapes back')
+
+    expect(rect.from).toEqual({ x: 20, y: 20 })
+    expect(rect.to).toEqual({ x: 100, y: 60 })
+    expect(text.at).toEqual({ x: 200, y: 400 })
+    expect(text.text).toBe('hello')
   })
 
   it('survives storage being unavailable', () => {

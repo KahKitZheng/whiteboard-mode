@@ -25,7 +25,24 @@
     cursor: cell;
   }
 
+  // Freehand strokes are filled outlines; everything else is stroked.
   path {
     fill: #e5484d;
+  }
+
+  rect,
+  ellipse,
+  line,
+  polyline {
+    fill: none;
+    stroke: #e5484d;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  text {
+    fill: #e5484d;
+    font-family: var(--sans);
+    dominant-baseline: alphabetic;
   }
 }

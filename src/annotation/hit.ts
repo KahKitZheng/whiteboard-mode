@@ -1,4 +1,5 @@
 import type { Point } from './coords'
+import { outline } from './geometry'
 import type { Shape } from './types'
 
 /**
@@ -24,7 +25,8 @@ function distanceToSegment(point: Point, from: Point, to: Point): number {
 }
 
 function touches(shape: Shape, point: Point): boolean {
-  const { points } = shape
+  // Every shape reduces to a polyline for this — see geometry.ts.
+  const points = outline(shape)
   if (points.length === 0) return false
   if (points.length === 1) return Math.hypot(point.x - points[0].x, point.y - points[0].y) <= TOLERANCE
 
