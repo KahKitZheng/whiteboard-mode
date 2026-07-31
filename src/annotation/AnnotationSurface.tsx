@@ -8,12 +8,15 @@ import {
 } from 'react'
 import { toReference, type Point } from './coords'
 import {
+  aspectOf,
   bounds,
   cornerAt,
   cornerPoint,
+  keepAspect,
   oppositeCorner,
   scaleAbout,
   translate,
+  uniformFactors,
   withinBounds,
   type Corner,
 } from './geometry'
@@ -43,6 +46,20 @@ type Gesture = {
 /** Guards a resize against dividing by a zero-width box. */
 function factor(moved: number, original: number): number {
   return Math.abs(original) < 0.001 ? 1 : moved / original
+}
+
+/**
+ * How far a resize has dragged each axis. A shape with fixed proportions gets
+ * one magnitude for both, otherwise the handle would squash it.
+ */
+function resizeFactors(
+  gesture: Extract<Gesture, { kind: 'resize' }>,
+  point: Point,
+): [number, number] {
+  const fx = factor(point.x - gesture.anchor.x, gesture.startCorner.x - gesture.anchor.x)
+  const fy = factor(point.y - gesture.anchor.y, gesture.startCorner.y - gesture.anchor.y)
+
+  return aspectOf(gesture.original.type) ? uniformFactors(fx, fy) : [fx, fy]
 }
 
 /** A tap that never moved, or an empty string, is not worth storing. */
@@ -345,12 +362,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       const transformed =
         active_.kind === 'move'
           ? translate(active_.original, point.x - active_.origin.x, point.y - active_.origin.y)
-          : scaleAbout(
-              active_.original,
-              active_.anchor,
-              factor(point.x - active_.anchor.x, active_.startCorner.x - active_.anchor.x),
-              factor(point.y - active_.anchor.y, active_.startCorner.y - active_.anchor.y),
-            )
+          : scaleAbout(active_.original, active_.anchor, ...resizeFactors(active_, point))
 
       replace((shapes) => shapes.map((shape) => (shape.id === active_.shapeId ? transformed : shape)))
       return
@@ -379,8 +391,12 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       return { ...shape, points: [...shape.points, ...moves.map((move) => pointFrom(move, box))] }
     }
 
-    // Everything else is dragged from one corner to the other.
-    return { ...shape, to: pointFrom(event, box) }
+    // Everything else is dragged from one corner to the other, snapped to the
+    // type's proportions where it has any.
+    const ratio = aspectOf(shape.type)
+    const to = pointFrom(event, box)
+
+    return { ...shape, to: ratio ? keepAspect(shape.from, to, ratio) : to }
   }
 
   function endShape(event: ReactPointerEvent<SVGSVGElement>) {
