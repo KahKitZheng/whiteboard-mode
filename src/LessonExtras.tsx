@@ -31,9 +31,12 @@ function DiagramPopup({ slug }: { slug: string }) {
       open={open}
       modal={false}
       onOpenChange={(next, details) => {
-        // A non-modal dialog otherwise closes on outside press and on focus
-        // leaving it — which is what drawing on the page, and reaching for the
-        // toolbar, both look like. Only deliberate dismissals count.
+        /*
+          A non-modal dialog closes both when focus leaves it and on any press
+          outside it — and the whiteboard toolbar is outside it. Neither counts
+          here, so dismissal is explicit: the backdrop's own click handler
+          below, the close button, or Escape.
+        */
         const deliberate = details.reason === 'close-press' || details.reason === 'escape-key'
         if (!next && !deliberate) return
         setOpen(next)
@@ -41,7 +44,8 @@ function DiagramPopup({ slug }: { slug: string }) {
     >
       <Dialog.Trigger className="extra-button">Open the diagram</Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Backdrop className="dialog-backdrop" />
+        {/* The backdrop dismisses; the toolbar, which is also "outside", does not. */}
+        <Dialog.Backdrop className="dialog-backdrop" onClick={() => setOpen(false)} />
         <Dialog.Popup className="dialog-popup">
           <Dialog.Title>Diagram</Dialog.Title>
           {/*

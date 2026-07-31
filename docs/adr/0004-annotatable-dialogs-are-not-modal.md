@@ -14,4 +14,6 @@ Portalling the single toolbar into the open dialog would work, but it makes the 
 
 The host app must render annotatable dialogs with `modal={false}` (or `'trap-focus'`, which keeps focus contained but leaves outside pointer interaction alive). This is a constraint the whiteboard imposes on its host, and it needs saying out loud during integration rather than being discovered as "the toolbar is dead".
 
-A non-modal dialog can be dismissed by pressing outside it, so a stroke drawn on the page behind would close it. Outside-press dismissal is therefore ignored while a dialog declares a surface; it closes by its own control or Escape.
+A non-modal dialog closes when focus leaves it, and reaching for the whiteboard toolbar looks exactly like that. Focus-out dismissal is therefore ignored while a dialog declares a surface. Pressing the backdrop, its own control, or Escape all still close it.
+
+The backdrop keeps `pointer-events: auto`, so the page behind an open dialog cannot be annotated — a press there dismisses the dialog instead of drawing. That is the deliberate trade: one surface is annotatable at a time, and the backdrop is how you leave.
