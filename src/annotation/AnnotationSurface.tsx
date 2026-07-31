@@ -55,6 +55,8 @@ function worthKeeping(shape: Shape): boolean {
 type Props = {
   /** Stable across reloads — this is what annotations are persisted against. */
   id: string
+  /** How the host sizes the surface. Its box is what gets annotated. */
+  className?: string
   initialShapes?: Shape[]
   children: ReactNode
 }
@@ -82,7 +84,7 @@ export function AnnotationSurface(props: Props) {
   return <Surface key={props.id} {...props} />
 }
 
-function Surface({ id, initialShapes = [], children }: Props) {
+function Surface({ id, className, initialShapes = [], children }: Props) {
   const element = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const { active, tool, claim, publish } = useWhiteboardMode()
@@ -389,7 +391,11 @@ function Surface({ id, initialShapes = [], children }: Props) {
   }
 
   return (
-    <div className="annotation-surface" ref={element} data-surface-id={id}>
+    <div
+      className={className ? `annotation-surface ${className}` : 'annotation-surface'}
+      ref={element}
+      data-surface-id={id}
+    >
       {children}
       {/* Width 0 means layout hasn't settled; scaling by it would misplace every shape. */}
       {width > 0 && (
