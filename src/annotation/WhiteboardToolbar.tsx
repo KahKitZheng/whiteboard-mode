@@ -1,10 +1,13 @@
 import { Toggle } from '@base-ui-components/react/toggle'
+import { ToggleGroup } from '@base-ui-components/react/toggle-group'
 import { Toolbar } from '@base-ui-components/react/toolbar'
-import { useWhiteboardMode } from './WhiteboardMode'
+import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './toolbar.scss'
 
+const TOOLS: Tool[] = ['pen', 'eraser']
+
 export function WhiteboardToolbar() {
-  const { active, setActive } = useWhiteboardMode()
+  const { active, setActive, tool, setTool, actions } = useWhiteboardMode()
 
   return (
     <Toolbar.Root className="whiteboard-toolbar">
@@ -12,15 +15,28 @@ export function WhiteboardToolbar() {
         Whiteboard
       </Toolbar.Button>
 
-      {/*
-        Tools only exist while the mode is on, and pen is the only one. It shows
-        as a label rather than a button because a control with nothing to switch
-        to is a lie — #7 turns this into a real ToggleGroup.
-      */}
       {active && (
         <>
           <Toolbar.Separator />
-          <span className="current-tool">Pen</span>
+
+          <ToggleGroup
+            value={[tool]}
+            onValueChange={([next]) => next && setTool(next as Tool)}
+            className="tools"
+          >
+            {TOOLS.map((name) => (
+              <Toolbar.Button key={name} render={<Toggle value={name} />}>
+                {name === 'pen' ? 'Pen' : 'Eraser'}
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+
+          <Toolbar.Separator />
+
+          <Toolbar.Button disabled={!actions?.canUndo} onClick={() => actions?.undo()}>
+            Undo
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => actions?.clear()}>Clear</Toolbar.Button>
         </>
       )}
     </Toolbar.Root>

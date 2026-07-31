@@ -27,6 +27,16 @@
       background: var(--accent);
       color: #fff;
     }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  .tools {
+    display: flex;
+    gap: 4px;
   }
 
   // Base UI renders the separator as a div[role="separator"], not an <hr>.
