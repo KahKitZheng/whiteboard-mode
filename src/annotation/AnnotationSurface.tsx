@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import { toReference, type Point } from './coords'
+import { shapeAt } from './hit'
 import { load, save } from './storage'
 import { strokePath } from './stroke'
 import type { Shape } from './types'
@@ -20,6 +21,12 @@ type Props = {
   children: ReactNode
 }
 
+/** Shapes and their history move together, so undo can never fall out of step. */
+type SurfaceState = {
+  shapes: Shape[]
+  history: Shape[][]
+}
+
 /**
  * An annotatable region, declared by the host app. The annotation layer renders
  * *inside* this element, so it scrolls with the content it annotates and stacks
@@ -29,10 +36,14 @@ type Props = {
 export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
   const element = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
+  const { active, tool, claim, publish } = useWhiteboardMode()
+
   // What was saved wins over the seed — the seed only furnishes a surface
   // nobody has annotated yet.
-  const [shapes, setShapes] = useState<Shape[]>(() => load(id) ?? initialShapes)
-  const { active } = useWhiteboardMode()
+  const [state, setState] = useState<SurfaceState>(() => ({
+    shapes: load(id) ?? initialShapes,
+    history: [],
+  }))
 
   // Points of strokes still being drawn, keyed by pointer. Only one pointer
   // draws at a time today, but keying by id is what makes multi-pointer a Map
@@ -51,18 +62,50 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
     return () => observer.disconnect()
   }, [])
 
-  // `shapes` only changes when a stroke ends, so this never fires mid-stroke.
-  // The debounce is there for the bursts that undo and erase will produce.
+  // `shapes` only changes when an edit completes, so this never fires
+  // mid-stroke. The debounce is for the bursts undo and erase produce.
   useEffect(() => {
-    const timer = setTimeout(() => save(id, shapes), 500)
+    const timer = setTimeout(() => save(id, state.shapes), 500)
     return () => clearTimeout(timer)
-  }, [id, shapes])
+  }, [id, state.shapes])
+
+  function commit(update: (shapes: Shape[]) => Shape[]) {
+    setState(({ shapes, history }) => ({ shapes: update(shapes), history: [...history, shapes] }))
+  }
+
+  function undo() {
+    setState(({ shapes, history }) =>
+      history.length === 0
+        ? { shapes, history }
+        : { shapes: history[history.length - 1], history: history.slice(0, -1) },
+    )
+  }
+
+  function clear() {
+    commit(() => [])
+  }
+
+  // Republished whenever the surface's own state changes, so the toolbar's
+  // undo button knows whether there is anything to undo.
+  useEffect(() => {
+    publish(id, { undo, clear, canUndo: state.history.length > 0 })
+    return () => publish(id, null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, publish, state.history.length])
 
   function pointFrom(event: { clientX: number; clientY: number }, bounds: DOMRect): Point {
     return toReference({ x: event.clientX - bounds.left, y: event.clientY - bounds.top }, width)
   }
 
-  function startStroke(event: ReactPointerEvent<SVGSVGElement>) {
+  function handlePointerDown(event: ReactPointerEvent<SVGSVGElement>) {
+    claim(id)
+
+    if (tool === 'eraser') {
+      const hit = shapeAt(state.shapes, pointFrom(event, event.currentTarget.getBoundingClientRect()))
+      if (hit) commit((shapes) => shapes.filter((shape) => shape.id !== hit.id))
+      return
+    }
+
     if (inProgress.current.size > 0) return
 
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -94,7 +137,7 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
 
     // A tap is not a stroke.
     if (points.length < 2) return
-    setShapes((current) => [...current, { id: crypto.randomUUID(), type: 'stroke', points }])
+    commit((shapes) => [...shapes, { id: crypto.randomUUID(), type: 'stroke', points }])
   }
 
   function cancelStroke(event: ReactPointerEvent<SVGSVGElement>) {
@@ -110,13 +153,14 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
         <svg
           className="annotation-layer"
           data-active={active ? '' : undefined}
+          data-tool={active ? tool : undefined}
           aria-hidden="true"
-          onPointerDown={active ? startStroke : undefined}
+          onPointerDown={active ? handlePointerDown : undefined}
           onPointerMove={active ? extendStroke : undefined}
           onPointerUp={active ? endStroke : undefined}
           onPointerCancel={active ? cancelStroke : undefined}
         >
-          {shapes.map((shape) => (
+          {state.shapes.map((shape) => (
             <path key={shape.id} d={strokePath(shape.points, width)} />
           ))}
           {live.length > 0 && <path d={strokePath(live, width)} />}
