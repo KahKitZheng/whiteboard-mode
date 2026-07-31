@@ -5,6 +5,7 @@ import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './toolbar.scss'
 
 const TOOLS: { name: Tool; label: string }[] = [
+  { name: 'select', label: 'Select' },
   { name: 'pen', label: 'Pen' },
   { name: 'rect', label: 'Rect' },
   { name: 'ellipse', label: 'Ellipse' },
@@ -40,6 +41,15 @@ export function WhiteboardToolbar() {
           </ToggleGroup>
 
           <Toolbar.Separator />
+
+          {actions?.hasSelection && (
+            <>
+              <Toolbar.Button onClick={() => actions.bringToFront()}>Front</Toolbar.Button>
+              <Toolbar.Button onClick={() => actions.sendToBack()}>Back</Toolbar.Button>
+              <Toolbar.Button onClick={() => actions.removeSelected()}>Delete</Toolbar.Button>
+              <Toolbar.Separator />
+            </>
+          )}
 
           <Toolbar.Button disabled={!actions?.canUndo} onClick={() => actions?.undo()}>
             Undo
