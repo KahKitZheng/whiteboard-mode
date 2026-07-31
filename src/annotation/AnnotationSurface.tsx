@@ -23,7 +23,7 @@ import {
 } from './geometry'
 import { shapeAt, shapeNear, shapesAlong } from './hit'
 import { SelectionOverlay } from './Selection'
-import { ShapeView } from './ShapeView'
+import { ShapeView, TextCaret } from './ShapeView'
 import { load, save } from './storage'
 import type { Shape, Text } from './types'
 import { useWhiteboardMode } from './WhiteboardMode'
@@ -504,9 +504,11 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
               </g>
             ))}
           {draft && <ShapeView shape={draft} width={width} />}
-          {/* A trailing bar stands in for a caret while typing. */}
           {editing && (
-            <ShapeView shape={{ ...editing, text: `${editing.text}|` }} width={width} />
+            <>
+              <ShapeView shape={editing} width={width} />
+              <TextCaret shape={editing} width={width} />
+            </>
           )}
           {tool === 'select' && selectedShape && (
             <SelectionOverlay shape={selectedShape} width={width} />
