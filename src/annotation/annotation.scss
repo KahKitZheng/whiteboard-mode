@@ -73,9 +73,32 @@
     stroke-linejoin: round;
   }
 
+  .text-caret {
+    fill: #e5484d;
+    animation: caret-blink 1.06s step-end infinite;
+  }
+
   text {
     fill: #e5484d;
     font-family: var(--sans);
     dominant-baseline: alphabetic;
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+// A blinking element is a problem for some readers; a steady caret still
+// shows where typing lands.
+@media (prefers-reduced-motion: reduce) {
+  .annotation-layer .text-caret {
+    animation: none;
   }
 }

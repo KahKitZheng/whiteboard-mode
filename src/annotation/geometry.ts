@@ -9,7 +9,7 @@ import type { Shape } from './types'
 
 const ELLIPSE_STEPS = 24
 
-/** Only used where the browser can't be asked — see `textBox`. */
+/** Only used where the browser can't be asked — see `textMetrics`. */
 const CHARACTER_WIDTH = 0.55
 const ESTIMATED_ASCENT = 0.75
 const ESTIMATED_DESCENT = 0.2
@@ -30,7 +30,10 @@ let measurer: CanvasRenderingContext2D | null | undefined
  * letter, and sat above the glyphs rather than around them. The browser knows
  * the real metrics, so ask it.
  */
-function textBox(text: string, size: number): { width: number; ascent: number; descent: number } {
+export function textMetrics(
+  text: string,
+  size: number,
+): { width: number; ascent: number; descent: number } {
   if (measurer === undefined) {
     measurer =
       typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
@@ -83,7 +86,7 @@ export function outline(shape: Shape): Point[] {
     case 'text': {
       // The measured glyph box, sitting on the baseline at `at`, with a little
       // padding so the selection rectangle doesn't crowd the letters.
-      const { width, ascent, descent } = textBox(shape.text, shape.size)
+      const { width, ascent, descent } = textMetrics(shape.text, shape.size)
       const pad = shape.size * TEXT_PADDING
       const left = shape.at.x - pad
       const right = shape.at.x + width + pad
