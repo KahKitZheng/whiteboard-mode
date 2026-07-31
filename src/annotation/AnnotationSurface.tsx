@@ -23,7 +23,8 @@ import {
 } from './geometry'
 import { shapeAt, shapeNear, shapesAlong } from './hit'
 import { SelectionOverlay } from './Selection'
-import { ShapeView, TextCaret } from './ShapeView'
+import { ShapeView } from './ShapeView'
+import { TextEditor } from './TextEditor'
 import { load, save } from './storage'
 import type { Shape, Text } from './types'
 import { useWhiteboardMode } from './WhiteboardMode'
@@ -238,41 +239,19 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, active])
 
-  // Text is typed onto the surface directly. Enter keeps it, Escape drops it.
-  useEffect(() => {
-    if (!editing) return
+  /** Finishing one label before starting another, so neither is lost. */
+  function beginEditing(next: Text | null) {
+    if (editing && worthKeeping(editing)) commitText(editing)
+    setEditing(next)
+  }
 
-    function onKeyDown(event: KeyboardEvent) {
-      const current = editing
-      if (!current) return
-      event.preventDefault()
-
-      if (event.key === 'Escape') return setEditing(null)
-
-      if (event.key === 'Enter') {
-        if (current.text.length > 0) {
-          commit((shapes) =>
-            shapes.some((shape) => shape.id === current.id)
-              ? shapes.map((shape) => (shape.id === current.id ? current : shape))
-              : [...shapes, current],
-          )
-        }
-        return setEditing(null)
-      }
-
-      if (event.key === 'Backspace') {
-        return setEditing({ ...current, text: current.text.slice(0, -1) })
-      }
-
-      if (event.key.length === 1) {
-        setEditing({ ...current, text: current.text + event.key })
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editing])
+  function commitText(label: Text) {
+    commit((shapes) =>
+      shapes.some((shape) => shape.id === label.id)
+        ? shapes.map((shape) => (shape.id === label.id ? label : shape))
+        : [...shapes, label],
+    )
+  }
 
   function pointFrom(event: { clientX: number; clientY: number }, box: DOMRect): Point {
     return toReference({ x: event.clientX - box.left, y: event.clientY - box.top }, width)
@@ -323,15 +302,20 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     }
 
     if (tool === 'text') {
+      // Without this the press moves focus as it normally would, which blurs
+      // the editor the instant it mounts — and blur commits, so an empty label
+      // vanished in the same tick it appeared.
+      event.preventDefault()
+
       // Aiming at existing text retypes it rather than stacking a second label
       // on top of the first.
       const existing = shapeNear(state.shapes, point)
-      if (existing?.type === 'text') return setEditing(existing)
+      if (existing?.type === 'text') return beginEditing(existing)
 
       // Typed straight onto the surface rather than through window.prompt: a
       // native dialog is unreliable while an element is fullscreen, which is
       // exactly where a board spends its time.
-      setEditing({ id: crypto.randomUUID(), type: 'text', at: point, text: '', size: TEXT_SIZE })
+      beginEditing({ id: crypto.randomUUID(), type: 'text', at: point, text: '', size: TEXT_SIZE })
       return
     }
 
@@ -355,7 +339,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     if (hit?.type !== 'text') return
 
     setSelected(null)
-    setEditing(hit)
+    beginEditing(hit)
   }
 
   function extendShape(event: ReactPointerEvent<SVGSVGElement>) {
@@ -505,10 +489,16 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
             ))}
           {draft && <ShapeView shape={draft} width={width} />}
           {editing && (
-            <>
-              <ShapeView shape={editing} width={width} />
-              <TextCaret shape={editing} width={width} />
-            </>
+            <TextEditor
+              shape={editing}
+              width={width}
+              onChange={setEditing}
+              onCommit={() => {
+                if (worthKeeping(editing)) commitText(editing)
+                setEditing(null)
+              }}
+              onCancel={() => setEditing(null)}
+            />
           )}
           {tool === 'select' && selectedShape && (
             <SelectionOverlay shape={selectedShape} width={width} />

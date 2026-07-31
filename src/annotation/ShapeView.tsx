@@ -1,8 +1,7 @@
 import { scaleFor, type Point } from './coords'
-import { textMetrics } from './geometry'
 import { strokePath } from './stroke'
 import { Timer } from './Timer'
-import type { Shape, Text } from './types'
+import type { Shape } from './types'
 
 const LINE_WIDTH = 4
 const ARROWHEAD = 18
@@ -101,26 +100,3 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
   }
 }
 
-const CARET_WIDTH = 2
-
-/**
- * A real caret rather than a "|" appended to the string. As a character it
- * could not blink, and it widened the shape's own box while typing, so the
- * selection outline jumped the moment you committed.
- */
-export function TextCaret({ shape, width }: { shape: Text; width: number }) {
-  const scale = scaleFor(width)
-  // Vertical extent comes from the font, not the string, so it is the same
-  // whatever has been typed — including nothing.
-  const { width: typed, ascent, descent } = textMetrics(shape.text, shape.size)
-
-  return (
-    <rect
-      className="text-caret"
-      x={(shape.at.x + typed) * scale}
-      y={(shape.at.y - ascent) * scale}
-      width={Math.max(1, CARET_WIDTH * scale)}
-      height={(ascent + descent) * scale}
-    />
-  )
-}
