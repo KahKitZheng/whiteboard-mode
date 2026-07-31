@@ -1,6 +1,8 @@
 # Reference-width normalized coordinates
 
-Shape coordinates are stored against a fixed reference width rather than in raw pixels, and scaled on render by `surfaceWidth / referenceWidth`. Scrolling is handled separately, by translating the layer. This keeps annotations correctly placed across board resolutions without storing pixels against a display size.
+Shape coordinates are stored against a fixed reference width rather than in raw pixels, and scaled on render by `surfaceWidth / referenceWidth`. This keeps annotations correctly placed across board resolutions without storing pixels against a display size.
+
+**Amended after implementation:** this decision originally said scrolling would be handled separately, by translating the layer. It is not handled at all. Because the layer renders inside the surface element (ADR 0001), the browser scrolls it with the content — verified in #1, where a 194px page scroll moved the stroke exactly 194px. Coordinates are surface-relative, so scroll never enters the transform.
 
 ## Consequences
 
