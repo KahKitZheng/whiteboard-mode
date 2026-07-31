@@ -44,11 +44,21 @@ describe('outline', () => {
     expect(outline(arrow)).toEqual([{ x: 0, y: 0 }, { x: 100, y: 0 }])
   })
 
-  it('boxes text above its baseline', () => {
-    const points = outline(text)
+  it('boxes text around its baseline', () => {
+    const box = bounds(text)
 
-    expect(points.every((point) => point.y <= 50)).toBe(true)
-    expect(Math.max(...points.map((point) => point.x))).toBeGreaterThan(50)
+    // Mostly above the baseline, dipping below it for descenders.
+    expect(box.minY).toBeLessThan(50)
+    expect(box.maxY).toBeGreaterThan(50)
+    expect(50 - box.minY).toBeGreaterThan(box.maxY - 50)
+    expect(box.maxX).toBeGreaterThan(box.minX)
+  })
+
+  it('boxes a longer string wider than a shorter one', () => {
+    const short = bounds({ ...text, text: 'a' })
+    const long = bounds({ ...text, text: 'a much longer label' })
+
+    expect(long.maxX - long.minX).toBeGreaterThan(short.maxX - short.minX)
   })
 })
 

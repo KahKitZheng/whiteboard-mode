@@ -9,10 +9,51 @@ import type { Shape } from './types'
 
 const ELLIPSE_STEPS = 24
 
-/** Rough width of a character relative to the font size. */
+/** Only used where the browser can't be asked — see `textBox`. */
 const CHARACTER_WIDTH = 0.55
+const ESTIMATED_ASCENT = 0.75
+const ESTIMATED_DESCENT = 0.2
+
+/** Breathing room between the glyphs and the box drawn around them. */
+const TEXT_PADDING = 0.12
+
+/** Must match what `.annotation-layer text` actually renders with. */
+const TEXT_FONT = "system-ui, 'Segoe UI', Roboto, sans-serif"
 
 export const TEXT_SIZE = 28
+
+let measurer: CanvasRenderingContext2D | null | undefined
+
+/**
+ * The box a string actually occupies. Estimating it from character count was
+ * wildly off — a selection rectangle around "test" ran far past the final
+ * letter, and sat above the glyphs rather than around them. The browser knows
+ * the real metrics, so ask it.
+ */
+function textBox(text: string, size: number): { width: number; ascent: number; descent: number } {
+  if (measurer === undefined) {
+    measurer =
+      typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
+  }
+
+  if (!measurer) {
+    // No DOM (tests, SSR). Proportional to size, so everything stays coherent.
+    return {
+      width: text.length * size * CHARACTER_WIDTH,
+      ascent: size * ESTIMATED_ASCENT,
+      descent: size * ESTIMATED_DESCENT,
+    }
+  }
+
+  measurer.font = `${size}px ${TEXT_FONT}`
+  const metrics = measurer.measureText(text)
+
+  return {
+    width: metrics.width,
+    ascent: metrics.actualBoundingBoxAscent || size * ESTIMATED_ASCENT,
+    descent: metrics.actualBoundingBoxDescent || size * ESTIMATED_DESCENT,
+  }
+}
 
 /** A polyline that approximates the shape's outline, for hit-testing. */
 export function outline(shape: Shape): Point[] {
@@ -40,14 +81,20 @@ export function outline(shape: Shape): Point[] {
     }
 
     case 'text': {
-      // Close enough to tap: the box the glyphs occupy, sitting on the baseline.
-      const width = shape.text.length * shape.size * CHARACTER_WIDTH
-      const top = shape.at.y - shape.size
+      // The measured glyph box, sitting on the baseline at `at`, with a little
+      // padding so the selection rectangle doesn't crowd the letters.
+      const { width, ascent, descent } = textBox(shape.text, shape.size)
+      const pad = shape.size * TEXT_PADDING
+      const left = shape.at.x - pad
+      const right = shape.at.x + width + pad
+      const top = shape.at.y - ascent - pad
+      const bottom = shape.at.y + descent + pad
+
       const corners = [
-        { x: shape.at.x, y: top },
-        { x: shape.at.x + width, y: top },
-        { x: shape.at.x + width, y: shape.at.y },
-        { x: shape.at.x, y: shape.at.y },
+        { x: left, y: top },
+        { x: right, y: top },
+        { x: right, y: bottom },
+        { x: left, y: bottom },
       ]
       return [...corners, corners[0]]
     }
