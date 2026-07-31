@@ -71,7 +71,18 @@ type SurfaceState = {
  * above or below other surfaces exactly as the host's own elements do.
  * See docs/adr/0001-host-declared-surfaces.md.
  */
-export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
+export function AnnotationSurface(props: Props) {
+  /*
+    Remount whenever the surface id changes. Shapes are seeded once, at mount,
+    so reusing one instance across two ids carries the first surface's
+    annotations into the second — the router keeps the element in the same slot
+    across routes, so this happens on every navigation. Keying here rather than
+    at the call site means the host app cannot forget to.
+  */
+  return <Surface key={props.id} {...props} />
+}
+
+function Surface({ id, initialShapes = [], children }: Props) {
   const element = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const { active, tool, claim, publish } = useWhiteboardMode()
