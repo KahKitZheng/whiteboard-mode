@@ -28,6 +28,18 @@ export type Text = {
   text: string
 }
 
-export type Shape = Stroke | Primitive | Text
+/**
+ * A shape whose rendering is interactive rather than static. It carries the
+ * same dragged box as a primitive, which is the whole point: everything that
+ * reasons about *where* a shape is already handles it.
+ */
+export type Widget = {
+  id: string
+  type: 'timer'
+  from: Point
+  to: Point
+}
+
+export type Shape = Stroke | Primitive | Text | Widget
 
 export type ShapeType = Shape['type']

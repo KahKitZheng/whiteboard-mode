@@ -24,7 +24,8 @@ export function outline(shape: Shape): Point[] {
     case 'arrow':
       return [shape.from, shape.to]
 
-    case 'rect': {
+    case 'rect':
+    case 'timer': {
       const { from, to } = shape
       return [from, { x: to.x, y: from.y }, to, { x: from.x, y: to.y }, from]
     }

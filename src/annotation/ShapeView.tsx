@@ -1,6 +1,7 @@
 import { scaleFor, type Point } from './coords'
 import { TEXT_SIZE } from './geometry'
 import { strokePath } from './stroke'
+import { Timer } from './Timer'
 import type { Shape } from './types'
 
 const LINE_WIDTH = 4
@@ -76,6 +77,25 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
         <text x={at_.x} y={at_.y} fontSize={TEXT_SIZE * scale}>
           {shape.text}
         </text>
+      )
+    }
+
+    case 'timer': {
+      // A foreignObject is what lets live React render inside the same layer as
+      // the ink — one layer, one coordinate system, as ADR 0003 requires.
+      const from = at(shape.from)
+      const to = at(shape.to)
+      const height = Math.abs(to.y - from.y)
+
+      return (
+        <foreignObject
+          x={Math.min(from.x, to.x)}
+          y={Math.min(from.y, to.y)}
+          width={Math.abs(to.x - from.x)}
+          height={height}
+        >
+          <Timer fontSize={Math.max(8, height * 0.18)} />
+        </foreignObject>
       )
     }
   }

@@ -367,7 +367,14 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
           className="annotation-layer"
           data-active={active ? '' : undefined}
           data-tool={active ? tool : undefined}
-          aria-hidden="true"
+          /*
+            Not aria-hidden. It was, while the layer held only ink — but a
+            widget puts real controls in here, and hiding the subtree took the
+            timer's buttons out of the accessibility tree with it. The shapes
+            themselves carry no accessible name, so they stay invisible to
+            assistive tech either way.
+          */
+          role="presentation"
           onPointerDown={active ? handlePointerDown : undefined}
           onPointerMove={active ? extendShape : undefined}
           onPointerUp={active ? endShape : undefined}
