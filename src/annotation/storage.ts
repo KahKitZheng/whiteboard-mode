@@ -1,5 +1,5 @@
 import { REFERENCE_WIDTH } from './coords'
-import { mapPoints } from './geometry'
+import { scaleAbout } from './geometry'
 import type { Shape } from './types'
 
 /**
@@ -7,7 +7,7 @@ import type { Shape } from './types'
  * sessionStorage for an API is a change to this file and nothing else.
  * See docs/adr/0002-reference-width-normalized-coordinates.md for `refWidth`.
  */
-const VERSION = 1
+const VERSION = 2
 
 export type StoredSurface = {
   version: number
@@ -42,9 +42,9 @@ export function load(surfaceId: string): Shape[] | null {
   // every shape. Rescale instead.
   if (stored.refWidth !== REFERENCE_WIDTH) {
     const factor = REFERENCE_WIDTH / stored.refWidth
-    return stored.shapes.map((shape) =>
-      mapPoints(shape, (point) => ({ x: point.x * factor, y: point.y * factor })),
-    )
+    // scaleAbout rather than mapPoints: text carries a size that has to travel
+    // with its position.
+    return stored.shapes.map((shape) => scaleAbout(shape, { x: 0, y: 0 }, factor, factor))
   }
 
   return stored.shapes

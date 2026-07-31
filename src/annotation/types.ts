@@ -26,6 +26,8 @@ export type Text = {
   type: 'text'
   at: Point
   text: string
+  /** Cap height in reference space. Without it, text could only be moved. */
+  size: number
 }
 
 /**

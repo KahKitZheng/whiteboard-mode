@@ -41,8 +41,8 @@ export function outline(shape: Shape): Point[] {
 
     case 'text': {
       // Close enough to tap: the box the glyphs occupy, sitting on the baseline.
-      const width = shape.text.length * TEXT_SIZE * CHARACTER_WIDTH
-      const top = shape.at.y - TEXT_SIZE
+      const width = shape.text.length * shape.size * CHARACTER_WIDTH
+      const top = shape.at.y - shape.size
       const corners = [
         { x: shape.at.x, y: top },
         { x: shape.at.x + width, y: top },
@@ -133,12 +133,21 @@ export function withinBounds(shape: Shape, point: Point): boolean {
  * This lives here rather than in the widget because it is a fact about the
  * shape's geometry, alongside `outline` and `mapPoints`.
  */
-const ASPECT: Partial<Record<Shape['type'], number>> = {
-  timer: 3 / 2,
-}
+const TIMER_ASPECT = 3 / 2
 
-export function aspectOf(type: Shape['type']): number | null {
-  return ASPECT[type] ?? null
+export function aspectOf(shape: Shape): number | null {
+  if (shape.type === 'timer') return TIMER_ASPECT
+
+  // Text's proportions come from its own string. Stretching one axis would
+  // either distort the glyphs or leave them adrift in their own box, so a
+  // resize scales it whole.
+  if (shape.type === 'text') {
+    const box = bounds(shape)
+    const height = box.maxY - box.minY
+    return height > 0 ? (box.maxX - box.minX) / height : null
+  }
+
+  return null
 }
 
 /** A dragged corner pulled onto the nearest box of the required proportions. */
@@ -166,8 +175,15 @@ export function translate(shape: Shape, dx: number, dy: number): Shape {
 }
 
 export function scaleAbout(shape: Shape, anchor: Point, fx: number, fy: number): Shape {
-  return mapPoints(shape, (point) => ({
+  const moved = mapPoints(shape, (point) => ({
     x: anchor.x + (point.x - anchor.x) * fx,
     y: anchor.y + (point.y - anchor.y) * fy,
   }))
+
+  // Text is a point and a size, not a span of points. Moving the point alone
+  // relocates it without resizing anything, which is what made resizing text
+  // look like it did nothing at all.
+  if (moved.type !== 'text') return moved
+
+  return { ...moved, size: moved.size * Math.max(Math.abs(fx), Math.abs(fy)) }
 }

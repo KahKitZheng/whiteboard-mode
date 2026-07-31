@@ -14,6 +14,7 @@ import {
   cornerPoint,
   keepAspect,
   oppositeCorner,
+  TEXT_SIZE,
   scaleAbout,
   translate,
   uniformFactors,
@@ -59,7 +60,7 @@ function resizeFactors(
   const fx = factor(point.x - gesture.anchor.x, gesture.startCorner.x - gesture.anchor.x)
   const fy = factor(point.y - gesture.anchor.y, gesture.startCorner.y - gesture.anchor.y)
 
-  return aspectOf(gesture.original.type) ? uniformFactors(fx, fy) : [fx, fy]
+  return aspectOf(gesture.original) ? uniformFactors(fx, fy) : [fx, fy]
 }
 
 /** A tap that never moved, or an empty string, is not worth storing. */
@@ -321,7 +322,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       // Typed straight onto the surface rather than through window.prompt: a
       // native dialog is unreliable while an element is fullscreen, which is
       // exactly where a board spends its time.
-      setEditing({ id: crypto.randomUUID(), type: 'text', at: point, text: '' })
+      setEditing({ id: crypto.randomUUID(), type: 'text', at: point, text: '', size: TEXT_SIZE })
       return
     }
 
@@ -393,7 +394,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
 
     // Everything else is dragged from one corner to the other, snapped to the
     // type's proportions where it has any.
-    const ratio = aspectOf(shape.type)
+    const ratio = aspectOf(shape)
     const to = pointFrom(event, box)
 
     return { ...shape, to: ratio ? keepAspect(shape.from, to, ratio) : to }

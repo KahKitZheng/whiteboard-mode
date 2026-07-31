@@ -61,7 +61,7 @@ describe('storage', () => {
   it('rescales shapes stored against a different reference width', () => {
     sessionStorage.setItem(
       'wb:old',
-      JSON.stringify({ version: 1, refWidth: REFERENCE_WIDTH / 2, shapes: SHAPES }),
+      JSON.stringify({ version: 2, refWidth: REFERENCE_WIDTH / 2, shapes: SHAPES }),
     )
 
     const restored = load('old')?.[0]
@@ -73,11 +73,11 @@ describe('storage', () => {
   it('rescales primitives and text, not just strokes', () => {
     const shapes: Shape[] = [
       { id: 'r', type: 'rect', from: { x: 10, y: 10 }, to: { x: 50, y: 30 } },
-      { id: 't', type: 'text', at: { x: 100, y: 200 }, text: 'hello' },
+      { id: 't', type: 'text', at: { x: 100, y: 200 }, text: 'hello', size: 28 },
     ]
     sessionStorage.setItem(
       'wb:mixed',
-      JSON.stringify({ version: 1, refWidth: REFERENCE_WIDTH / 2, shapes }),
+      JSON.stringify({ version: 2, refWidth: REFERENCE_WIDTH / 2, shapes }),
     )
 
     const [rect, text] = load('mixed') ?? []

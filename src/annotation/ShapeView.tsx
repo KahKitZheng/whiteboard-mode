@@ -1,5 +1,4 @@
 import { scaleFor, type Point } from './coords'
-import { TEXT_SIZE } from './geometry'
 import { strokePath } from './stroke'
 import { Timer } from './Timer'
 import type { Shape } from './types'
@@ -74,7 +73,7 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
     case 'text': {
       const at_ = at(shape.at)
       return (
-        <text x={at_.x} y={at_.y} fontSize={TEXT_SIZE * scale}>
+        <text x={at_.x} y={at_.y} fontSize={shape.size * scale}>
           {shape.text}
         </text>
       )

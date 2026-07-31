@@ -19,7 +19,7 @@ import type { Shape } from './types'
 const rect: Shape = { id: 'r', type: 'rect', from: { x: 100, y: 100 }, to: { x: 300, y: 200 } }
 const ellipse: Shape = { id: 'e', type: 'ellipse', from: { x: 0, y: 0 }, to: { x: 200, y: 100 } }
 const arrow: Shape = { id: 'a', type: 'arrow', from: { x: 0, y: 0 }, to: { x: 100, y: 0 } }
-const text: Shape = { id: 't', type: 'text', at: { x: 50, y: 50 }, text: 'hello' }
+const text: Shape = { id: 't', type: 'text', at: { x: 50, y: 50 }, text: 'hello', size: 28 }
 
 describe('outline', () => {
   it('closes a rectangle back on its first corner', () => {
@@ -153,9 +153,14 @@ describe('fixed proportions', () => {
   const RATIO = 3 / 2
 
   it('only constrains the types that need it', () => {
-    expect(aspectOf('timer')).toBeCloseTo(RATIO)
-    expect(aspectOf('rect')).toBeNull()
-    expect(aspectOf('stroke')).toBeNull()
+    const timer: Shape = { id: 'w', type: 'timer', from: { x: 0, y: 0 }, to: { x: 30, y: 20 } }
+    const stroke: Shape = { id: 's', type: 'stroke', points: [{ x: 0, y: 0 }, { x: 5, y: 5 }] }
+
+    expect(aspectOf(timer)).toBeCloseTo(RATIO)
+    expect(aspectOf(rect)).toBeNull()
+    expect(aspectOf(stroke)).toBeNull()
+    // Text's ratio comes from its own string, so it resizes whole.
+    expect(aspectOf(text)).toBeGreaterThan(0)
   })
 
   it('snaps a dragged corner to the ratio', () => {
@@ -196,5 +201,46 @@ describe('fixed proportions', () => {
     const box = bounds(scaleAbout(timer, { x: 0, y: 0 }, fx, fy))
 
     expect((box.maxX - box.minX) / (box.maxY - box.minY)).toBeCloseTo(RATIO)
+  })
+})
+
+describe('resizing text', () => {
+  const label: Shape = { id: 'l', type: 'text', at: { x: 100, y: 100 }, text: 'hello', size: 20 }
+
+  it('scales the glyph size, not just the position', () => {
+    const bigger = scaleAbout(label, { x: 0, y: 0 }, 2, 2)
+    if (bigger.type !== 'text') throw new Error('type changed')
+
+    expect(bigger.size).toBe(40)
+    expect(bigger.at).toEqual({ x: 200, y: 200 })
+  })
+
+  it('grows its box, so the selection follows', () => {
+    const before = bounds(label)
+    const after = bounds(scaleAbout(label, { x: 0, y: 0 }, 2, 2))
+
+    expect(after.maxX - after.minX).toBeCloseTo((before.maxX - before.minX) * 2)
+    expect(after.maxY - after.minY).toBeCloseTo((before.maxY - before.minY) * 2)
+  })
+
+  it('shrinks as well as grows', () => {
+    const smaller = scaleAbout(label, { x: 0, y: 0 }, 0.5, 0.5)
+    if (smaller.type !== 'text') throw new Error('type changed')
+
+    expect(smaller.size).toBe(10)
+  })
+
+  it('takes the larger factor when a drag is lopsided', () => {
+    const scaled = scaleAbout(label, { x: 0, y: 0 }, 1.2, 3)
+    if (scaled.type !== 'text') throw new Error('type changed')
+
+    expect(scaled.size).toBe(60)
+  })
+
+  it('leaves the string alone', () => {
+    const scaled = scaleAbout(label, { x: 0, y: 0 }, 4, 4)
+    if (scaled.type !== 'text') throw new Error('type changed')
+
+    expect(scaled.text).toBe('hello')
   })
 })
