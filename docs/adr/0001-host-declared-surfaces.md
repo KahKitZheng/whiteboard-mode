@@ -11,3 +11,5 @@ Detecting surfaces automatically by watching the DOM for dialogs, top-layer chan
 Rendering each surface's layer *inside* the element it annotates means the browser's own stacking handles layering — a popup's annotations sit above the page's because the popup does. No z-index arithmetic, and the fullscreen top-layer case works by construction, since the layer is a descendant of the element that goes fullscreen.
 
 The surface element also defines the coordinate origin and the width used for scaling, so no separate registration of bounds is needed.
+
+**Surfaces must not nest.** A surface's layer covers its whole box, and it renders after its children, so an outer surface's layer sits on top of any surface declared inside it — the inner one becomes unreachable, and strokes aimed at it are swallowed by the outer surface or lost entirely. Discovered in #5, where a fullscreen stage declared inside a lesson's surface could not be drawn on at all. Annotatable regions are siblings.
