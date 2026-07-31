@@ -1,6 +1,15 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
-export type Tool = 'select' | 'pen' | 'rect' | 'ellipse' | 'line' | 'arrow' | 'text' | 'eraser'
+export type Tool =
+  | 'select'
+  | 'pen'
+  | 'rect'
+  | 'ellipse'
+  | 'line'
+  | 'arrow'
+  | 'text'
+  | 'timer'
+  | 'eraser'
 
 /** What the toolbar can do to a surface. Published by the surface itself. */
 export type SurfaceActions = {

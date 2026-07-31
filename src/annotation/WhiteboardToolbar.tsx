@@ -12,6 +12,7 @@ const TOOLS: { name: Tool; label: string }[] = [
   { name: 'line', label: 'Line' },
   { name: 'arrow', label: 'Arrow' },
   { name: 'text', label: 'Text' },
+  { name: 'timer', label: 'Timer' },
   { name: 'eraser', label: 'Eraser' },
 ]
 
