@@ -2,6 +2,16 @@
   position: relative;
 }
 
+/*
+  A surface declared inside another paints above the outer one's layer.
+  Without this the outer layer — which renders after its own children — covers
+  the inner surface entirely and swallows every stroke aimed at it.
+  See docs/adr/0001-host-declared-surfaces.md.
+*/
+.annotation-surface .annotation-surface {
+  z-index: 1;
+}
+
 .annotation-layer {
   position: absolute;
   inset: 0;

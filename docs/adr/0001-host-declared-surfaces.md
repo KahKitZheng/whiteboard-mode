@@ -12,4 +12,8 @@ Rendering each surface's layer *inside* the element it annotates means the brows
 
 The surface element also defines the coordinate origin and the width used for scaling, so no separate registration of bounds is needed.
 
-**Surfaces must not nest.** A surface's layer covers its whole box, and it renders after its children, so an outer surface's layer sits on top of any surface declared inside it — the inner one becomes unreachable, and strokes aimed at it are swallowed by the outer surface or lost entirely. Discovered in #5, where a fullscreen stage declared inside a lesson's surface could not be drawn on at all. Annotatable regions are siblings.
+**Surfaces may nest, and the inner one wins.** A surface's layer covers its whole box and renders after its own children, so by default an outer surface's layer sits on top of any surface declared inside it and swallows every stroke aimed at the inner one. That was first met in #5 and worked around by keeping annotatable regions as siblings.
+
+That workaround stopped being viable once a page's surface had to span the whole page, since anything else annotatable then falls inside it. The real fix is one rule — `.annotation-surface .annotation-surface { z-index: 1 }` — which lifts an inner surface above its ancestor's layer. The outer surface therefore cannot be annotated across an inner surface's box, which is the correct reading: that region belongs to the inner surface.
+
+**A surface's box is what gets annotated**, so the host sizes it. A surface that spans the page is an ordinary block; one used as an overlay is positioned by the host and must also be `pointer-events: none` on the wrapper — only the layer manages pointer events, and a full-viewport wrapper would otherwise swallow every press meant for what is beneath it.
