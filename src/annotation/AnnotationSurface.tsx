@@ -105,12 +105,31 @@ export function AnnotationSurface({ id, initialShapes = [], children }: Props) {
     return () => observer.disconnect()
   }, [])
 
-  // `shapes` only changes when an edit completes, so this never fires
-  // mid-stroke. The debounce is for the bursts undo and erase produce.
+  // The debounce earns its keep during a move or resize, where shapes change on
+  // every pointer frame.
   useEffect(() => {
     const timer = setTimeout(() => save(id, state.shapes), 500)
     return () => clearTimeout(timer)
   }, [id, state.shapes])
+
+  // ...but a debounce still pending when the surface goes away would be
+  // cancelled, losing the last edit. Closing a popup within half a second of
+  // drawing in it did exactly that. Flush on unmount and on the page going
+  // away instead.
+  const latestShapes = useRef(state.shapes)
+  latestShapes.current = state.shapes
+
+  useEffect(() => {
+    function flush() {
+      save(id, latestShapes.current)
+    }
+
+    window.addEventListener('pagehide', flush)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      flush()
+    }
+  }, [id])
 
   function commit(update: (shapes: Shape[]) => Shape[]) {
     setState(({ shapes, history }) => ({ shapes: update(shapes), history: [...history, shapes] }))
