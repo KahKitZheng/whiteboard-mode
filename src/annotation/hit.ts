@@ -1,5 +1,5 @@
 import type { Point } from './coords'
-import { outline } from './geometry'
+import { outline, withinBounds } from './geometry'
 import type { Shape } from './types'
 
 /**
@@ -40,6 +40,23 @@ function touches(shape: Shape, point: Point): boolean {
 export function shapeAt(shapes: Shape[], point: Point): Shape | null {
   for (let index = shapes.length - 1; index >= 0; index -= 1) {
     if (touches(shapes[index], point)) return shapes[index]
+  }
+  return null
+}
+
+/**
+ * The topmost shape at a point, counting anywhere inside its box — not just its
+ * outline. Picking by outline alone means aiming at the edge of a rectangle, or
+ * at the strokes of a letter, which is more guesswork than anyone wants from a
+ * select tool. The outline still wins where two shapes overlap, so precision is
+ * kept where it matters and forgiveness added where it doesn't.
+ */
+export function shapeNear(shapes: Shape[], point: Point): Shape | null {
+  const onOutline = shapeAt(shapes, point)
+  if (onOutline) return onOutline
+
+  for (let index = shapes.length - 1; index >= 0; index -= 1) {
+    if (withinBounds(shapes[index], point)) return shapes[index]
   }
   return null
 }

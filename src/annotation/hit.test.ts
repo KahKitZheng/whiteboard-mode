@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { shapeAt, shapesAlong } from './hit'
+import { shapeAt, shapeNear, shapesAlong } from './hit'
 import type { Shape } from './types'
 
 const horizontal: Shape = {
@@ -74,5 +74,27 @@ describe('shapesAlong', () => {
 
   it('handles a sweep that never moved', () => {
     expect(shapesAlong([horizontal], { x: 100, y: 100 }, { x: 100, y: 100 })).toHaveLength(1)
+  })
+})
+
+describe('shapeNear', () => {
+  const box: Shape = { id: 'box', type: 'rect', from: { x: 0, y: 0 }, to: { x: 200, y: 100 } }
+
+  it('picks a shape from inside it, not just from its edge', () => {
+    expect(shapeAt([box], { x: 100, y: 50 })).toBeNull()
+    expect(shapeNear([box], { x: 100, y: 50 })?.id).toBe('box')
+  })
+
+  it('still picks by edge', () => {
+    expect(shapeNear([box], { x: 100, y: 0 })?.id).toBe('box')
+  })
+
+  it('prefers an outline hit over a merely-enclosing box', () => {
+    // The line crosses the rectangle's interior; aiming at the line gets it.
+    expect(shapeNear([box, vertical], { x: 100, y: 50 })?.id).toBe('vertical')
+  })
+
+  it('finds nothing outside everything', () => {
+    expect(shapeNear([box], { x: 400, y: 400 })).toBeNull()
   })
 })
