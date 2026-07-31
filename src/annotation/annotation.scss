@@ -22,6 +22,10 @@
   pointer-events: none;
   // Strokes may run past the surface box; don't clip them to it.
   overflow: visible;
+  // Dragging a text shape would otherwise select its glyphs, leaving the
+  // browser's blue highlight sitting behind the letters mid-drag.
+  user-select: none;
+  -webkit-user-select: none;
 
   &[data-active] {
     pointer-events: auto;
@@ -74,6 +78,9 @@
   }
 
   .text-input {
+    // ...but the editor itself is text, and selecting it is the point.
+    user-select: text;
+    -webkit-user-select: text;
     width: 100%;
     padding: 0;
     border: 0;
