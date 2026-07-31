@@ -46,14 +46,19 @@ function DiagramPopup({ slug }: { slug: string }) {
       <Dialog.Portal>
         {/* The backdrop dismisses; the toolbar, which is also "outside", does not. */}
         <Dialog.Backdrop className="dialog-backdrop" onClick={() => setOpen(false)} />
-        <Dialog.Popup className="dialog-popup">
-          <Dialog.Title>Diagram</Dialog.Title>
-          {/*
-            The popup's surface is its own. It is rendered into a portal at the
-            end of <body>, so it paints above the page's layer for exactly the
-            reason the dialog itself does — no z-index arithmetic.
-          */}
-          <AnnotationSurface id={`lesson-${slug}:popup`}>
+        {/*
+          The popup's surface spans the whole viewport, so with whiteboard mode
+          armed you can annotate anywhere on screen and the marks belong to the
+          popup. It sits in the same portal, so it paints above the page's layer
+          for the reason the dialog itself does — no z-index arithmetic.
+
+          It also decides what a press outside the popup means: armed, the layer
+          takes it and draws; off, the layer is inert and the backdrop below
+          gets it and dismisses.
+        */}
+        <AnnotationSurface id={`lesson-${slug}:popup`} className="popup-surface">
+          <Dialog.Popup className="dialog-popup">
+            <Dialog.Title>Diagram</Dialog.Title>
             <div className="diagram">
               <p>Annotate this diagram. The marks belong to the popup, not the page.</p>
               <svg viewBox="0 0 200 100" className="diagram-art" aria-hidden="true">
@@ -61,9 +66,9 @@ function DiagramPopup({ slug }: { slug: string }) {
                 <circle cx="115" cy="50" r="34" />
               </svg>
             </div>
-          </AnnotationSurface>
-          <Dialog.Close className="extra-button">Close</Dialog.Close>
-        </Dialog.Popup>
+            <Dialog.Close className="extra-button">Close</Dialog.Close>
+          </Dialog.Popup>
+        </AnnotationSurface>
       </Dialog.Portal>
     </Dialog.Root>
   )

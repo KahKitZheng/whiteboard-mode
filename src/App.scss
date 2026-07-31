@@ -18,6 +18,14 @@
   }
 }
 
+.page-surface {
+  // The surface's box is what gets annotated, so it fills the page rather than
+  // hugging the article.
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 .lesson {
   padding: 40px 48px 40px;
 
@@ -74,6 +82,7 @@
 }
 
 .dialog-popup {
+  pointer-events: auto;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -103,4 +112,13 @@
     stroke: var(--border);
     stroke-width: 2;
   }
+}
+
+.popup-surface {
+  position: fixed;
+  inset: 0;
+  // A surface used as an overlay has to be transparent to presses itself. Only
+  // its layer manages pointer-events; the wrapper is an ordinary div and would
+  // otherwise swallow everything, backdrop included.
+  pointer-events: none;
 }

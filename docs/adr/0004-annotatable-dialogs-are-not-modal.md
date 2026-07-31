@@ -16,4 +16,9 @@ The host app must render annotatable dialogs with `modal={false}` (or `'trap-foc
 
 A non-modal dialog closes when focus leaves it, and reaching for the whiteboard toolbar looks exactly like that. Focus-out dismissal is therefore ignored while a dialog declares a surface. Pressing the backdrop, its own control, or Escape all still close it.
 
-The backdrop keeps `pointer-events: auto`, so the page behind an open dialog cannot be annotated — a press there dismisses the dialog instead of drawing. That is the deliberate trade: one surface is annotatable at a time, and the backdrop is how you leave.
+A dialog's surface spans the whole viewport rather than the dialog's own box, so with whiteboard mode armed the teacher can annotate anywhere on screen and the marks belong to the dialog. That surface is also what decides what a press outside the dialog means, without any code asking:
+
+- **Armed** — the layer is live and takes the press, so it draws. The dialog stays open.
+- **Off** — the layer is inert, so the press falls through to the backdrop beneath and dismisses.
+
+Which is the behaviour you want either way: while drawing, an errant press should not throw away the thing you are annotating; while not drawing, pressing outside means "done".
