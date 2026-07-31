@@ -1,0 +1,28 @@
+.lesson-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 24px;
+  padding: 16px 48px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+
+  a {
+    color: var(--text);
+    text-decoration: none;
+
+    &.is-active {
+      color: var(--accent);
+    }
+  }
+}
+
+.lesson {
+  padding: 40px 48px 96px;
+
+  p {
+    margin: 0 0 24px;
+    max-width: 62ch;
+  }
+}
