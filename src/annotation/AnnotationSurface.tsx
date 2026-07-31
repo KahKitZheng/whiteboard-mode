@@ -17,7 +17,7 @@ import {
   withinBounds,
   type Corner,
 } from './geometry'
-import { shapeAt } from './hit'
+import { shapeAt, shapesAlong } from './hit'
 import { SelectionOverlay } from './Selection'
 import { ShapeView } from './ShapeView'
 import { load, save } from './storage'
@@ -104,6 +104,8 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
   const [editing, setEditing] = useState<Text | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const gesture = useRef<Gesture | null>(null)
+  const erasing = useRef<{ pointerId: number; last: Point } | null>(null)
+  const [marked, setMarked] = useState<string[]>([])
 
   const selectedShape = state.shapes.find((shape) => shape.id === selected) ?? null
 
@@ -288,8 +290,13 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     }
 
     if (tool === 'eraser') {
+      // Shapes are marked while the pointer sweeps and deleted together on
+      // release, so a scribble across five strokes is one undo, not five.
+      event.currentTarget.setPointerCapture(event.pointerId)
+      erasing.current = { pointerId: event.pointerId, last: point }
+
       const hit = shapeAt(state.shapes, point)
-      if (hit) commit((shapes) => shapes.filter((shape) => shape.id !== hit.id))
+      setMarked(hit ? [hit.id] : [])
       return
     }
 
@@ -314,6 +321,23 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
   }
 
   function extendShape(event: ReactPointerEvent<SVGSVGElement>) {
+    const erase = erasing.current
+    if (erase && erase.pointerId === event.pointerId) {
+      const box = event.currentTarget.getBoundingClientRect()
+      const coalesced = event.nativeEvent.getCoalescedEvents?.() ?? []
+      const moves = coalesced.length > 0 ? coalesced : [event.nativeEvent]
+      const swept: string[] = []
+
+      for (const move of moves) {
+        const next = pointFrom(move, box)
+        for (const shape of shapesAlong(state.shapes, erase.last, next)) swept.push(shape.id)
+        erase.last = next
+      }
+
+      if (swept.length > 0) setMarked((current) => [...new Set([...current, ...swept])])
+      return
+    }
+
     const active_ = gesture.current
     if (active_) {
       const point = pointFrom(event, event.currentTarget.getBoundingClientRect())
@@ -360,6 +384,15 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
   }
 
   function endShape(event: ReactPointerEvent<SVGSVGElement>) {
+    if (erasing.current) {
+      erasing.current = null
+      if (marked.length > 0) {
+        commit((shapes) => shapes.filter((shape) => !marked.includes(shape.id)))
+      }
+      setMarked([])
+      return
+    }
+
     if (gesture.current) {
       // One history entry for the whole gesture, not one per pointer move.
       const { before } = gesture.current
@@ -378,6 +411,13 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
   }
 
   function cancelShape(event: ReactPointerEvent<SVGSVGElement>) {
+    if (erasing.current) {
+      // A cancelled sweep deletes nothing.
+      erasing.current = null
+      setMarked([])
+      return
+    }
+
     if (gesture.current) {
       // Put the shape back where it was; a cancelled gesture is not an edit.
       const { before } = gesture.current
@@ -417,7 +457,11 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
           onPointerCancel={active ? cancelShape : undefined}
         >
           {state.shapes.map((shape) => (
-            <ShapeView key={shape.id} shape={shape} width={width} />
+            /* Marked shapes fade rather than vanish, so a sweep can be seen
+               before the pointer lifts and can still be cancelled. */
+            <g key={shape.id} data-marked={marked.includes(shape.id) ? '' : undefined}>
+              <ShapeView shape={shape} width={width} />
+            </g>
           ))}
           {draft && <ShapeView shape={draft} width={width} />}
           {/* A trailing bar stands in for a caret while typing. */}

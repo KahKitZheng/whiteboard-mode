@@ -39,6 +39,10 @@
     cursor: default;
   }
 
+  [data-marked] {
+    opacity: 0.25;
+  }
+
   .selection {
     rect {
       fill: none;
