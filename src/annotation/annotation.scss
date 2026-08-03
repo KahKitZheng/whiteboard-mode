@@ -62,17 +62,17 @@
     }
   }
 
-  // Freehand strokes are filled outlines; everything else is stroked.
-  path {
-    fill: #e5484d;
-  }
-
+  /*
+    Nothing here may set fill or stroke to a colour. A shape carries its own,
+    as a presentation attribute — and a CSS rule beats a presentation
+    attribute, so a colour named here would silently override every shape's
+    and there would be no way to tell from the markup.
+  */
   rect,
   ellipse,
   line,
   polyline {
     fill: none;
-    stroke: #e5484d;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
@@ -86,13 +86,11 @@
     border: 0;
     outline: none;
     background: transparent;
-    color: #e5484d;
     font-family: var(--sans);
     // The caret, selection, word deletion and clipboard all come with it.
   }
 
   text {
-    fill: #e5484d;
     font-family: var(--sans);
     dominant-baseline: alphabetic;
   }

@@ -59,7 +59,13 @@ export function TextEditor({ shape, width, onChange, onCommit, onCancel }: Props
         ref={input}
         className="text-input"
         value={shape.text}
-        style={{ fontSize: shape.size * scale, height, lineHeight: `${height}px` }}
+        // Its colour is the shape's, so what you type looks like what you get.
+        style={{
+          fontSize: shape.size * scale,
+          height,
+          lineHeight: `${height}px`,
+          color: shape.color,
+        }}
         onChange={(event) => onChange({ ...shape, text: event.target.value })}
         onKeyDown={onKeyDown}
         onBlur={onCommit}
