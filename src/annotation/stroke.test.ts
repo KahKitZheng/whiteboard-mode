@@ -16,24 +16,24 @@ function extent(path: string): number {
 
 describe('strokePath', () => {
   it('returns nothing for a stroke with no points', () => {
-    expect(strokePath([], REFERENCE_WIDTH)).toBe('')
+    expect(strokePath([], REFERENCE_WIDTH, 9)).toBe('')
   })
 
   it('produces a closed outline, since the stroke is filled not stroked', () => {
-    const path = strokePath(POINTS, REFERENCE_WIDTH)
+    const path = strokePath(POINTS, REFERENCE_WIDTH, 9)
 
     expect(path.startsWith('M ')).toBe(true)
     expect(path.endsWith(' Z')).toBe(true)
   })
 
   it('scales the outline with the surface width', () => {
-    const half = extent(strokePath(POINTS, REFERENCE_WIDTH / 2))
-    const full = extent(strokePath(POINTS, REFERENCE_WIDTH))
+    const half = extent(strokePath(POINTS, REFERENCE_WIDTH / 2, 9))
+    const full = extent(strokePath(POINTS, REFERENCE_WIDTH, 9))
 
     expect(half).toBeCloseTo(full / 2, 0)
   })
 
   it('survives a single-point stroke', () => {
-    expect(() => strokePath([{ x: 10, y: 10 }], REFERENCE_WIDTH)).not.toThrow()
+    expect(() => strokePath([{ x: 10, y: 10 }], REFERENCE_WIDTH, 9)).not.toThrow()
   })
 })

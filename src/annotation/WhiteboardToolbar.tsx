@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { clampToWindow } from './toolbar'
+import { ToolSettings } from './ToolSettings'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './toolbar.scss'
 
@@ -178,6 +179,8 @@ function Bar({ offset, onResize }: BarProps) {
                 </Toolbar.Button>
               ))}
             </ToggleGroup>
+
+            <ToolSettings />
 
             {actions?.hasSelection && (
               <>

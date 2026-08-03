@@ -1,9 +1,16 @@
 import type { Point } from './coords'
 
-/** All coordinates below are reference space, not screen pixels. */
+/** All coordinates and widths below are reference space, not screen pixels. */
+
+/** Shared by everything that is drawn with ink. */
+type Inked = {
+  color: string
+  /** Full stroke width, so a pen stroke and a border of the same number match. */
+  weight: number
+}
 
 /** A shape produced by freehand drawing, stored as its captured input points. */
-export type Stroke = {
+export type Stroke = Inked & {
   id: string
   type: 'stroke'
   points: Point[]
@@ -14,7 +21,7 @@ export type Stroke = {
  * the other. They share a shape so that adding another costs a render branch
  * and nothing else.
  */
-export type Primitive = {
+export type Primitive = Inked & {
   id: string
   type: 'rect' | 'ellipse' | 'line' | 'arrow'
   from: Point
@@ -28,6 +35,7 @@ export type Text = {
   text: string
   /** Cap height in reference space. Without it, text could only be moved. */
   size: number
+  color: string
 }
 
 /**

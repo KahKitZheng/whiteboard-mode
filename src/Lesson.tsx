@@ -1,4 +1,5 @@
 import type { Point } from './annotation/coords'
+import { DEFAULT_STYLE } from './annotation/style'
 import type { Shape } from './annotation/types'
 
 // ponytail: generated rather than thirty hand-typed points. These stand in for
@@ -43,8 +44,8 @@ export const LESSONS: Lesson[] = [
     title: 'Lesson one',
     body: PARAGRAPHS,
     shapes: [
-      { id: 'one-title', type: 'stroke', points: ellipse(215, 120, 195, 58) },
-      { id: 'one-body', type: 'stroke', points: underline(60, 640, 505) },
+      { id: 'one-title', type: 'stroke', points: ellipse(215, 120, 195, 58), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight },
+      { id: 'one-body', type: 'stroke', points: underline(60, 640, 505), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight },
     ],
   },
   {
@@ -52,7 +53,7 @@ export const LESSONS: Lesson[] = [
     title: 'Lesson two',
     body: [...PARAGRAPHS].reverse(),
     shapes: [
-      { id: 'two-body', type: 'stroke', points: underline(60, 900, 330) },
+      { id: 'two-body', type: 'stroke', points: underline(60, 900, 330), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight },
     ],
   },
 ]

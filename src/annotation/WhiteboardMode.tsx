@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { DEFAULT_STYLE, type Style } from './style'
 
 export type Tool =
   | 'select'
@@ -17,6 +18,9 @@ export type SurfaceActions = {
   clear: () => void
   canUndo: boolean
   hasSelection: boolean
+  /** What the selected shape looks like, so the toolbar can show its settings. */
+  selectedStyle: Partial<Style> | null
+  restyleSelected: (patch: Partial<Style>) => void
   removeSelected: () => void
   bringToFront: () => void
   sendToBack: () => void
@@ -35,6 +39,9 @@ type WhiteboardMode = {
   setActive: (active: boolean) => void
   tool: Tool
   setTool: (tool: Tool) => void
+  /** What the next shape will look like. */
+  style: Style
+  setStyle: (patch: Partial<Style>) => void
   /** The surface toolbar actions apply to — the last one touched. */
   current: string | null
   claim: (surfaceId: string) => void
@@ -47,10 +54,16 @@ const WhiteboardModeContext = createContext<WhiteboardMode | null>(null)
 export function WhiteboardModeProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState(false)
   const [tool, setTool] = useState<Tool>('pen')
+  const [style, setWholeStyle] = useState<Style>(DEFAULT_STYLE)
   const [current, setCurrent] = useState<string | null>(null)
   const [published, setPublished] = useState<Record<string, SurfaceActions>>({})
 
   const claim = useCallback((surfaceId: string) => setCurrent(surfaceId), [])
+
+  const setStyle = useCallback(
+    (patch: Partial<Style>) => setWholeStyle((current) => ({ ...current, ...patch })),
+    [],
+  )
 
   const publish = useCallback((surfaceId: string, actions: SurfaceActions | null) => {
     setPublished((all) => {
@@ -68,12 +81,14 @@ export function WhiteboardModeProvider({ children }: { children: ReactNode }) {
       setActive,
       tool,
       setTool,
+      style,
+      setStyle,
       current,
       claim,
       actions: current ? (published[current] ?? null) : null,
       publish,
     }),
-    [active, tool, current, published, claim, publish],
+    [active, tool, style, setStyle, current, published, claim, publish],
   )
 
   return <WhiteboardModeContext.Provider value={mode}>{children}</WhiteboardModeContext.Provider>

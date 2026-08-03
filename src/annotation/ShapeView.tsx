@@ -3,18 +3,16 @@ import { strokePath } from './stroke'
 import { Timer } from './Timer'
 import type { Shape } from './types'
 
-const LINE_WIDTH = 4
-const ARROWHEAD = 18
+const ARROWHEAD = 4
 
 /** One render branch per shape type — the only place shape types are drawn. */
 export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
   const scale = scaleFor(width)
   const at = (point: Point): Point => ({ x: point.x * scale, y: point.y * scale })
-  const lineWidth = LINE_WIDTH * scale
 
   switch (shape.type) {
     case 'stroke':
-      return <path d={strokePath(shape.points, width)} />
+      return <path d={strokePath(shape.points, width, shape.weight)} fill={shape.color} />
 
     case 'rect': {
       const from = at(shape.from)
@@ -25,7 +23,8 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
           y={Math.min(from.y, to.y)}
           width={Math.abs(to.x - from.x)}
           height={Math.abs(to.y - from.y)}
-          strokeWidth={lineWidth}
+          stroke={shape.color}
+          strokeWidth={shape.weight * scale}
         />
       )
     }
@@ -39,7 +38,8 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
           cy={(from.y + to.y) / 2}
           rx={Math.abs(to.x - from.x) / 2}
           ry={Math.abs(to.y - from.y) / 2}
-          strokeWidth={lineWidth}
+          stroke={shape.color}
+          strokeWidth={shape.weight * scale}
         />
       )
     }
@@ -47,14 +47,25 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
     case 'line': {
       const from = at(shape.from)
       const to = at(shape.to)
-      return <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} strokeWidth={lineWidth} />
+      return (
+        <line
+          x1={from.x}
+          y1={from.y}
+          x2={to.x}
+          y2={to.y}
+          stroke={shape.color}
+          strokeWidth={shape.weight * scale}
+        />
+      )
     }
 
     case 'arrow': {
       const from = at(shape.from)
       const to = at(shape.to)
       const angle = Math.atan2(to.y - from.y, to.x - from.x)
-      const head = ARROWHEAD * scale
+      // Proportional to the line, so a thick arrow gets a head to match rather
+      // than the same small one on every weight.
+      const head = ARROWHEAD * shape.weight * scale
       const wing = (spread: number) => ({
         x: to.x - Math.cos(angle + spread) * head,
         y: to.y - Math.sin(angle + spread) * head,
@@ -63,7 +74,7 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
       const right = wing(-Math.PI / 7)
 
       return (
-        <g strokeWidth={lineWidth}>
+        <g stroke={shape.color} strokeWidth={shape.weight * scale}>
           <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} />
           <polyline points={`${left.x},${left.y} ${to.x},${to.y} ${right.x},${right.y}`} />
         </g>
@@ -73,7 +84,13 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
     case 'text': {
       const at_ = at(shape.at)
       return (
-        <text x={at_.x} y={at_.y} fontSize={shape.size * scale} xmlSpace="preserve">
+        <text
+          x={at_.x}
+          y={at_.y}
+          fontSize={shape.size * scale}
+          fill={shape.color}
+          xmlSpace="preserve"
+        >
           {shape.text}
         </text>
       )
@@ -99,4 +116,3 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
     }
   }
 }
-

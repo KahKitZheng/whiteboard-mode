@@ -15,7 +15,6 @@ import {
   cornerPoint,
   keepAspect,
   oppositeCorner,
-  TEXT_SIZE,
   scaleAbout,
   translate,
   uniformFactors,
@@ -26,6 +25,7 @@ import { SelectionOverlay } from './Selection'
 import { ShapeView } from './ShapeView'
 import { TextEditor } from './TextEditor'
 import { load, save } from './storage'
+import { restyle, styleOf, type Style } from './style'
 import type { Shape, Text } from './types'
 import { useWhiteboardMode } from './WhiteboardMode'
 import './annotation.scss'
@@ -106,7 +106,7 @@ export function AnnotationSurface(props: Props) {
 function Surface({ id, className, initialShapes = [], children }: Props) {
   const element = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
-  const { active, tool, claim, publish } = useWhiteboardMode()
+  const { active, tool, style, claim, publish } = useWhiteboardMode()
 
   // What was saved wins over the seed — the seed only furnishes a surface
   // nobody has annotated yet.
@@ -192,6 +192,11 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     setSelected(null)
   }
 
+  function restyleSelected(patch: Partial<Style>) {
+    if (!selected) return
+    commit((shapes) => shapes.map((shape) => (shape.id === selected ? restyle(shape, patch) : shape)))
+  }
+
   function reorder(toEnd: boolean) {
     if (!selected) return
     commit((shapes) => {
@@ -210,13 +215,15 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       clear,
       canUndo: state.history.length > 0,
       hasSelection: selected !== null,
+      selectedStyle: selectedShape ? styleOf(selectedShape) : null,
+      restyleSelected,
       removeSelected,
       bringToFront: () => reorder(true),
       sendToBack: () => reorder(false),
     })
     return () => publish(id, null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, publish, state.history.length, selected])
+  }, [id, publish, state.history.length, selected, state.shapes])
 
   // A selection only means anything while the select tool is active.
   useEffect(() => {
@@ -315,17 +322,27 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       // Typed straight onto the surface rather than through window.prompt: a
       // native dialog is unreliable while an element is fullscreen, which is
       // exactly where a board spends its time.
-      beginEditing({ id: crypto.randomUUID(), type: 'text', at: point, text: '', size: TEXT_SIZE })
+      beginEditing({
+        id: crypto.randomUUID(),
+        type: 'text',
+        at: point,
+        text: '',
+        size: style.textSize,
+        color: style.color,
+      })
       return
     }
 
     if (inProgress.current.size > 0) return
 
     event.currentTarget.setPointerCapture(event.pointerId)
+    const ink = { color: style.color, weight: style.weight }
     const shape: Shape =
       tool === 'pen'
-        ? { id: crypto.randomUUID(), type: 'stroke', points: [point] }
-        : { id: crypto.randomUUID(), type: tool, from: point, to: point }
+        ? { id: crypto.randomUUID(), type: 'stroke', points: [point], ...ink }
+        : tool === 'timer'
+          ? { id: crypto.randomUUID(), type: 'timer', from: point, to: point }
+          : { id: crypto.randomUUID(), type: tool, from: point, to: point, ...ink }
 
     inProgress.current.set(event.pointerId, shape)
     setDraft(shape)

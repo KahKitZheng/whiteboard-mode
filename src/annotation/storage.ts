@@ -7,7 +7,7 @@ import type { Shape } from './types'
  * sessionStorage for an API is a change to this file and nothing else.
  * See docs/adr/0002-reference-width-normalized-coordinates.md for `refWidth`.
  */
-const VERSION = 2
+const VERSION = 3
 
 export type StoredSurface = {
   version: number

@@ -77,7 +77,13 @@
       outline-offset: 2px;
     }
 
-    &[data-pressed] {
+    /*
+      Hover has to be spelled out again: `button:hover:not(:disabled)` out-
+      specifies a bare `button[data-pressed]`, so without this the active tool
+      turns grey under the pointer — reading as though it were not selected.
+    */
+    &[data-pressed],
+    &[data-pressed]:hover {
       background: var(--accent);
       color: #fff;
     }
@@ -150,6 +156,53 @@
 
   .icon-button {
     padding: 0;
+  }
+
+  /*
+    The settings say what they do rather than naming it: a swatch is its colour,
+    a dot is its thickness, a letter is its size. Across a classroom that reads
+    faster than a word does.
+  */
+  .swatches {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .swatch {
+    min-width: 34px;
+    padding: 0;
+
+    // The pressed state is a ring around the swatch, not the accent fill every
+    // other control uses — filling it would hide the colour being chosen.
+    &[data-pressed] {
+      background: transparent;
+
+      .swatch-dot {
+        box-shadow:
+          0 0 0 2px var(--bg),
+          0 0 0 4px var(--swatch);
+      }
+    }
+  }
+
+  .swatch-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--swatch);
+  }
+
+  .weight-dot {
+    border-radius: 50%;
+    background: currentcolor;
+  }
+
+  .size-letter {
+    font-weight: 600;
+    line-height: 1;
   }
 
   .clear-button {

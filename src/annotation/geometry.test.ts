@@ -16,10 +16,10 @@ import {
 import { shapeAt } from './hit'
 import type { Shape } from './types'
 
-const rect: Shape = { id: 'r', type: 'rect', from: { x: 100, y: 100 }, to: { x: 300, y: 200 } }
-const ellipse: Shape = { id: 'e', type: 'ellipse', from: { x: 0, y: 0 }, to: { x: 200, y: 100 } }
-const arrow: Shape = { id: 'a', type: 'arrow', from: { x: 0, y: 0 }, to: { x: 100, y: 0 } }
-const text: Shape = { id: 't', type: 'text', at: { x: 50, y: 50 }, text: 'hello', size: 28 }
+const rect: Shape = { id: 'r', type: 'rect', from: { x: 100, y: 100 }, to: { x: 300, y: 200 }, color: '#e5484d', weight: 9 }
+const ellipse: Shape = { id: 'e', type: 'ellipse', from: { x: 0, y: 0 }, to: { x: 200, y: 100 }, color: '#e5484d', weight: 9 }
+const arrow: Shape = { id: 'a', type: 'arrow', from: { x: 0, y: 0 }, to: { x: 100, y: 0 }, color: '#e5484d', weight: 9 }
+const text: Shape = { id: 't', type: 'text', at: { x: 50, y: 50 }, text: 'hello', size: 28, color: '#e5484d' }
 
 describe('outline', () => {
   it('closes a rectangle back on its first corner', () => {
@@ -151,6 +151,7 @@ describe('bounds and transforms', () => {
       id: 's',
       type: 'stroke',
       points: [{ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 20, y: 0 }],
+  color: '#e5484d', weight: 9,
     }
     const scaled = scaleAbout(stroke, { x: 0, y: 0 }, 2, 2)
     if (scaled.type !== 'stroke') throw new Error('type changed')
@@ -164,7 +165,7 @@ describe('fixed proportions', () => {
 
   it('only constrains the types that need it', () => {
     const timer: Shape = { id: 'w', type: 'timer', from: { x: 0, y: 0 }, to: { x: 30, y: 20 } }
-    const stroke: Shape = { id: 's', type: 'stroke', points: [{ x: 0, y: 0 }, { x: 5, y: 5 }] }
+    const stroke: Shape = { id: 's', type: 'stroke', points: [{ x: 0, y: 0 }, { x: 5, y: 5 }], color: '#e5484d', weight: 9 }
 
     expect(aspectOf(timer)).toBeCloseTo(RATIO)
     expect(aspectOf(rect)).toBeNull()
@@ -215,7 +216,7 @@ describe('fixed proportions', () => {
 })
 
 describe('resizing text', () => {
-  const label: Shape = { id: 'l', type: 'text', at: { x: 100, y: 100 }, text: 'hello', size: 20 }
+  const label: Shape = { id: 'l', type: 'text', at: { x: 100, y: 100 }, text: 'hello', size: 20, color: '#e5484d' }
 
   it('scales the glyph size, not just the position', () => {
     const bigger = scaleAbout(label, { x: 0, y: 0 }, 2, 2)
@@ -259,24 +260,24 @@ describe('text metrics', () => {
   const at = { x: 0, y: 100 }
 
   it('gives the same height whatever the string says', () => {
-    const tall = bounds({ id: 'a', type: 'text', at, text: 'T', size: 28 })
-    const short = bounds({ id: 'b', type: 'text', at, text: 'o', size: 28 })
-    const descending = bounds({ id: 'c', type: 'text', at, text: 'g', size: 28 })
+    const tall = bounds({ id: 'a', type: 'text', at, text: 'T', size: 28, color: '#e5484d' })
+    const short = bounds({ id: 'b', type: 'text', at, text: 'o', size: 28, color: '#e5484d' })
+    const descending = bounds({ id: 'c', type: 'text', at, text: 'g', size: 28, color: '#e5484d' })
 
     expect(short.maxY - short.minY).toBeCloseTo(tall.maxY - tall.minY)
     expect(descending.maxY - descending.minY).toBeCloseTo(tall.maxY - tall.minY)
   })
 
   it('gives the same height for an empty string', () => {
-    const empty = bounds({ id: 'a', type: 'text', at, text: '', size: 28 })
-    const typed = bounds({ id: 'b', type: 'text', at, text: 'hello', size: 28 })
+    const empty = bounds({ id: 'a', type: 'text', at, text: '', size: 28, color: '#e5484d' })
+    const typed = bounds({ id: 'b', type: 'text', at, text: 'hello', size: 28, color: '#e5484d' })
 
     expect(empty.maxY - empty.minY).toBeCloseTo(typed.maxY - typed.minY)
   })
 
   it('scales the height with the size', () => {
-    const small = bounds({ id: 'a', type: 'text', at, text: 'x', size: 20 })
-    const large = bounds({ id: 'b', type: 'text', at, text: 'x', size: 40 })
+    const small = bounds({ id: 'a', type: 'text', at, text: 'x', size: 20, color: '#e5484d' })
+    const large = bounds({ id: 'b', type: 'text', at, text: 'x', size: 40, color: '#e5484d' })
 
     expect(large.maxY - large.minY).toBeCloseTo((small.maxY - small.minY) * 2)
   })

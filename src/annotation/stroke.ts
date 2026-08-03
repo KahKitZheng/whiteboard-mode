@@ -2,7 +2,6 @@ import getStroke from 'perfect-freehand'
 import { scaleFor, type Point } from './coords'
 
 const OPTIONS = {
-  size: 9,
   thinning: 0.6,
   smoothing: 0.5,
   streamline: 0.5,
@@ -10,17 +9,16 @@ const OPTIONS = {
 
 /**
  * Reference-space input points -> an SVG path describing the stroke's filled
- * outline, in surface pixels. The stroke's own thickness scales with the
- * surface too, otherwise a stroke drawn on a laptop looks like a marker on a
- * 4K panel.
+ * outline, in surface pixels. The thickness scales with the surface too,
+ * otherwise a stroke drawn on a laptop looks like a marker on a 4K panel.
  */
-export function strokePath(points: Point[], surfaceWidth: number): string {
+export function strokePath(points: Point[], surfaceWidth: number, weight: number): string {
   if (points.length === 0) return ''
 
   const scale = scaleFor(surfaceWidth)
   const outline = getStroke(
     points.map((point) => [point.x * scale, point.y * scale]),
-    { ...OPTIONS, size: OPTIONS.size * scale },
+    { ...OPTIONS, size: weight * scale },
   )
 
   return pathFromOutline(outline)
