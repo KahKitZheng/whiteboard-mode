@@ -2,16 +2,33 @@
   position: fixed;
   bottom: 24px;
   left: 50%;
-  transform: translateX(-50%);
+  /*
+    Centering and the dragged-to offset share the `translate` property so that
+    `transform` is left free for the drag in flight — see WhiteboardToolbar.tsx.
+  */
+  translate: calc(-50% + var(--offset-x, 0px)) var(--offset-y, 0px);
   z-index: 2;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px;
+  box-sizing: border-box;
+  /*
+    A fixed element pinned by `left: 50%` gets half the viewport as its
+    containing block, so it shrink-wraps to 640px and wraps the controls onto a
+    second row. max-content is what lets it be as wide as it actually is.
+  */
+  width: max-content;
+  max-width: calc(100vw - 32px);
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--bg);
   box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+
+  &[data-dragging] {
+    cursor: grabbing;
+    box-shadow: 0 16px 40px rgb(0 0 0 / 24%);
+  }
 
   button {
     font: inherit;
@@ -34,8 +51,25 @@
     }
   }
 
+  .drag-handle {
+    color: color-mix(in srgb, var(--text) 55%, transparent);
+    cursor: grab;
+    // Without this the browser claims the drag as a scroll and the toolbar snaps
+    // back — the same reason the annotation layer sets it.
+    touch-action: none;
+  }
+
+  .toolbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    // A narrow window gets a wrapped toolbar rather than a clipped one.
+    flex-wrap: wrap;
+  }
+
   .tools {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
   }
 
@@ -44,11 +78,5 @@
     width: 1px;
     height: 20px;
     background: var(--border);
-  }
-
-  .current-tool {
-    font-size: 15px;
-    padding: 6px 16px;
-    color: var(--accent);
   }
 }
