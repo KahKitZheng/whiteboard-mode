@@ -3,22 +3,45 @@ import { ToggleGroup } from '@base-ui-components/react/toggle-group'
 import { Toolbar } from '@base-ui-components/react/toolbar'
 import { DndContext, useDraggable, type DragEndEvent } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
+import {
+  ArrowUpRight,
+  BringToFront,
+  Circle,
+  Eraser,
+  GripVertical,
+  MousePointer2,
+  Pen,
+  Presentation,
+  SendToBack,
+  Slash,
+  Square,
+  Timer,
+  Trash2,
+  Type,
+  Undo2,
+  type LucideIcon,
+} from 'lucide-react'
 import { useState, type CSSProperties } from 'react'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './toolbar.scss'
 
-const TOOLS: { name: Tool; label: string }[] = [
-  { name: 'select', label: 'Select' },
-  { name: 'pen', label: 'Pen' },
-  { name: 'rect', label: 'Rect' },
-  { name: 'ellipse', label: 'Ellipse' },
-  { name: 'line', label: 'Line' },
-  { name: 'arrow', label: 'Arrow' },
-  { name: 'text', label: 'Text' },
-  { name: 'timer', label: 'Timer' },
-  { name: 'eraser', label: 'Eraser' },
+/**
+ * A glyph rather than a word, because a teacher picks a tool from across the
+ * room — the tool's name is the accessible one, on the button.
+ */
+const TOOLS: { name: Tool; label: string; Icon: LucideIcon }[] = [
+  { name: 'select', label: 'Select', Icon: MousePointer2 },
+  { name: 'pen', label: 'Pen', Icon: Pen },
+  { name: 'rect', label: 'Rectangle', Icon: Square },
+  { name: 'ellipse', label: 'Ellipse', Icon: Circle },
+  { name: 'line', label: 'Line', Icon: Slash },
+  { name: 'arrow', label: 'Arrow', Icon: ArrowUpRight },
+  { name: 'text', label: 'Text', Icon: Type },
+  { name: 'timer', label: 'Timer', Icon: Timer },
+  { name: 'eraser', label: 'Eraser', Icon: Eraser },
 ]
 
+const ICON_SIZE = 22
 const DRAG_ID = 'whiteboard-toolbar'
 
 /**
@@ -82,11 +105,15 @@ function Bar({ offset }: { offset: { x: number; y: number } }) {
         {...listeners}
         {...attributes}
       >
-        <span aria-hidden="true">⠿</span>
+        <GripVertical size={ICON_SIZE} />
       </button>
 
       <Toolbar.Root className="toolbar-controls">
-        <Toolbar.Button render={<Toggle pressed={active} onPressedChange={setActive} />}>
+        <Toolbar.Button
+          className="whiteboard-switch"
+          render={<Toggle pressed={active} onPressedChange={setActive} />}
+        >
+          <Presentation size={ICON_SIZE} />
           Whiteboard
         </Toolbar.Button>
 
@@ -99,28 +126,66 @@ function Bar({ offset }: { offset: { x: number; y: number } }) {
               onValueChange={([next]) => next && setTool(next as Tool)}
               className="tools"
             >
-              {TOOLS.map(({ name, label }) => (
-                <Toolbar.Button key={name} render={<Toggle value={name} />}>
-                  {label}
+              {TOOLS.map(({ name, label, Icon }) => (
+                <Toolbar.Button
+                  key={name}
+                  className="icon-button"
+                  aria-label={label}
+                  title={label}
+                  render={<Toggle value={name} />}
+                >
+                  <Icon size={ICON_SIZE} />
                 </Toolbar.Button>
               ))}
             </ToggleGroup>
 
-            <Toolbar.Separator />
-
             {actions?.hasSelection && (
               <>
-                <Toolbar.Button onClick={() => actions.bringToFront()}>Front</Toolbar.Button>
-                <Toolbar.Button onClick={() => actions.sendToBack()}>Back</Toolbar.Button>
-                <Toolbar.Button onClick={() => actions.removeSelected()}>Delete</Toolbar.Button>
                 <Toolbar.Separator />
+
+                <Toolbar.Button
+                  className="icon-button"
+                  aria-label="Bring to front"
+                  title="Bring to front"
+                  onClick={() => actions.bringToFront()}
+                >
+                  <BringToFront size={ICON_SIZE} />
+                </Toolbar.Button>
+                <Toolbar.Button
+                  className="icon-button"
+                  aria-label="Send to back"
+                  title="Send to back"
+                  onClick={() => actions.sendToBack()}
+                >
+                  <SendToBack size={ICON_SIZE} />
+                </Toolbar.Button>
+                <Toolbar.Button
+                  className="icon-button"
+                  aria-label="Delete shape"
+                  title="Delete shape"
+                  onClick={() => actions.removeSelected()}
+                >
+                  <Trash2 size={ICON_SIZE} />
+                </Toolbar.Button>
               </>
             )}
 
-            <Toolbar.Button disabled={!actions?.canUndo} onClick={() => actions?.undo()}>
-              Undo
+            <Toolbar.Separator />
+
+            <Toolbar.Button
+              className="icon-button"
+              aria-label="Undo"
+              title="Undo"
+              disabled={!actions?.canUndo}
+              onClick={() => actions?.undo()}
+            >
+              <Undo2 size={ICON_SIZE} />
             </Toolbar.Button>
-            <Toolbar.Button onClick={() => actions?.clear()}>Clear</Toolbar.Button>
+            {/* Wiping a surface is rare and cannot be taken back past one undo,
+                so it says so in words rather than hiding behind a glyph. */}
+            <Toolbar.Button className="clear-button" onClick={() => actions?.clear()}>
+              Clear all
+            </Toolbar.Button>
           </>
         )}
       </Toolbar.Root>
