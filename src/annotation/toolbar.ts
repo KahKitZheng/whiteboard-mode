@@ -3,7 +3,7 @@ import type { Style } from './style'
 import type { Tool } from './WhiteboardMode'
 
 /** Icons are one size everywhere: a row that varies reads as a mistake. */
-export const ICON_SIZE = 22
+export const ICON_SIZE = 20
 
 /** Tools that put ink on the surface, and so have a colour and a weight. */
 const INK_TOOLS: Tool[] = ['pen', 'rect', 'ellipse', 'line', 'arrow']

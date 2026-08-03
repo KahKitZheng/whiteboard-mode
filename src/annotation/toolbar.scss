@@ -45,11 +45,16 @@
 
   button {
     font: inherit;
-    font-size: 15px;
-    // 40px square is the floor for a finger on a board, and every control keeps
-    // it — a row of buttons that vary in height reads as a mistake.
-    min-width: 40px;
-    height: 40px;
+    font-size: 14px;
+    /*
+      36px square. Below the 44px a finger nominally wants, but these are
+      pointer-and-stylus controls on a wall-sized panel where everything is
+      already larger than life — and a bar that covers the lesson costs more
+      than a target that needs aiming at. Every control keeps the same square:
+      a row of buttons that vary in height reads as a mistake.
+    */
+    min-width: 36px;
+    height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -177,15 +182,15 @@
   }
 
   .swatch-dot {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: var(--swatch);
   }
 
   .setting-icon {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 
   /*
@@ -290,8 +295,8 @@
   // Secondary to the tools, and there are a lot of them, so they are smaller —
   // still a comfortable target, but not competing with the tool tray.
   .choices button {
-    min-width: 32px;
-    height: 32px;
+    min-width: 30px;
+    height: 30px;
   }
 
   .choices {
@@ -326,14 +331,20 @@
   max-height: calc(100vh - 32px);
   overflow: auto;
 
+  /*
+    Read down a left edge rather than off a centre line: with groups of three
+    and groups of six, centring leaves every row starting somewhere different
+    and there is no line for the eye to follow.
+  */
   .toolbar-controls {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: 6px;
   }
 
   .tools {
     flex-direction: column;
+    align-items: flex-start;
   }
 
   // A word would set the width of the whole column, so the icon speaks for it.
@@ -368,18 +379,19 @@
   }
 
   .setting-label {
-    text-align: center;
+    text-align: left;
+    padding-left: 4px;
   }
 
   .choices {
     flex-wrap: wrap;
-    justify-content: center;
-    width: 112px;
+    justify-content: flex-start;
+    width: 102px;
     box-sizing: border-box;
   }
 
   .drag-handle {
-    align-self: center;
+    align-self: flex-start;
   }
 }
 
