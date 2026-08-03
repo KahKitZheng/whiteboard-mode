@@ -29,9 +29,15 @@ export type Swatch = { name: string; value: string }
 export const COLORS: Swatch[] = [
   { name: 'Red', value: '#e5484d' },
   { name: 'Orange', value: '#f76808' },
+  { name: 'Amber', value: '#ffb224' },
   { name: 'Green', value: '#30a46c' },
+  { name: 'Teal', value: '#12a594' },
+  { name: 'Cyan', value: '#00a2c7' },
   { name: 'Blue', value: '#3e63dd' },
+  { name: 'Indigo', value: '#5b5bd6' },
   { name: 'Violet', value: '#8e4ec6' },
+  { name: 'Pink', value: '#e93d82' },
+  { name: 'Brown', value: '#ad7f58' },
   { name: 'Slate', value: '#8b8d98' },
 ]
 

@@ -56,6 +56,12 @@ export function DraggableBar({
     sit over the margin instead.
   */
   const [vertical, setVertical] = useState(false)
+  /*
+    Which side of the bar the grip hangs off. It sits away from the nearest
+    screen edge, so a bar against the right has its grip on the left where
+    there is room to grab it rather than pressed into the wall.
+  */
+  const [gripOnRight, setGripOnRight] = useState(false)
 
   /*
     The pointer's own position, tracked rather than reconstructed from the
@@ -84,6 +90,7 @@ export function DraggableBar({
       : vertical
 
     setVertical(nextVertical)
+    if (Number.isFinite(droppedAt)) setGripOnRight(droppedAt < innerWidth / 2)
 
     /*
       Turning takes the bar from a wide row to a narrow column, and the offset
@@ -123,6 +130,7 @@ export function DraggableBar({
         offset={offset}
         onResize={reclamp}
         vertical={vertical}
+        gripOnRight={gripOnRight}
       >
         {children}
       </Bar>
@@ -138,10 +146,11 @@ type BarProps = {
   /** Called with the bar's box whenever it, or the window, changes size. */
   onResize: (box: DOMRect) => void
   vertical: boolean
+  gripOnRight: boolean
   children: (vertical: boolean) => ReactNode
 }
 
-function Bar({ id, label, className, offset, onResize, vertical, children }: BarProps) {
+function Bar({ id, label, className, offset, onResize, vertical, gripOnRight, children }: BarProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } =
     useDraggable({ id })
 
@@ -194,6 +203,7 @@ function Bar({ id, label, className, offset, onResize, vertical, children }: Bar
       style={style}
       data-dragging={isDragging ? '' : undefined}
       data-orientation={vertical ? 'vertical' : undefined}
+      data-grip={gripOnRight ? 'right' : 'left'}
     >
       {/*
         The handle sits outside Toolbar.Root on purpose: Base UI gives a toolbar
@@ -212,7 +222,8 @@ function Bar({ id, label, className, offset, onResize, vertical, children }: Bar
         <GripVertical size={ICON_SIZE} />
       </button>
 
-      {children(vertical)}
+      {/* The controls carry the panel's surface; the grip hangs off it. */}
+      <div className="bar-body">{children(vertical)}</div>
     </div>
   )
 }

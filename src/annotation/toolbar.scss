@@ -14,9 +14,8 @@
   translate: calc(-50% + var(--offset-x, 0px)) var(--offset-y, 0px);
   z-index: 2;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px;
+  align-items: flex-start;
+  gap: 2px;
   box-sizing: border-box;
   /*
     A fixed element pinned by `left: 50%` gets half the viewport as its
@@ -26,21 +25,41 @@
   width: max-content;
   // Narrower than a board, wider than a phone.
   max-width: calc(100vw - 32px);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  // Translucent so the lesson content the toolbar covers stays readable behind
-  // it, which matters when there is nowhere clear to drag it to.
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
-  backdrop-filter: blur(14px);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 6%),
-    0 12px 32px -8px rgb(0 0 0 / 18%);
+  /*
+    The surface belongs to the body, not the root: the grip hangs off the
+    outside of it, the way the live board's does, so it costs the controls no
+    room of their own.
+  */
+  .bar-body {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    // Translucent so the lesson content the toolbar covers stays readable
+    // behind it, which matters when there is nowhere clear to drag it to.
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter: blur(14px);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 6%),
+      0 12px 32px -8px rgb(0 0 0 / 18%);
+  }
 
-  &[data-dragging] {
-    cursor: grabbing;
+  // The grip goes to whichever side faces away from the nearest screen edge.
+  &[data-grip='right'] .drag-handle {
+    order: 1;
+  }
+
+  &[data-dragging] .bar-body {
     box-shadow:
       0 1px 2px rgb(0 0 0 / 6%),
       0 24px 48px -12px rgb(0 0 0 / 28%);
+  }
+
+  &[data-dragging] {
+    cursor: grabbing;
   }
 
   button {
@@ -106,8 +125,12 @@
   }
 
   .drag-handle {
+    // Narrow, because outside the panel it is only ever a grip.
+    min-width: 20px;
+    height: 36px;
     padding: 0;
-    color: color-mix(in srgb, var(--text) 55%, transparent);
+    border-radius: 8px;
+    color: color-mix(in srgb, var(--text) 45%, transparent);
     cursor: grab;
     // Without this the browser claims the drag as a scroll and the toolbar snaps
     // back — the same reason the annotation layer sets it.
@@ -324,7 +347,8 @@
   it goes where the lesson is not, and the lesson differs every time.
 */
 .whiteboard-toolbar[data-orientation='vertical'] {
-  flex-direction: column;
+  // The root stays a row so the grip keeps its place beside the panel — it is
+  // the panel's own contents that turn.
   width: max-content;
   max-width: calc(100vw - 32px);
   // Tall bars are clamped like wide ones, so nothing is ever out of reach.
@@ -336,6 +360,11 @@
     and groups of six, centring leaves every row starting somewhere different
     and there is no line for the eye to follow.
   */
+  .bar-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .toolbar-controls {
     flex-direction: column;
     align-items: flex-start;
@@ -393,6 +422,15 @@
   .drag-handle {
     align-self: flex-start;
   }
+}
+
+// Twelve colours wrap rather than run: six across lying down, three standing.
+.whiteboard-toolbar .swatches {
+  max-width: 192px;
+}
+
+.whiteboard-toolbar[data-orientation='vertical'] .swatches {
+  max-width: none;
 }
 
 // Horizontal is the only place the words-and-icon switch shows both.
