@@ -222,3 +222,12 @@
     background: var(--border);
   }
 }
+
+/*
+  The settings bar rides above the main one by default, so the two do not land
+  on top of each other — but it is dragged independently, so a teacher who
+  wants it somewhere else can put it there.
+*/
+.contextual-bar {
+  bottom: calc(24px + 58px + 12px);
+}

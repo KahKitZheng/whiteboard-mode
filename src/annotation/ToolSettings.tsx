@@ -2,10 +2,8 @@ import { Toggle } from '@base-ui-components/react/toggle'
 import { ToggleGroup } from '@base-ui-components/react/toggle-group'
 import { Toolbar } from '@base-ui-components/react/toolbar'
 import { COLORS, TEXT_SIZES, WEIGHTS, type Style } from './style'
-import { useWhiteboardMode, type Tool } from './WhiteboardMode'
-
-/** Tools that put ink on the surface, and so have a colour and a weight. */
-const INK_TOOLS: Tool[] = ['pen', 'rect', 'ellipse', 'line', 'arrow']
+import { settingsFor } from './toolbar'
+import { useWhiteboardMode } from './WhiteboardMode'
 
 /** Largest dot the weight control draws, in px. */
 const DOT = 18
@@ -22,11 +20,7 @@ const DOT = 18
 export function ToolSettings() {
   const { tool, style, setStyle, actions } = useWhiteboardMode()
   const selected = actions?.selectedStyle ?? null
-
-  const inkTool = INK_TOOLS.includes(tool)
-  const showColor = selected ? selected.color !== undefined : inkTool || tool === 'text'
-  const showWeight = selected ? selected.weight !== undefined : inkTool
-  const showTextSize = selected ? selected.textSize !== undefined : tool === 'text'
+  const { color: showColor, weight: showWeight, textSize: showTextSize } = settingsFor(tool, selected)
 
   if (!showColor && !showWeight && !showTextSize) return null
 
@@ -41,8 +35,6 @@ export function ToolSettings() {
 
   return (
     <>
-      <Toolbar.Separator />
-
       {showColor && (
         <ToggleGroup
           value={[color]}
