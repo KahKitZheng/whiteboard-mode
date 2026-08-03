@@ -277,6 +277,9 @@
 
   .setting-label {
     font-size: 11px;
+    // Left to inherit, an 11px label took 26px of line — a quarter of the
+    // panel's height was the words naming the groups.
+    line-height: 1.2;
     font-weight: 500;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -350,18 +353,29 @@
     margin: 4px 0;
   }
 
-  // Each setting becomes a labelled block, and the colours a grid rather than a
-  // long row — six across is what made the horizontal bar wide.
+  /*
+    Each setting becomes a labelled block, and the colours a grid rather than a
+    long row — six across is what made the horizontal bar wide.
+
+    The blocks stretch to a common width so their trays line up. Left to size
+    themselves, the colour grid came out 112px against the others' 104px and
+    the column's edges were ragged.
+  */
   .setting {
     flex-direction: column;
-    align-items: center;
-    gap: 4px;
+    align-items: stretch;
+    gap: 3px;
+  }
+
+  .setting-label {
+    text-align: center;
   }
 
   .choices {
     flex-wrap: wrap;
     justify-content: center;
-    max-width: 108px;
+    width: 112px;
+    box-sizing: border-box;
   }
 
   .drag-handle {
