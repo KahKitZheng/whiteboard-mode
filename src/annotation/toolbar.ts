@@ -1,4 +1,29 @@
 import type { Point } from './coords'
+import type { Style } from './style'
+import type { Tool } from './WhiteboardMode'
+
+/** Icons are one size everywhere: a row that varies reads as a mistake. */
+export const ICON_SIZE = 22
+
+/** Tools that put ink on the surface, and so have a colour and a weight. */
+const INK_TOOLS: Tool[] = ['pen', 'rect', 'ellipse', 'line', 'arrow']
+
+/**
+ * Which settings mean anything right now. A weight means nothing to the text
+ * tool and a text size means nothing to the pen, so showing either would be
+ * offering a control that does nothing.
+ *
+ * A selection wins over the tool: its own settings are what the controls edit.
+ */
+export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
+  const inkTool = INK_TOOLS.includes(tool)
+
+  return {
+    color: selected ? selected.color !== undefined : inkTool || tool === 'text',
+    weight: selected ? selected.weight !== undefined : inkTool,
+    textSize: selected ? selected.textSize !== undefined : tool === 'text',
+  }
+}
 
 export type Box = { left: number; right: number; top: number; bottom: number }
 export type Viewport = { width: number; height: number }
