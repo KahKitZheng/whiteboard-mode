@@ -38,8 +38,12 @@ export function ContextualBar({
       offset={offset}
       onOffsetChange={onOffsetChange}
     >
-      <Toolbar.Root className="toolbar-controls">
-        <ToolSettings />
+      {(vertical) => (
+        <Toolbar.Root
+          className="toolbar-controls"
+          orientation={vertical ? 'vertical' : 'horizontal'}
+        >
+          <ToolSettings />
 
         {actions?.hasSelection && (
           <div className="setting" role="group" aria-label="Shape">
@@ -72,7 +76,8 @@ export function ContextualBar({
             </div>
           </div>
         )}
-      </Toolbar.Root>
+        </Toolbar.Root>
+      )}
     </DraggableBar>
   )
 }

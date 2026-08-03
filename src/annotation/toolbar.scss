@@ -308,3 +308,68 @@
     align-self: flex-end;
   }
 }
+
+/*
+  Dragged near a side, a bar stands up. A row of controls along the bottom sits
+  right where a lesson's text is; the same controls in a column at the edge sit
+  over the margin instead. Which is what makes a floating bar workable at all —
+  it goes where the lesson is not, and the lesson differs every time.
+*/
+.whiteboard-toolbar[data-orientation='vertical'] {
+  flex-direction: column;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  // Tall bars are clamped like wide ones, so nothing is ever out of reach.
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+
+  .toolbar-controls {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tools {
+    flex-direction: column;
+  }
+
+  // A word would set the width of the whole column, so the icon speaks for it.
+  .switch-label {
+    display: none;
+  }
+
+  .whiteboard-switch,
+  .clear-button {
+    min-width: 40px;
+    padding: 0;
+  }
+
+  [role='separator'] {
+    width: 24px;
+    height: 1px;
+    margin: 4px 0;
+  }
+
+  // Each setting becomes a labelled block, and the colours a grid rather than a
+  // long row — six across is what made the horizontal bar wide.
+  .setting {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .choices {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 108px;
+  }
+
+  .drag-handle {
+    align-self: center;
+  }
+}
+
+// Horizontal is the only place the words-and-icon switch shows both.
+.whiteboard-toolbar:not([data-orientation='vertical']) .clear-icon {
+  display: none;
+}

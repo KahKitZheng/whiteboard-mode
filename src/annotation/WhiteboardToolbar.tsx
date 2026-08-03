@@ -11,6 +11,7 @@ import {
   Slash,
   Square,
   Timer,
+  Trash2,
   Type,
   Undo2,
   type LucideIcon,
@@ -75,13 +76,18 @@ export function WhiteboardToolbar() {
         onOffsetChange={setMain}
         onMeasure={measure}
       >
-        <Toolbar.Root className="toolbar-controls">
-          <Toolbar.Button
-            className="whiteboard-switch"
+        {(vertical) => (
+          <Toolbar.Root
+            className="toolbar-controls"
+            orientation={vertical ? 'vertical' : 'horizontal'}
+          >
+            <Toolbar.Button
+              className="whiteboard-switch"
             render={<Toggle pressed={active} onPressedChange={setActive} />}
           >
             <Presentation size={ICON_SIZE} />
-            Whiteboard
+            {/* Hidden when the bar stands up, where a word would set the width. */}
+            <span className="switch-label">Whiteboard</span>
           </Toolbar.Button>
 
           {active && (
@@ -119,12 +125,19 @@ export function WhiteboardToolbar() {
               </Toolbar.Button>
               {/* Wiping a surface is rare and cannot be taken back past one undo,
                   so it says so in words rather than hiding behind a glyph. */}
-              <Toolbar.Button className="clear-button" onClick={() => actions?.clear()}>
-                Clear all
+              <Toolbar.Button
+                className="clear-button"
+                aria-label="Clear all"
+                title="Clear all"
+                onClick={() => actions?.clear()}
+              >
+                <span className="switch-label">Clear all</span>
+                <Trash2 className="clear-icon" size={ICON_SIZE} />
               </Toolbar.Button>
             </>
           )}
-        </Toolbar.Root>
+          </Toolbar.Root>
+        )}
       </DraggableBar>
     </>
   )
