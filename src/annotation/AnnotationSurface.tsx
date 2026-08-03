@@ -329,6 +329,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
         text: '',
         size: style.textSize,
         color: style.color,
+        opacity: style.opacity,
       })
       return
     }
@@ -336,13 +337,23 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     if (inProgress.current.size > 0) return
 
     event.currentTarget.setPointerCapture(event.pointerId)
-    const ink = { color: style.color, weight: style.weight }
+    const ink = { color: style.color, weight: style.weight, opacity: style.opacity }
     const shape: Shape =
       tool === 'pen'
         ? { id: crypto.randomUUID(), type: 'stroke', points: [point], ...ink }
         : tool === 'timer'
-          ? { id: crypto.randomUUID(), type: 'timer', from: point, to: point }
-          : { id: crypto.randomUUID(), type: tool, from: point, to: point, ...ink }
+          ? { id: crypto.randomUUID(), type: 'timer', from: point, to: point, opacity: style.opacity }
+          : {
+              id: crypto.randomUUID(),
+              type: tool,
+              from: point,
+              to: point,
+              ...ink,
+              border: style.border,
+              // A line has no inside, so it is left without one rather than
+              // carrying a fill nothing will ever read.
+              ...(tool === 'rect' || tool === 'ellipse' ? { fill: style.fill } : {}),
+            }
 
     inProgress.current.set(event.pointerId, shape)
     setDraft(shape)

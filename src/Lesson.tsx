@@ -44,8 +44,8 @@ export const LESSONS: Lesson[] = [
     title: 'Lesson one',
     body: PARAGRAPHS,
     shapes: [
-      { id: 'one-title', type: 'stroke', points: ellipse(215, 120, 195, 58), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight },
-      { id: 'one-body', type: 'stroke', points: underline(60, 640, 505), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight },
+      { id: 'one-title', type: 'stroke', points: ellipse(215, 120, 195, 58), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 },
+      { id: 'one-body', type: 'stroke', points: underline(60, 640, 505), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 },
     ],
   },
   {
@@ -53,7 +53,7 @@ export const LESSONS: Lesson[] = [
     title: 'Lesson two',
     body: [...PARAGRAPHS].reverse(),
     shapes: [
-      { id: 'two-body', type: 'stroke', points: underline(60, 900, 330), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight },
+      { id: 'two-body', type: 'stroke', points: underline(60, 900, 330), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 },
     ],
   },
 ]

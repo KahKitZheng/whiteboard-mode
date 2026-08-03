@@ -6,14 +6,18 @@ const horizontal: Shape = {
   id: 'horizontal',
   type: 'stroke',
   points: [{ x: 0, y: 100 }, { x: 200, y: 100 }],
-  color: '#e5484d', weight: 9,
+  color: '#e5484d',
+  weight: 9,
+  opacity: 1,
 }
 
 const vertical: Shape = {
   id: 'vertical',
   type: 'stroke',
   points: [{ x: 100, y: 0 }, { x: 100, y: 200 }],
-  color: '#e5484d', weight: 9,
+  color: '#e5484d',
+  weight: 9,
+  opacity: 1,
 }
 
 describe('shapeAt', () => {
@@ -39,7 +43,7 @@ describe('shapeAt', () => {
   })
 
   it('handles a stroke of a single point', () => {
-    const dot: Shape = { id: 'dot', type: 'stroke', points: [{ x: 50, y: 50 }], color: '#e5484d', weight: 9 }
+    const dot: Shape = { id: 'dot', type: 'stroke', points: [{ x: 50, y: 50 }], color: '#e5484d', weight: 9, opacity: 1 }
 
     expect(shapeAt([dot], { x: 53, y: 53 })?.id).toBe('dot')
     expect(shapeAt([dot], { x: 90, y: 90 })).toBeNull()
@@ -80,7 +84,7 @@ describe('shapesAlong', () => {
 })
 
 describe('shapeNear', () => {
-  const box: Shape = { id: 'box', type: 'rect', from: { x: 0, y: 0 }, to: { x: 200, y: 100 }, color: '#e5484d', weight: 9 }
+  const box: Shape = { id: 'box', type: 'rect', from: { x: 0, y: 0 }, to: { x: 200, y: 100 }, color: '#e5484d', weight: 9, opacity: 1, border: 'solid' }
 
   it('picks a shape from inside it, not just from its edge', () => {
     expect(shapeAt([box], { x: 100, y: 50 })).toBeNull()

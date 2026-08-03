@@ -8,20 +8,44 @@ export const ICON_SIZE = 22
 /** Tools that put ink on the surface, and so have a colour and a weight. */
 const INK_TOOLS: Tool[] = ['pen', 'rect', 'ellipse', 'line', 'arrow']
 
+/** Tools that draw a stroked line, which is what a dash pattern needs. */
+const BORDER_TOOLS: Tool[] = ['rect', 'ellipse', 'line', 'arrow']
+
+/** Tools that draw a closed shape, which is what a fill needs. */
+const FILL_TOOLS: Tool[] = ['rect', 'ellipse']
+
+/** Tools that leave a shape behind, all of which can be made more or less solid. */
+const SHAPE_TOOLS: Tool[] = [...INK_TOOLS, 'text', 'timer']
+
 /**
  * Which settings mean anything right now. A weight means nothing to the text
- * tool and a text size means nothing to the pen, so showing either would be
- * offering a control that does nothing.
+ * tool, a fill means nothing to a line, a dash means nothing to freehand ink —
+ * showing any of them would be offering a control that does nothing.
  *
- * A selection wins over the tool: its own settings are what the controls edit.
+ * A selection wins over the tool: its own settings are what the controls edit,
+ * so what it reports is what gets shown.
  */
 export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
+  if (selected) {
+    return {
+      color: selected.color !== undefined,
+      weight: selected.weight !== undefined,
+      textSize: selected.textSize !== undefined,
+      border: selected.border !== undefined,
+      fill: selected.fill !== undefined,
+      opacity: selected.opacity !== undefined,
+    }
+  }
+
   const inkTool = INK_TOOLS.includes(tool)
 
   return {
-    color: selected ? selected.color !== undefined : inkTool || tool === 'text',
-    weight: selected ? selected.weight !== undefined : inkTool,
-    textSize: selected ? selected.textSize !== undefined : tool === 'text',
+    color: inkTool || tool === 'text',
+    weight: inkTool,
+    textSize: tool === 'text',
+    border: BORDER_TOOLS.includes(tool),
+    fill: FILL_TOOLS.includes(tool),
+    opacity: SHAPE_TOOLS.includes(tool),
   }
 }
 

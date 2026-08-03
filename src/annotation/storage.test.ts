@@ -19,7 +19,7 @@ function fakeStorage(): Storage {
 }
 
 const SHAPES: Shape[] = [
-  { id: 'a', type: 'stroke', points: [{ x: 10, y: 20 }, { x: 30, y: 40 }], color: '#e5484d', weight: 9 },
+  { id: 'a', type: 'stroke', points: [{ x: 10, y: 20 }, { x: 30, y: 40 }], color: '#e5484d', weight: 9, opacity: 1 },
 ]
 
 beforeEach(() => {
@@ -61,7 +61,7 @@ describe('storage', () => {
   it('rescales shapes stored against a different reference width', () => {
     sessionStorage.setItem(
       'wb:old',
-      JSON.stringify({ version: 3, refWidth: REFERENCE_WIDTH / 2, shapes: SHAPES }),
+      JSON.stringify({ version: 4, refWidth: REFERENCE_WIDTH / 2, shapes: SHAPES }),
     )
 
     const restored = load('old')?.[0]
@@ -72,12 +72,12 @@ describe('storage', () => {
 
   it('rescales primitives and text, not just strokes', () => {
     const shapes: Shape[] = [
-      { id: 'r', type: 'rect', from: { x: 10, y: 10 }, to: { x: 50, y: 30 }, color: '#e5484d', weight: 9 },
-      { id: 't', type: 'text', at: { x: 100, y: 200 }, text: 'hello', size: 28, color: '#e5484d' },
+      { id: 'r', type: 'rect', from: { x: 10, y: 10 }, to: { x: 50, y: 30 }, color: '#e5484d', weight: 9, opacity: 1, border: 'solid' },
+      { id: 't', type: 'text', at: { x: 100, y: 200 }, text: 'hello', size: 28, color: '#e5484d', opacity: 1 },
     ]
     sessionStorage.setItem(
       'wb:mixed',
-      JSON.stringify({ version: 3, refWidth: REFERENCE_WIDTH / 2, shapes }),
+      JSON.stringify({ version: 4, refWidth: REFERENCE_WIDTH / 2, shapes }),
     )
 
     const [rect, text] = load('mixed') ?? []

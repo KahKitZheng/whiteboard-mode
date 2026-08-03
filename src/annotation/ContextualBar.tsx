@@ -23,7 +23,9 @@ export function ContextualBar({
 }) {
   const { tool, actions } = useWhiteboardMode()
   const settings = settingsFor(tool, actions?.selectedStyle ?? null)
-  const hasSettings = settings.color || settings.weight || settings.textSize
+  // Every flag, not a hand-picked three — the timer offers only an opacity, and
+  // listing them by name meant it offered nothing at all.
+  const hasSettings = Object.values(settings).some(Boolean)
 
   // Nothing to say, so it says nothing rather than sitting there empty.
   if (!hasSettings && !actions?.hasSelection) return null

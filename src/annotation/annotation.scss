@@ -72,7 +72,13 @@
   ellipse,
   line,
   polyline {
-    fill: none;
+    /*
+      No `fill: none` here. A rectangle's fill is a setting now, and a CSS rule
+      would beat the attribute carrying it — the same way a colour named here
+      once overrode every shape's. Each element states its own fill instead.
+
+      The round cap is what turns a zero-length dash into a dot.
+    */
     stroke-linecap: round;
     stroke-linejoin: round;
   }

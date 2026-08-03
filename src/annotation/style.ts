@@ -1,4 +1,4 @@
-import type { Shape } from './types'
+import type { BorderStyle, FillStyle, Shape } from './types'
 
 /**
  * What a shape looks like, as opposed to where it is. Kept apart from geometry
@@ -15,6 +15,9 @@ export type Style = {
   weight: number
   /** Cap height for text, in reference space. */
   textSize: number
+  border: BorderStyle
+  fill: FillStyle
+  opacity: number
 }
 
 export type Swatch = { name: string; value: string }
@@ -44,46 +47,105 @@ export const TEXT_SIZES: { name: string; value: number }[] = [
   { name: 'Large', value: 46 },
 ]
 
+export const BORDERS: { name: string; value: BorderStyle }[] = [
+  { name: 'Solid', value: 'solid' },
+  { name: 'Dashed', value: 'dashed' },
+  { name: 'Dotted', value: 'dotted' },
+]
+
+export const FILLS: { name: string; value: FillStyle }[] = [
+  { name: 'No fill', value: 'none' },
+  { name: 'Tinted', value: 'tinted' },
+  { name: 'Solid fill', value: 'solid' },
+]
+
+/**
+ * A tinted shape has to stay readable over lesson text, so the lightest option
+ * is a wash rather than a colour.
+ */
+export const TINT_OPACITY = 0.18
+
+export const OPACITIES: { name: string; value: number }[] = [
+  { name: 'Faint', value: 0.25 },
+  { name: 'Half', value: 0.5 },
+  { name: 'Full', value: 1 },
+]
+
 export const DEFAULT_STYLE: Style = {
   color: COLORS[0].value,
   weight: WEIGHTS[1].value,
   textSize: TEXT_SIZES[1].value,
+  border: 'solid',
+  fill: 'none',
+  opacity: 1,
+}
+
+/** Closed shapes are the only ones with an inside to fill. */
+export function canFill(shape: Shape): boolean {
+  return shape.type === 'rect' || shape.type === 'ellipse'
 }
 
 /**
  * Applying a style to a shape that has one. Not every setting means something
- * to every shape — a label has no border weight, a timer draws itself — so a
- * patch only touches what applies.
+ * to every shape — a label has no border, a line has no inside, a timer draws
+ * itself — so a patch only touches what applies.
  */
 export function restyle(shape: Shape, patch: Partial<Style>): Shape {
+  const opacity = patch.opacity === undefined ? {} : { opacity: patch.opacity }
+  const color = patch.color === undefined ? {} : { color: patch.color }
+
   switch (shape.type) {
+    // A widget draws itself; all it takes is how solid it is.
     case 'timer':
-      return shape
+      return { ...shape, ...opacity }
 
     case 'text':
       return {
         ...shape,
-        ...(patch.color === undefined ? {} : { color: patch.color }),
+        ...color,
+        ...opacity,
         ...(patch.textSize === undefined ? {} : { size: patch.textSize }),
+      }
+
+    case 'stroke':
+      return {
+        ...shape,
+        ...color,
+        ...opacity,
+        ...(patch.weight === undefined ? {} : { weight: patch.weight }),
       }
 
     default:
       return {
         ...shape,
-        ...(patch.color === undefined ? {} : { color: patch.color }),
+        ...color,
+        ...opacity,
         ...(patch.weight === undefined ? {} : { weight: patch.weight }),
+        ...(patch.border === undefined ? {} : { border: patch.border }),
+        ...(patch.fill === undefined || !canFill(shape) ? {} : { fill: patch.fill }),
       }
   }
 }
 
 /** What a shape's settings currently are, for the toolbar to show. */
-export function styleOf(shape: Shape): Partial<Style> | null {
+export function styleOf(shape: Shape): Partial<Style> {
   switch (shape.type) {
     case 'timer':
-      return null
+      return { opacity: shape.opacity }
+
     case 'text':
-      return { color: shape.color, textSize: shape.size }
+      return { color: shape.color, textSize: shape.size, opacity: shape.opacity }
+
+    case 'stroke':
+      return { color: shape.color, weight: shape.weight, opacity: shape.opacity }
+
     default:
-      return { color: shape.color, weight: shape.weight }
+      return {
+        color: shape.color,
+        weight: shape.weight,
+        opacity: shape.opacity,
+        border: shape.border,
+        ...(canFill(shape) ? { fill: shape.fill ?? 'none' } : {}),
+      }
   }
 }

@@ -2,7 +2,16 @@ import { Toggle } from '@base-ui-components/react/toggle'
 import { ToggleGroup } from '@base-ui-components/react/toggle-group'
 import { Toolbar } from '@base-ui-components/react/toolbar'
 import type { ReactNode } from 'react'
-import { COLORS, TEXT_SIZES, WEIGHTS, type Style } from './style'
+import {
+  BORDERS,
+  COLORS,
+  FILLS,
+  OPACITIES,
+  TEXT_SIZES,
+  TINT_OPACITY,
+  WEIGHTS,
+  type Style,
+} from './style'
 import { settingsFor } from './toolbar'
 import { useWhiteboardMode } from './WhiteboardMode'
 
@@ -35,9 +44,9 @@ function Setting({ label, children }: { label: string; children: ReactNode }) {
 export function ToolSettings() {
   const { tool, style, setStyle, actions } = useWhiteboardMode()
   const selected = actions?.selectedStyle ?? null
-  const { color: showColor, weight: showWeight, textSize: showTextSize } = settingsFor(tool, selected)
+  const shown = settingsFor(tool, selected)
 
-  if (!showColor && !showWeight && !showTextSize) return null
+  if (!Object.values(shown).some(Boolean)) return null
 
   function apply(patch: Partial<Style>) {
     setStyle(patch)
@@ -47,10 +56,13 @@ export function ToolSettings() {
   const color = selected?.color ?? style.color
   const weight = selected?.weight ?? style.weight
   const textSize = selected?.textSize ?? style.textSize
+  const border = selected?.border ?? style.border
+  const fill = selected?.fill ?? style.fill
+  const opacity = selected?.opacity ?? style.opacity
 
   return (
     <>
-      {showColor && (
+      {shown.color && (
         <Setting label="Colour">
           <ToggleGroup
             value={[color]}
@@ -73,7 +85,76 @@ export function ToolSettings() {
         </Setting>
       )}
 
-      {showWeight && (
+      {shown.fill && (
+        <Setting label="Fill">
+          <ToggleGroup
+            value={[fill]}
+            onValueChange={([next]) => next && apply({ fill: next as Style['fill'] })}
+            className="choices"
+          >
+            {FILLS.map(({ name, value }) => (
+              <Toolbar.Button
+                key={value}
+                className="icon-button"
+                aria-label={name}
+                title={name}
+                render={<Toggle value={value} />}
+              >
+                <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
+                  <rect
+                    x="3"
+                    y="3"
+                    width="14"
+                    height="14"
+                    rx="3"
+                    stroke={color}
+                    strokeWidth="2"
+                    fill={value === 'none' ? 'none' : color}
+                    fillOpacity={value === 'tinted' ? TINT_OPACITY : 1}
+                  />
+                </svg>
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+        </Setting>
+      )}
+
+      {shown.border && (
+        <Setting label="Border">
+          <ToggleGroup
+            value={[border]}
+            onValueChange={([next]) => next && apply({ border: next as Style['border'] })}
+            className="choices"
+          >
+            {BORDERS.map(({ name, value }) => (
+              <Toolbar.Button
+                key={value}
+                className="icon-button"
+                aria-label={name}
+                title={name}
+                render={<Toggle value={value} />}
+              >
+                <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
+                  <line
+                    x1="2"
+                    y1="10"
+                    x2="18"
+                    y2="10"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeDasharray={
+                      value === 'dashed' ? '5 3.5' : value === 'dotted' ? '0 4.5' : undefined
+                    }
+                  />
+                </svg>
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+        </Setting>
+      )}
+
+      {shown.weight && (
         <Setting label="Weight">
           <ToggleGroup
             value={[String(weight)]}
@@ -99,7 +180,7 @@ export function ToolSettings() {
         </Setting>
       )}
 
-      {showTextSize && (
+      {shown.textSize && (
         <Setting label="Size">
           <ToggleGroup
             value={[String(textSize)]}
@@ -122,6 +203,30 @@ export function ToolSettings() {
           </ToggleGroup>
         </Setting>
       )}
+      {shown.opacity && (
+        <Setting label="Opacity">
+          <ToggleGroup
+            value={[String(opacity)]}
+            onValueChange={([next]) => next && apply({ opacity: Number(next) })}
+            className="choices"
+          >
+            {OPACITIES.map(({ name, value }) => (
+              <Toolbar.Button
+                key={value}
+                className="icon-button"
+                aria-label={name}
+                title={name}
+                render={<Toggle value={String(value)} />}
+              >
+                <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
+                  <circle cx="10" cy="10" r="7" fill={color} opacity={value} />
+                </svg>
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+        </Setting>
+      )}
+
     </>
   )
 }

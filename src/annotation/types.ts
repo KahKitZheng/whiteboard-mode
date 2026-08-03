@@ -2,11 +2,19 @@ import type { Point } from './coords'
 
 /** All coordinates and widths below are reference space, not screen pixels. */
 
+/** How a line is drawn. Freehand ink has none of it — a stroke is a filled
+ * outline rather than a stroked path, so a dash pattern has nothing to sit on. */
+export type BorderStyle = 'solid' | 'dashed' | 'dotted'
+
+/** Only closed shapes have an inside to fill. */
+export type FillStyle = 'none' | 'tinted' | 'solid'
+
 /** Shared by everything that is drawn with ink. */
 type Inked = {
   color: string
   /** Full stroke width, so a pen stroke and a border of the same number match. */
   weight: number
+  opacity: number
 }
 
 /** A shape produced by freehand drawing, stored as its captured input points. */
@@ -26,6 +34,9 @@ export type Primitive = Inked & {
   type: 'rect' | 'ellipse' | 'line' | 'arrow'
   from: Point
   to: Point
+  border: BorderStyle
+  /** Closed shapes only — a line has no inside. */
+  fill?: FillStyle
 }
 
 export type Text = {
@@ -36,6 +47,7 @@ export type Text = {
   /** Cap height in reference space. Without it, text could only be moved. */
   size: number
   color: string
+  opacity: number
 }
 
 /**
@@ -48,6 +60,7 @@ export type Widget = {
   type: 'timer'
   from: Point
   to: Point
+  opacity: number
 }
 
 export type Shape = Stroke | Primitive | Text | Widget
