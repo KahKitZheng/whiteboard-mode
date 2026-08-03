@@ -21,7 +21,8 @@ import {
   Undo2,
   type LucideIcon,
 } from 'lucide-react'
-import { useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { clampToWindow } from './toolbar'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './toolbar.scss'
 
@@ -59,17 +60,56 @@ export function WhiteboardToolbar() {
     setOffset((at) => ({ x: at.x + delta.x, y: at.y + delta.y }))
   }
 
+  const reclamp = useCallback((box: DOMRect) => {
+    setOffset((at) => clampToWindow(at, box, { width: innerWidth, height: innerHeight }))
+  }, [])
+
   return (
     <DndContext modifiers={[restrictToWindowEdges]} onDragEnd={onDragEnd}>
-      <Bar offset={offset} />
+      <Bar offset={offset} onResize={reclamp} />
     </DndContext>
   )
 }
 
-function Bar({ offset }: { offset: { x: number; y: number } }) {
+type BarProps = {
+  offset: { x: number; y: number }
+  /** Called with the toolbar's box whenever it, or the window, changes size. */
+  onResize: (box: DOMRect) => void
+}
+
+function Bar({ offset, onResize }: BarProps) {
   const { active, setActive, tool, setTool, actions } = useWhiteboardMode()
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } =
     useDraggable({ id: DRAG_ID })
+
+  // dnd-kit wants the node too, and it only takes one ref.
+  const element = useRef<HTMLDivElement | null>(null)
+  const setRefs = useCallback(
+    (node: HTMLDivElement | null) => {
+      element.current = node
+      setNodeRef(node)
+    },
+    [setNodeRef],
+  )
+
+  useEffect(() => {
+    const node = element.current
+    // Mid-drag the box already carries the drag transform, so folding it into
+    // the offset would count the drag twice. The drop clamps anyway.
+    if (!node || isDragging) return
+
+    function reclamp() {
+      if (node) onResize(node.getBoundingClientRect())
+    }
+
+    const observer = new ResizeObserver(reclamp)
+    observer.observe(node)
+    window.addEventListener('resize', reclamp)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', reclamp)
+    }
+  }, [isDragging, onResize])
 
   /*
     Where it has been dragged to lives in the CSS `translate` property, next to
@@ -87,7 +127,7 @@ function Bar({ offset }: { offset: { x: number; y: number } }) {
   return (
     <div
       className="whiteboard-toolbar"
-      ref={setNodeRef}
+      ref={setRefs}
       style={style}
       data-dragging={isDragging ? '' : undefined}
     >
