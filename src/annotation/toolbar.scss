@@ -1,27 +1,81 @@
+/*
+  Everything below is nested under .whiteboard-toolbar on purpose. The shared
+  `button` rule would otherwise out-specify a bare `.clear-button` and quietly
+  cancel it.
+*/
 .whiteboard-toolbar {
   position: fixed;
   bottom: 24px;
   left: 50%;
-  transform: translateX(-50%);
+  /*
+    Centering and the dragged-to offset share the `translate` property so that
+    `transform` is left free for the drag in flight — see WhiteboardToolbar.tsx.
+  */
+  translate: calc(-50% + var(--offset-x, 0px)) var(--offset-y, 0px);
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 4px;
+  padding: 6px;
+  box-sizing: border-box;
+  /*
+    A fixed element pinned by `left: 50%` gets half the viewport as its
+    containing block, so it shrink-wraps to 640px and wraps the controls onto a
+    second row. max-content is what lets it be as wide as it actually is.
+  */
+  width: max-content;
+  // Narrower than a board, wider than a phone.
+  max-width: calc(100vw - 32px);
   border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+  border-radius: 18px;
+  // Translucent so the lesson content the toolbar covers stays readable behind
+  // it, which matters when there is nowhere clear to drag it to.
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 6%),
+    0 12px 32px -8px rgb(0 0 0 / 18%);
+
+  &[data-dragging] {
+    cursor: grabbing;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 6%),
+      0 24px 48px -12px rgb(0 0 0 / 28%);
+  }
 
   button {
     font: inherit;
     font-size: 15px;
-    padding: 6px 16px;
+    // 40px square is the floor for a finger on a board, and every control keeps
+    // it — a row of buttons that vary in height reads as a mistake.
+    min-width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 12px;
     border: 0;
-    border-radius: 999px;
+    border-radius: 12px;
     background: transparent;
     color: var(--text);
     cursor: pointer;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition:
+        background-color 120ms ease,
+        color 120ms ease;
+    }
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--text) 10%, transparent);
+      color: var(--text-h);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
 
     &[data-pressed] {
       background: var(--accent);
@@ -29,26 +83,89 @@
     }
 
     &:disabled {
-      opacity: 0.4;
+      opacity: 0.35;
       cursor: default;
+    }
+  }
+
+  // Lucide already sets fill, stroke and joins on its own svg; only the
+  // shrinking needs saying, so an icon keeps its size in a tight row.
+  svg {
+    flex: none;
+  }
+
+  .drag-handle {
+    padding: 0;
+    color: color-mix(in srgb, var(--text) 55%, transparent);
+    cursor: grab;
+    // Without this the browser claims the drag as a scroll and the toolbar snaps
+    // back — the same reason the annotation layer sets it.
+    touch-action: none;
+  }
+
+  .toolbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    // A phone gets a wrapped toolbar rather than a clipped one.
+    flex-wrap: wrap;
+  }
+
+  /*
+    The one control that is always there, so it is the one that carries a name.
+    It reads as a chip in both states — grey off, accent-tinted on — rather than
+    filling solid, because a solid accent is how the toolbar says "this is the
+    active tool" and only one thing at a time may claim that.
+  */
+  .whiteboard-switch {
+    font-weight: 500;
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+    color: var(--text-h);
+
+    &[data-pressed] {
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      color: var(--accent);
+    }
+
+    &[data-pressed]:hover {
+      background: color-mix(in srgb, var(--accent) 22%, transparent);
+      color: var(--accent);
     }
   }
 
   .tools {
     display: flex;
-    gap: 4px;
+    align-items: center;
+    // The tray wraps rather than overflowing, otherwise the last tools are
+    // clipped off the edge of a narrow window with no way to reach them.
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 14px;
+    // The tools read as one tray, so picking one looks like a choice between
+    // them rather than nine unrelated buttons.
+    background: color-mix(in srgb, var(--text) 7%, transparent);
+  }
+
+  .icon-button {
+    padding: 0;
+  }
+
+  .clear-button {
+    color: #e5484d;
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, #e5484d 12%, transparent);
+      color: #e5484d;
+    }
   }
 
   // Base UI renders the separator as a div[role="separator"], not an <hr>.
   [role='separator'] {
     width: 1px;
-    height: 20px;
+    height: 24px;
+    margin: 0 4px;
     background: var(--border);
-  }
-
-  .current-tool {
-    font-size: 15px;
-    padding: 6px 16px;
-    color: var(--accent);
   }
 }
