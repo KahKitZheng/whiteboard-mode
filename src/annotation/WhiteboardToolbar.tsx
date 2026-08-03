@@ -20,6 +20,7 @@ import { useCallback, useState } from 'react'
 import { ContextualBar } from './ContextualBar'
 import { DraggableBar, type Offset } from './DraggableBar'
 import { ICON_SIZE } from './toolbar'
+import { ToolGroup, type ToolChoice } from './ToolGroup'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './toolbar.scss'
 
@@ -30,14 +31,20 @@ import './toolbar.scss'
 const TOOLS: { name: Tool; label: string; Icon: LucideIcon }[] = [
   { name: 'select', label: 'Select', Icon: MousePointer2 },
   { name: 'pen', label: 'Pen', Icon: Pen },
+  { name: 'text', label: 'Text', Icon: Type },
+  { name: 'eraser', label: 'Eraser', Icon: Eraser },
+]
+
+/** Siblings of each other, rather than of the pen. */
+const SHAPES: ToolChoice[] = [
   { name: 'rect', label: 'Rectangle', Icon: Square },
   { name: 'ellipse', label: 'Ellipse', Icon: Circle },
   { name: 'line', label: 'Line', Icon: Slash },
   { name: 'arrow', label: 'Arrow', Icon: ArrowUpRight },
-  { name: 'text', label: 'Text', Icon: Type },
-  { name: 'timer', label: 'Timer', Icon: Timer },
-  { name: 'eraser', label: 'Eraser', Icon: Eraser },
 ]
+
+/** A timer is not a drawing tool; it only shares the tray with them. */
+const WIDGETS: ToolChoice[] = [{ name: 'timer', label: 'Timer', Icon: Timer }]
 
 /**
  * The controls a teacher reaches for constantly: which tool, and undo. Anything
@@ -94,23 +101,47 @@ export function WhiteboardToolbar() {
             <>
               <Toolbar.Separator />
 
-              <ToggleGroup
-                value={[tool]}
-                onValueChange={([next]) => next && setTool(next as Tool)}
-                className="tools"
-              >
-                {TOOLS.map(({ name, label, Icon }) => (
-                  <Toolbar.Button
-                    key={name}
-                    className="icon-button"
-                    aria-label={label}
-                    title={label}
-                    render={<Toggle value={name} />}
-                  >
-                    <Icon size={ICON_SIZE} />
-                  </Toolbar.Button>
-                ))}
-              </ToggleGroup>
+              <div className="tools">
+                <ToggleGroup
+                  value={[tool]}
+                  onValueChange={([next]) => next && setTool(next as Tool)}
+                  className="tool-toggles"
+                >
+                  {TOOLS.slice(0, 2).map(({ name, label, Icon }) => (
+                    <Toolbar.Button
+                      key={name}
+                      className="icon-button"
+                      aria-label={label}
+                      title={label}
+                      render={<Toggle value={name} />}
+                    >
+                      <Icon size={ICON_SIZE} />
+                    </Toolbar.Button>
+                  ))}
+                </ToggleGroup>
+
+                <ToolGroup label="Shapes" choices={SHAPES} />
+
+                <ToggleGroup
+                  value={[tool]}
+                  onValueChange={([next]) => next && setTool(next as Tool)}
+                  className="tool-toggles"
+                >
+                  {TOOLS.slice(2).map(({ name, label, Icon }) => (
+                    <Toolbar.Button
+                      key={name}
+                      className="icon-button"
+                      aria-label={label}
+                      title={label}
+                      render={<Toggle value={name} />}
+                    >
+                      <Icon size={ICON_SIZE} />
+                    </Toolbar.Button>
+                  ))}
+                </ToggleGroup>
+
+                <ToolGroup label="Widgets" choices={WIDGETS} />
+              </div>
 
               <Toolbar.Separator />
 
