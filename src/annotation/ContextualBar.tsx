@@ -40,34 +40,35 @@ export function ContextualBar({
         <ToolSettings />
 
         {actions?.hasSelection && (
-          <>
-            {hasSettings && <Toolbar.Separator />}
-
-            <Toolbar.Button
-              className="icon-button"
-              aria-label="Bring to front"
-              title="Bring to front"
-              onClick={() => actions.bringToFront()}
-            >
-              <BringToFront size={ICON_SIZE} />
-            </Toolbar.Button>
-            <Toolbar.Button
-              className="icon-button"
-              aria-label="Send to back"
-              title="Send to back"
-              onClick={() => actions.sendToBack()}
-            >
-              <SendToBack size={ICON_SIZE} />
-            </Toolbar.Button>
-            <Toolbar.Button
-              className="icon-button"
-              aria-label="Delete shape"
-              title="Delete shape"
-              onClick={() => actions.removeSelected()}
-            >
-              <Trash2 size={ICON_SIZE} />
-            </Toolbar.Button>
-          </>
+          <div className="setting" role="group" aria-label="Shape">
+            <span className="setting-label">Shape</span>
+            <div className="choices">
+              <Toolbar.Button
+                className="icon-button"
+                aria-label="Bring to front"
+                title="Bring to front"
+                onClick={() => actions.bringToFront()}
+              >
+                <BringToFront size={ICON_SIZE} />
+              </Toolbar.Button>
+              <Toolbar.Button
+                className="icon-button"
+                aria-label="Send to back"
+                title="Send to back"
+                onClick={() => actions.sendToBack()}
+              >
+                <SendToBack size={ICON_SIZE} />
+              </Toolbar.Button>
+              <Toolbar.Button
+                className="icon-button"
+                aria-label="Delete shape"
+                title="Delete shape"
+                onClick={() => actions.removeSelected()}
+              >
+                <Trash2 size={ICON_SIZE} />
+              </Toolbar.Button>
+            </div>
+          </div>
         )}
       </Toolbar.Root>
     </DraggableBar>

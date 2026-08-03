@@ -18,6 +18,8 @@ type Props = {
   */
   offset: Offset
   onOffsetChange: (offset: Offset) => void
+  /** Called with the bar's box whenever it changes, for anything stacked on it. */
+  onMeasure?: (box: DOMRect) => void
   children: ReactNode
 }
 
@@ -27,16 +29,25 @@ type Props = {
  * teacher can decide. Clamped to the window, so there is no off-screen
  * position to recover from.
  */
-export function DraggableBar({ id, label, className, offset, onOffsetChange, children }: Props) {
+export function DraggableBar({
+  id,
+  label,
+  className,
+  offset,
+  onOffsetChange,
+  onMeasure,
+  children,
+}: Props) {
   function onDragEnd({ delta }: DragEndEvent) {
     onOffsetChange({ x: offset.x + delta.x, y: offset.y + delta.y })
   }
 
   const reclamp = useCallback(
     (box: DOMRect) => {
+      onMeasure?.(box)
       onOffsetChange(clampToWindow(offset, box, { width: innerWidth, height: innerHeight }))
     },
-    [offset, onOffsetChange],
+    [offset, onOffsetChange, onMeasure],
   )
 
   return (

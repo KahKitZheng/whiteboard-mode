@@ -229,5 +229,53 @@
   wants it somewhere else can put it there.
 */
 .contextual-bar {
-  bottom: calc(24px + 58px + 12px);
+  bottom: calc(24px + var(--main-bar-height, 58px) + 12px);
+  /*
+    Bounded so the groups wrap onto rows rather than growing one very long
+    line. Border, fill and opacity are still to come; at six groups a single
+    row would be wider than the tool tray it sits above.
+  */
+  max-width: min(560px, calc(100vw - 32px));
+
+  .toolbar-controls {
+    align-items: flex-start;
+    gap: 4px 12px;
+  }
+
+  /*
+    A named group of choices. The name is what makes wrapping survivable: once
+    the groups sit on more than one row, an unlabelled run of three dots beside
+    a run of three letters is a puzzle rather than a control.
+  */
+  .setting {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .setting-label {
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text) 65%, transparent);
+  }
+
+  .choices {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 14px;
+    // Each group reads as one tray, so a choice looks like a choice between
+    // its own options rather than among everything on the bar.
+    background: color-mix(in srgb, var(--text) 7%, transparent);
+  }
+
+  // The drag handle is not a setting, so it lines up with the controls rather
+  // than with their labels.
+  .drag-handle {
+    align-self: flex-end;
+  }
 }
