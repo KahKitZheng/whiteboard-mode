@@ -42,7 +42,8 @@
   // The grip is centred against the panel it holds, not hung off its first row —
   // a toolbar that wraps onto two rows left the handle floating at the top.
   align-items: center;
-  gap: 6px;
+  // The grip is part of the panel, not a thing parked next to it.
+  gap: 0;
   box-sizing: border-box;
   /*
     A fixed element pinned by `left: 50%` gets half the viewport as its
@@ -68,6 +69,8 @@
     gap: 2px;
     padding: 5px;
     box-sizing: border-box;
+    // Square where the grip meets it; the grip carries that side's corners.
+    border-radius: 0 16px 16px 0;
   }
 
   &[data-dragging] .bar-body {
@@ -153,23 +156,40 @@
   }
 
   /*
-    The grip gets a surface of its own, the way the live board's does. Outside
-    the panel it would otherwise be six dots lying directly on the lesson, and
-    against a photograph there is no telling whether they are part of it.
+    The grip stays outside the controls — it costs them no room that way — but
+    joined to them, sharing an edge and the panel's own surface. Set apart with
+    a gap it read as six dots lying loose on the lesson, and against a
+    photograph there was no telling whether they were part of it.
+
+    So it takes the corners on its side, squares the join, and runs the full
+    height of whatever it is holding: the two together are one rounded panel
+    with a grip end, not a button beside a bar.
   */
   .drag-handle {
-    @include surface;
-
-    border-radius: 10px;
-    min-width: 28px;
-    width: 28px;
-    height: 28px;
+    align-self: stretch;
+    min-width: 26px;
+    width: 26px;
+    height: auto;
     padding: 0;
+    border-radius: 16px 0 0 16px;
+    background: var(--bg);
     color: color-mix(in srgb, var(--text) 70%, transparent);
     cursor: grab;
+    // Cast away from the join, so the grip's own shadow does not fall across
+    // the panel it is attached to and draw the seam it is meant to hide.
+    box-shadow: -6px 0 16px -6px rgb(0 0 0 / 12%);
     // Without this the browser claims the drag as a scroll and the toolbar snaps
     // back — the same reason the annotation layer sets it.
     touch-action: none;
+
+    // Three sides only: the hairline stops at the join rather than ruling a
+    // line down the middle of the panel.
+    @media (prefers-color-scheme: dark) {
+      box-shadow:
+        inset 0 1px 0 var(--border),
+        inset 1px 0 0 var(--border),
+        inset 0 -1px 0 var(--border);
+    }
 
     &:hover {
       color: var(--text-h);
@@ -444,6 +464,8 @@
   .bar-body {
     flex-direction: column;
     align-items: stretch;
+    // The grip is underneath now, so it is the bottom corners it carries.
+    border-radius: 16px 16px 0 0;
   }
 
   .toolbar-controls {
@@ -508,6 +530,15 @@
     min-width: 0;
     width: auto;
     height: 24px;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 6px 16px -6px rgb(0 0 0 / 12%);
+
+    @media (prefers-color-scheme: dark) {
+      box-shadow:
+        inset 1px 0 0 var(--border),
+        inset -1px 0 0 var(--border),
+        inset 0 -1px 0 var(--border);
+    }
   }
 }
 
