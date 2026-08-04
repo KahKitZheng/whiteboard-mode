@@ -16,7 +16,7 @@ import {
   Undo2,
   type LucideIcon,
 } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { ContextualBar } from './ContextualBar'
 import { DraggableBar, type Offset } from './DraggableBar'
 import { ICON_SIZE } from './toolbar'
@@ -62,15 +62,6 @@ export function WhiteboardToolbar() {
   // selection returns to where it was put.
   const [contextual, setContextual] = useState<Offset>({ x: 0, y: 0 })
 
-  /*
-    The contextual bar rests above this one, so it has to know how tall this one
-    actually is. A fixed number was wrong the moment the toolbar wrapped onto a
-    second row: it sat 58px up, inside a bar three rows tall.
-  */
-  const measure = useCallback((box: DOMRect) => {
-    document.documentElement.style.setProperty('--main-bar-height', `${box.height}px`)
-  }, [])
-
   return (
     <>
       {active && <ContextualBar offset={contextual} onOffsetChange={setContextual} />}
@@ -81,7 +72,6 @@ export function WhiteboardToolbar() {
         className="whiteboard-toolbar"
         offset={main}
         onOffsetChange={setMain}
-        onMeasure={measure}
       >
         {(vertical) => (
           <Toolbar.Root

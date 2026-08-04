@@ -14,7 +14,9 @@
   translate: calc(-50% + var(--offset-x, 0px)) var(--offset-y, 0px);
   z-index: 2;
   display: flex;
-  align-items: flex-start;
+  // The grip is centred against the panel it holds, not hung off its first row —
+  // a toolbar that wraps onto two rows left the handle floating at the top.
+  align-items: center;
   gap: 2px;
   box-sizing: border-box;
   /*
@@ -45,11 +47,6 @@
     box-shadow:
       0 1px 2px rgb(0 0 0 / 6%),
       0 12px 32px -8px rgb(0 0 0 / 18%);
-  }
-
-  // The grip goes to whichever side faces away from the nearest screen edge.
-  &[data-grip='right'] .drag-handle {
-    order: 1;
   }
 
   &[data-dragging] .bar-body {
@@ -281,24 +278,21 @@
 }
 
 /*
-  The settings bar rides above the main one by default, so the two do not land
-  on top of each other — but it is dragged independently, so a teacher who
-  wants it somewhere else can put it there.
+  A narrow column in the low left corner, clear of the centred tool tray. It is
+  pinned by its bottom rather than its top, so the settings grow upward as they
+  are added and the end a teacher reaches for stays at the height it was — the
+  top of a wall-mounted board is the one place a teacher cannot comfortably get
+  to mid-lesson.
+
+  Still dragged independently, so a teacher whose lesson lives in that corner
+  can put it somewhere else.
 */
 .contextual-bar {
-  bottom: calc(24px + var(--main-bar-height, 58px) + 12px);
-  /*
-    Bounded so the groups wrap onto rows rather than growing one very long
-    line. Border, fill and opacity are still to come; at six groups a single
-    row would be wider than the tool tray it sits above.
-  */
-  /*
-    Wider than it is tall on purpose. Pinned to the bottom, a bar covers
-    whatever is behind it — a wide, short one covers a strip of the lesson, a
-    tall one covers a paragraph. So the groups run along a single row for as
-    long as they fit, and only wrap when they truly cannot.
-  */
-  max-width: min(1180px, calc(100vw - 32px));
+  bottom: 24px;
+  left: 24px;
+  // Overrides the main bar's centring: this one is anchored to the corner, so
+  // there is no -50% to carry.
+  translate: var(--offset-x, 0px) var(--offset-y, 0px);
 
   .toolbar-controls {
     align-items: center;
@@ -350,12 +344,6 @@
     // its own options rather than among everything on the bar.
     background: color-mix(in srgb, var(--text) 7%, transparent);
   }
-
-  // The drag handle is not a setting, so it lines up with the controls rather
-  // than with their labels.
-  .drag-handle {
-    align-self: flex-end;
-  }
 }
 
 /*
@@ -365,8 +353,14 @@
   it goes where the lesson is not, and the lesson differs every time.
 */
 .whiteboard-toolbar[data-orientation='vertical'] {
-  // The root stays a row so the grip keeps its place beside the panel — it is
-  // the panel's own contents that turn.
+  /*
+    The root turns with it, so the grip ends up under the panel rather than
+    beside it. A standing bar is tall, and its top is the part of a wall panel
+    a teacher has to stretch for — the one thing they have to grab to move it
+    belongs at the bottom.
+  */
+  flex-direction: column;
+  align-items: stretch;
   width: max-content;
   max-width: calc(100vw - 32px);
   // Tall bars are clamped like wide ones, so nothing is ever out of reach.
@@ -437,8 +431,12 @@
     box-sizing: border-box;
   }
 
+  // Below the panel, and lying across it: the grip reads as a bar to pull
+  // rather than a column of dots stood on its end.
   .drag-handle {
-    align-self: flex-start;
+    order: 1;
+    min-width: 0;
+    height: 20px;
   }
 }
 

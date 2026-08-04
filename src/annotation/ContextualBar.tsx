@@ -13,6 +13,12 @@ import { useWhiteboardMode } from './WhiteboardMode'
  * for constantly — the tools and undo — stay in the same place and the same
  * size whatever else is going on. It is also the room to grow: settings can be
  * added here without the tool tray getting any wider.
+ *
+ * A column at the low left, and a column wherever it is dragged to. Its
+ * contents come and go with the selection, so a panel that also changed shape
+ * with its position would move every control it holds twice over — and the
+ * settings a teacher is picking from are the ones they are already reaching
+ * for, which is an argument for keeping them exactly where they were left.
  */
 export function ContextualBar({
   offset,
@@ -37,6 +43,7 @@ export function ContextualBar({
       className="whiteboard-toolbar contextual-bar"
       offset={offset}
       onOffsetChange={onOffsetChange}
+      alwaysVertical
     >
       {(vertical) => (
         <Toolbar.Root

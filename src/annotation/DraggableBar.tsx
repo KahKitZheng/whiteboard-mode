@@ -1,6 +1,6 @@
 import { DndContext, useDraggable, type DragEndEvent } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
-import { GripVertical } from 'lucide-react'
+import { GripHorizontal, GripVertical } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { clampToWindow, ICON_SIZE } from './toolbar'
 
@@ -18,8 +18,12 @@ type Props = {
   */
   offset: Offset
   onOffsetChange: (offset: Offset) => void
-  /** Called with the bar's box whenever it changes, for anything stacked on it. */
-  onMeasure?: (box: DOMRect) => void
+  /**
+   * A bar that is a column wherever it is put, rather than one that stands up
+   * near an edge. A settings panel that changed shape as it was dragged would
+   * move every control it holds; the tool tray can afford that, it cannot.
+   */
+  alwaysVertical?: boolean
   /** Given the orientation, because Base UI needs telling as well as CSS. */
   children: (vertical: boolean) => ReactNode
 }
@@ -47,7 +51,7 @@ export function DraggableBar({
   className,
   offset,
   onOffsetChange,
-  onMeasure,
+  alwaysVertical = false,
   children,
 }: Props) {
   /*
@@ -55,13 +59,8 @@ export function DraggableBar({
     right where a lesson's text is; the same controls in a column at the edge
     sit over the margin instead.
   */
-  const [vertical, setVertical] = useState(false)
-  /*
-    Which side of the bar the grip hangs off. It sits away from the nearest
-    screen edge, so a bar against the right has its grip on the left where
-    there is room to grab it rather than pressed into the wall.
-  */
-  const [gripOnRight, setGripOnRight] = useState(false)
+  const [standing, setStanding] = useState(false)
+  const vertical = alwaysVertical || standing
 
   /*
     The pointer's own position, tracked rather than reconstructed from the
@@ -85,12 +84,12 @@ export function DraggableBar({
     window.removeEventListener('pointermove', trackPointer)
 
     const droppedAt = pointerX.current ?? (activatorEvent as PointerEvent).clientX + delta.x
-    const nextVertical = Number.isFinite(droppedAt)
-      ? droppedAt < innerWidth * EDGE_FRACTION || droppedAt > innerWidth * (1 - EDGE_FRACTION)
-      : vertical
+    const nextStanding =
+      alwaysVertical || !Number.isFinite(droppedAt)
+        ? standing
+        : droppedAt < innerWidth * EDGE_FRACTION || droppedAt > innerWidth * (1 - EDGE_FRACTION)
 
-    setVertical(nextVertical)
-    if (Number.isFinite(droppedAt)) setGripOnRight(droppedAt < innerWidth / 2)
+    setStanding(nextStanding)
 
     /*
       Turning takes the bar from a wide row to a narrow column, and the offset
@@ -99,7 +98,7 @@ export function DraggableBar({
       on where it was actually dropped; the clamp then pulls it fully on screen.
     */
     onOffsetChange({
-      x: nextVertical === vertical ? offset.x + delta.x : droppedAt - innerWidth / 2,
+      x: nextStanding === standing ? offset.x + delta.x : droppedAt - innerWidth / 2,
       y: offset.y + delta.y,
     })
   }
@@ -110,10 +109,9 @@ export function DraggableBar({
 
   const reclamp = useCallback(
     (box: DOMRect) => {
-      onMeasure?.(box)
       onOffsetChange(clampToWindow(offset, box, { width: innerWidth, height: innerHeight }))
     },
-    [offset, onOffsetChange, onMeasure],
+    [offset, onOffsetChange],
   )
 
   return (
@@ -130,7 +128,6 @@ export function DraggableBar({
         offset={offset}
         onResize={reclamp}
         vertical={vertical}
-        gripOnRight={gripOnRight}
       >
         {children}
       </Bar>
@@ -146,11 +143,10 @@ type BarProps = {
   /** Called with the bar's box whenever it, or the window, changes size. */
   onResize: (box: DOMRect) => void
   vertical: boolean
-  gripOnRight: boolean
   children: (vertical: boolean) => ReactNode
 }
 
-function Bar({ id, label, className, offset, onResize, vertical, gripOnRight, children }: BarProps) {
+function Bar({ id, label, className, offset, onResize, vertical, children }: BarProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } =
     useDraggable({ id })
 
@@ -203,12 +199,16 @@ function Bar({ id, label, className, offset, onResize, vertical, gripOnRight, ch
       style={style}
       data-dragging={isDragging ? '' : undefined}
       data-orientation={vertical ? 'vertical' : undefined}
-      data-grip={gripOnRight ? 'right' : 'left'}
     >
       {/*
         The handle sits outside Toolbar.Root on purpose: Base UI gives a toolbar
         roving arrow-key focus, which would eat the arrow keys dnd-kit's keyboard
         sensor needs to move the panel without a pointer.
+
+        Its place is fixed — left of a row, under a column — rather than moving
+        with the nearest edge. A grip that changes sides is one the teacher has
+        to find again each time, and the top of a standing bar is the hardest
+        part of a wall panel to reach.
       */}
       <button
         type="button"
@@ -219,7 +219,7 @@ function Bar({ id, label, className, offset, onResize, vertical, gripOnRight, ch
         {...listeners}
         {...attributes}
       >
-        <GripVertical size={ICON_SIZE} />
+        {vertical ? <GripHorizontal size={ICON_SIZE} /> : <GripVertical size={ICON_SIZE} />}
       </button>
 
       {/* The controls carry the panel's surface; the grip hangs off it. */}
