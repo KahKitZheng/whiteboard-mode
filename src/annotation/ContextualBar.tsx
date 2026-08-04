@@ -54,7 +54,6 @@ export function ContextualBar({
 
         {actions?.hasSelection && (
           <div className="setting" role="group" aria-label="Shape">
-            <span className="setting-label">Shape</span>
             <div className="choices">
               <Toolbar.Button
                 className="icon-button"

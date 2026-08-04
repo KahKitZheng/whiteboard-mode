@@ -19,14 +19,15 @@ import { useWhiteboardMode } from './WhiteboardMode'
 const DOT = 18
 
 /**
- * A named group of choices. Naming them is what lets the bar wrap: once the
- * groups sit on more than one row, an unlabelled run of three dots beside a
- * run of three letters is a puzzle rather than a control.
+ * A group of choices, told apart by a rule between them rather than a word
+ * above them. In a column this narrow each name cost a line of its own, and
+ * every control here already shows what it does — a swatch is its colour, a
+ * dot is its thickness. The name stays on the group for anyone reading the
+ * panel rather than looking at it.
  */
 function Setting({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="setting" role="group" aria-label={label}>
-      <span className="setting-label">{label}</span>
       {children}
     </div>
   )

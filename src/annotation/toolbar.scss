@@ -1,4 +1,29 @@
 /*
+  One surface for everything that floats over the lesson: the tool pill, the
+  settings panel, the history pill, the grip beside them. Solid rather than
+  frosted, the way the live board's panels are — a blurred panel over a
+  photograph turns into a smear, and these sit over video as often as text.
+
+  The hairline is an inset shadow rather than a border so it costs no layout,
+  and it only appears in the dark theme: a drop shadow has nothing to land on
+  there, and a dark panel on a dark page would dissolve without it.
+*/
+@mixin surface {
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow:
+    0 2px 6px rgb(0 0 0 / 6%),
+    0 12px 32px -8px rgb(0 0 0 / 18%);
+
+  @media (prefers-color-scheme: dark) {
+    box-shadow:
+      inset 0 0 0 1px var(--border),
+      0 2px 6px rgb(0 0 0 / 45%),
+      0 12px 32px -8px rgb(0 0 0 / 60%);
+  }
+}
+
+/*
   Everything below is nested under .whiteboard-toolbar on purpose. The shared
   `button` rule would otherwise out-specify a bare `.clear-button` and quietly
   cancel it.
@@ -17,7 +42,7 @@
   // The grip is centred against the panel it holds, not hung off its first row —
   // a toolbar that wraps onto two rows left the handle floating at the top.
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   box-sizing: border-box;
   /*
     A fixed element pinned by `left: 50%` gets half the viewport as its
@@ -27,31 +52,27 @@
   width: max-content;
   // Narrower than a board, wider than a phone.
   max-width: calc(100vw - 32px);
+
   /*
     The surface belongs to the body, not the root: the grip hangs off the
-    outside of it, the way the live board's does, so it costs the controls no
-    room of their own.
+    outside of it, so it costs the controls no room of their own.
+
+    Positioned, because the history pill floats above it.
   */
   .bar-body {
+    @include surface;
+
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px;
+    gap: 2px;
+    padding: 5px;
     box-sizing: border-box;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    // Translucent so the lesson content the toolbar covers stays readable
-    // behind it, which matters when there is nowhere clear to drag it to.
-    background: color-mix(in srgb, var(--bg) 86%, transparent);
-    backdrop-filter: blur(14px);
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 6%),
-      0 12px 32px -8px rgb(0 0 0 / 18%);
   }
 
   &[data-dragging] .bar-body {
     box-shadow:
-      0 1px 2px rgb(0 0 0 / 6%),
+      0 2px 6px rgb(0 0 0 / 6%),
       0 24px 48px -12px rgb(0 0 0 / 28%);
   }
 
@@ -63,23 +84,23 @@
     font: inherit;
     font-size: 14px;
     /*
-      36px square. Below the 44px a finger nominally wants, but these are
+      34px square. Below the 44px a finger nominally wants, but these are
       pointer-and-stylus controls on a wall-sized panel where everything is
       already larger than life — and a bar that covers the lesson costs more
       than a target that needs aiming at. Every control keeps the same square:
       a row of buttons that vary in height reads as a mistake.
     */
-    min-width: 36px;
-    height: 36px;
+    min-width: 34px;
+    height: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 0 12px;
+    padding: 0 10px;
     border: 0;
-    border-radius: 12px;
+    border-radius: 10px;
     background: transparent;
-    color: var(--text);
+    color: var(--text-h);
     cursor: pointer;
 
     @media (prefers-reduced-motion: no-preference) {
@@ -89,8 +110,7 @@
     }
 
     &:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--text) 10%, transparent);
-      color: var(--text-h);
+      background: color-mix(in srgb, var(--text) 12%, transparent);
     }
 
     &:focus-visible {
@@ -121,25 +141,55 @@
     flex: none;
   }
 
+  /*
+    The grip gets a surface of its own, the way the live board's does. Outside
+    the panel it would otherwise be six dots lying directly on the lesson, and
+    against a photograph there is no telling whether they are part of it.
+  */
   .drag-handle {
-    // Narrow, because outside the panel it is only ever a grip.
-    min-width: 20px;
-    height: 36px;
+    @include surface;
+
+    border-radius: 10px;
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
     padding: 0;
-    border-radius: 8px;
-    color: color-mix(in srgb, var(--text) 45%, transparent);
+    color: color-mix(in srgb, var(--text) 70%, transparent);
     cursor: grab;
     // Without this the browser claims the drag as a scroll and the toolbar snaps
     // back — the same reason the annotation layer sets it.
     touch-action: none;
+
+    &:hover {
+      color: var(--text-h);
+    }
   }
 
   .toolbar-controls {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     // A phone gets a wrapped toolbar rather than a clipped one.
     flex-wrap: wrap;
+  }
+
+  /*
+    Undo and Clear all float in a pill of their own above the tools, which is
+    where the live board keeps them. They undo work rather than make it, so
+    they do not belong in the run of buttons a teacher sweeps along — reaching
+    for the eraser and landing on Clear all is a lesson gone.
+  */
+  .bar-extras {
+    @include surface;
+
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    translate: -50%;
+    display: flex;
+    gap: 2px;
+    padding: 5px;
+    border-radius: 14px;
   }
 
   /*
@@ -150,8 +200,7 @@
   */
   .whiteboard-switch {
     font-weight: 500;
-    background: color-mix(in srgb, var(--text) 8%, transparent);
-    color: var(--text-h);
+    background: color-mix(in srgb, var(--text) 10%, transparent);
 
     &[data-pressed] {
       background: color-mix(in srgb, var(--accent) 14%, transparent);
@@ -164,6 +213,11 @@
     }
   }
 
+  /*
+    No tray behind the tools. With only the active one filled, the buttons read
+    as a set on their own, and a grey panel inside a white one was two surfaces
+    doing the work of one.
+  */
   .tools {
     display: flex;
     align-items: center;
@@ -172,11 +226,6 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 2px;
-    padding: 2px;
-    border-radius: 14px;
-    // The tools read as one tray, so picking one looks like a choice between
-    // them rather than a row of unrelated buttons.
-    background: color-mix(in srgb, var(--text) 7%, transparent);
   }
 
   .tool-toggles {
@@ -192,9 +241,9 @@
 
   .tool-group-caret {
     position: absolute;
-    right: 1px;
-    bottom: 1px;
-    opacity: 0.55;
+    right: 0;
+    bottom: 0;
+    opacity: 0.5;
   }
 
   .icon-button {
@@ -210,18 +259,21 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 2px;
+    // Four to a row, so twelve colours make a block rather than a long line.
+    // Four 30px swatches and the three 2px gaps between them, exactly — a
+    // round 120px here wrapped the fourth colour onto a line of its own.
+    max-width: 126px;
   }
 
   .swatch {
-    min-width: 34px;
+    min-width: 30px;
+    height: 30px;
     padding: 0;
   }
 
   .swatch-dot {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--swatch);
   }
@@ -237,15 +289,25 @@
     filled with the accent the way the tool tray's are: it would paint over the
     very thing being chosen, and a selected opacity became an opaque disc.
 
-    A ring instead. Hover is spelled out again because
-    `button:hover:not(:disabled)` would otherwise out-specify it.
+    A plain grey chip instead, which is what the live board uses. Hover is
+    spelled out again because `button:hover:not(:disabled)` would otherwise
+    out-specify it.
   */
   .choices button {
     &[data-pressed],
     &[data-pressed]:hover {
-      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      background: color-mix(in srgb, var(--text) 16%, transparent);
       color: var(--text-h);
-      box-shadow: inset 0 0 0 2px var(--accent);
+    }
+  }
+
+  // A colour is the one setting a grey chip cannot show, because the chip sits
+  // behind the very thing being chosen. So the swatch takes a ring instead.
+  .swatch {
+    &[data-pressed],
+    &[data-pressed]:hover {
+      background: transparent;
+      box-shadow: inset 0 0 0 2px var(--text-h);
     }
   }
 
@@ -267,14 +329,6 @@
       color: #e5484d;
     }
   }
-
-  // Base UI renders the separator as a div[role="separator"], not an <hr>.
-  [role='separator'] {
-    width: 1px;
-    height: 24px;
-    margin: 0 4px;
-    background: var(--border);
-  }
 }
 
 /*
@@ -294,37 +348,29 @@
   // there is no -50% to carry.
   translate: var(--offset-x, 0px) var(--offset-y, 0px);
 
+  .bar-body {
+    padding: 8px;
+  }
+
   .toolbar-controls {
-    align-items: center;
-    gap: 4px 10px;
+    gap: 8px;
   }
 
   /*
-    A named group of choices. The name is what makes wrapping survivable: once
-    the groups sit on more than one row, an unlabelled run of three dots beside
-    a run of three letters is a puzzle rather than a control.
+    A rule between groups rather than a word above each. The names cost a line
+    apiece in a column this narrow, and every control already shows what it
+    does — the group's name lives on its `aria-label`, where the only reader
+    that needs it will find it.
   */
-  /*
-    The name sits beside its choices rather than above them. Stacked, every
-    group cost a 26px line of its own and the bar stood 162px tall over the
-    lesson; alongside, the same names cost nothing in height.
-  */
-  .setting {
+  .setting + .setting {
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .choices {
     display: flex;
     align-items: center;
-    gap: 6px;
-  }
-
-  .setting-label {
-    font-size: 11px;
-    // Left to inherit, an 11px label took 26px of line — a quarter of the
-    // panel's height was the words naming the groups.
-    line-height: 1.2;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    color: color-mix(in srgb, var(--text) 65%, transparent);
+    gap: 2px;
   }
 
   // Secondary to the tools, and there are a lot of them, so they are smaller —
@@ -332,17 +378,6 @@
   .choices button {
     min-width: 30px;
     height: 30px;
-  }
-
-  .choices {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 2px;
-    border-radius: 14px;
-    // Each group reads as one tray, so a choice looks like a choice between
-    // its own options rather than among everything on the bar.
-    background: color-mix(in srgb, var(--text) 7%, transparent);
   }
 }
 
@@ -369,7 +404,7 @@
 
   /*
     Read down a left edge rather than off a centre line: with groups of three
-    and groups of six, centring leaves every row starting somewhere different
+    and groups of four, centring leaves every row starting somewhere different
     and there is no line for the eye to follow.
   */
   .bar-body {
@@ -379,8 +414,8 @@
 
   .toolbar-controls {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+    align-items: stretch;
+    gap: 8px;
   }
 
   .tools {
@@ -388,101 +423,84 @@
     align-items: flex-start;
   }
 
+  /*
+    Standing up, the history pill comes back into the column. Floated off the
+    side it would hang over whichever screen edge the bar was dragged to, and
+    a pill that is off-screen is worse than one in the wrong order.
+  */
+  .bar-extras {
+    position: static;
+    translate: none;
+    flex-direction: row;
+    justify-content: center;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
   // A word would set the width of the whole column, so the icon speaks for it.
   .switch-label {
     display: none;
   }
 
-  .whiteboard-switch,
-  .clear-button {
+  .whiteboard-switch {
     min-width: 40px;
     padding: 0;
   }
 
-  [role='separator'] {
-    width: 24px;
-    height: 1px;
-    margin: 4px 0;
-  }
-
   /*
-    Each setting becomes a labelled block, and the colours a grid rather than a
-    long row — six across is what made the horizontal bar wide.
-
-    The blocks stretch to a common width so their trays line up. Left to size
-    themselves, the colour grid came out 112px against the others' 104px and
-    the column's edges were ragged.
+    Each setting becomes a block, and the colours a grid rather than a long
+    row — four across is what made the horizontal bar wide.
   */
   .setting {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 3px;
   }
 
-  .setting-label {
-    text-align: left;
-    padding-left: 4px;
-  }
-
   .choices {
     flex-wrap: wrap;
     justify-content: flex-start;
-    width: 102px;
-    box-sizing: border-box;
   }
 
   // Below the panel, and lying across it: the grip reads as a bar to pull
   // rather than a column of dots stood on its end.
   .drag-handle {
     order: 1;
+    align-self: stretch;
     min-width: 0;
-    height: 20px;
+    width: auto;
+    height: 24px;
   }
-}
-
-// Twelve colours wrap rather than run: six across lying down, three standing.
-.whiteboard-toolbar .swatches {
-  max-width: 192px;
-}
-
-.whiteboard-toolbar[data-orientation='vertical'] .swatches {
-  max-width: none;
-}
-
-// Horizontal is the only place the words-and-icon switch shows both.
-.whiteboard-toolbar:not([data-orientation='vertical']) .clear-icon {
-  display: none;
 }
 
 /* A group's members, opened from its button in the tray. */
 .tool-menu {
+  @include surface;
+
   display: flex;
   gap: 2px;
-  padding: 4px;
-  border: 1px solid var(--border);
+  padding: 5px;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  backdrop-filter: blur(14px);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 6%),
-    0 12px 32px -8px rgb(0 0 0 / 18%);
 
   button {
     font: inherit;
-    min-width: 36px;
-    height: 36px;
+    min-width: 34px;
+    height: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: 0;
     border-radius: 10px;
     background: transparent;
-    color: var(--text);
+    color: var(--text-h);
     cursor: pointer;
 
     &:hover {
-      background: color-mix(in srgb, var(--text) 10%, transparent);
-      color: var(--text-h);
+      background: color-mix(in srgb, var(--text) 12%, transparent);
     }
 
     &[data-pressed],

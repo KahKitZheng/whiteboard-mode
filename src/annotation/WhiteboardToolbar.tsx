@@ -89,8 +89,6 @@ export function WhiteboardToolbar() {
 
           {active && (
             <>
-              <Toolbar.Separator />
-
               <div className="tools">
                 <ToggleGroup
                   value={[tool]}
@@ -133,28 +131,30 @@ export function WhiteboardToolbar() {
                 <ToolGroup label="Widgets" choices={WIDGETS} />
               </div>
 
-              <Toolbar.Separator />
-
-              <Toolbar.Button
-                className="icon-button"
-                aria-label="Undo"
-                title="Undo"
-                disabled={!actions?.canUndo}
-                onClick={() => actions?.undo()}
-              >
-                <Undo2 size={ICON_SIZE} />
-              </Toolbar.Button>
-              {/* Wiping a surface is rare and cannot be taken back past one undo,
-                  so it says so in words rather than hiding behind a glyph. */}
-              <Toolbar.Button
-                className="clear-button"
-                aria-label="Clear all"
-                title="Clear all"
-                onClick={() => actions?.clear()}
-              >
-                <span className="switch-label">Clear all</span>
-                <Trash2 className="clear-icon" size={ICON_SIZE} />
-              </Toolbar.Button>
+              {/*
+                Undo and Clear all keep to a pill of their own. They undo work
+                rather than make it, so they stay out of the run of buttons a
+                teacher sweeps along looking for a tool.
+              */}
+              <div className="bar-extras" role="group" aria-label="History">
+                <Toolbar.Button
+                  className="icon-button"
+                  aria-label="Undo"
+                  title="Undo"
+                  disabled={!actions?.canUndo}
+                  onClick={() => actions?.undo()}
+                >
+                  <Undo2 size={ICON_SIZE} />
+                </Toolbar.Button>
+                <Toolbar.Button
+                  className="icon-button clear-button"
+                  aria-label="Clear all"
+                  title="Clear all"
+                  onClick={() => actions?.clear()}
+                >
+                  <Trash2 size={ICON_SIZE} />
+                </Toolbar.Button>
+              </div>
             </>
           )}
           </Toolbar.Root>
