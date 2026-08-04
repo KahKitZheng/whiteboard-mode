@@ -34,7 +34,7 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
     case 'stroke':
       return (
         <path
-          d={strokePath(shape.points, width, shape.weight)}
+          d={strokePath(shape.points, width, shape.weight, shape.highlight)}
           fill={shape.color}
           opacity={shape.opacity}
         />

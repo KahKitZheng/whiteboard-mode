@@ -8,17 +8,29 @@ const OPTIONS = {
 }
 
 /**
+ * A highlighter is a chisel tip, not a nib: it lays down the same width however
+ * fast it is moved. Thinned like a pen, a highlight tapered away at both ends
+ * and the first and last words of the phrase came out barely covered.
+ */
+const HIGHLIGHT_OPTIONS = { ...OPTIONS, thinning: 0 }
+
+/**
  * Reference-space input points -> an SVG path describing the stroke's filled
  * outline, in surface pixels. The thickness scales with the surface too,
  * otherwise a stroke drawn on a laptop looks like a marker on a 4K panel.
  */
-export function strokePath(points: Point[], surfaceWidth: number, weight: number): string {
+export function strokePath(
+  points: Point[],
+  surfaceWidth: number,
+  weight: number,
+  highlight = false,
+): string {
   if (points.length === 0) return ''
 
   const scale = scaleFor(surfaceWidth)
   const outline = getStroke(
     points.map((point) => [point.x * scale, point.y * scale]),
-    { ...OPTIONS, size: weight * scale },
+    { ...(highlight ? HIGHLIGHT_OPTIONS : OPTIONS), size: weight * scale },
   )
 
   return pathFromOutline(outline)

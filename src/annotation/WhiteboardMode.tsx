@@ -4,6 +4,7 @@ import { DEFAULT_STYLE, type Style } from './style'
 export type Tool =
   | 'select'
   | 'pen'
+  | 'highlighter'
   | 'rect'
   | 'ellipse'
   | 'line'
@@ -15,8 +16,10 @@ export type Tool =
 /** What the toolbar can do to a surface. Published by the surface itself. */
 export type SurfaceActions = {
   undo: () => void
+  redo: () => void
   clear: () => void
   canUndo: boolean
+  canRedo: boolean
   hasSelection: boolean
   /** What the selected shape looks like, so the toolbar can show its settings. */
   selectedStyle: Partial<Style> | null

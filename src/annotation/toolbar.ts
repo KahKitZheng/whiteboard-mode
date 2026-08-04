@@ -6,7 +6,7 @@ import type { Tool } from './WhiteboardMode'
 export const ICON_SIZE = 20
 
 /** Tools that put ink on the surface, and so have a colour and a weight. */
-const INK_TOOLS: Tool[] = ['pen', 'rect', 'ellipse', 'line', 'arrow']
+const INK_TOOLS: Tool[] = ['pen', 'highlighter', 'rect', 'ellipse', 'line', 'arrow']
 
 /** Tools that draw a stroked line, which is what a dash pattern needs. */
 const BORDER_TOOLS: Tool[] = ['rect', 'ellipse', 'line', 'arrow']

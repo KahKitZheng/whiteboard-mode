@@ -22,6 +22,13 @@ export type Stroke = Inked & {
   id: string
   type: 'stroke'
   points: Point[]
+  /**
+   * Ink laid over the words rather than beside them: broad, and see-through
+   * enough that the lesson text still reads underneath. A flag on a stroke
+   * rather than a type of its own, because a highlight is drawn, moved, erased
+   * and scaled exactly like any other freehand mark.
+   */
+  highlight?: boolean
 }
 
 /**

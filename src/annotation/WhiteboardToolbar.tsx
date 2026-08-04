@@ -5,9 +5,11 @@ import {
   ArrowUpRight,
   Circle,
   Eraser,
+  Highlighter,
   MousePointer2,
   Pen,
   Presentation,
+  Redo2,
   Slash,
   Square,
   Timer,
@@ -31,8 +33,11 @@ import './toolbar.scss'
 const TOOLS: { name: Tool; label: string; Icon: LucideIcon }[] = [
   { name: 'select', label: 'Select', Icon: MousePointer2 },
   { name: 'pen', label: 'Pen', Icon: Pen },
-  { name: 'text', label: 'Text', Icon: Type },
+  // Next to the pen, because it is one: the same gesture, laid over the words
+  // rather than beside them.
+  { name: 'highlighter', label: 'Highlighter', Icon: Highlighter },
   { name: 'eraser', label: 'Eraser', Icon: Eraser },
+  { name: 'text', label: 'Text', Icon: Type },
 ]
 
 /** Siblings of each other, rather than of the pen. */
@@ -95,7 +100,7 @@ export function WhiteboardToolbar() {
                   onValueChange={([next]) => next && setTool(next as Tool)}
                   className="tool-toggles"
                 >
-                  {TOOLS.slice(0, 2).map(({ name, label, Icon }) => (
+                  {TOOLS.map(({ name, label, Icon }) => (
                     <Toolbar.Button
                       key={name}
                       className="icon-button"
@@ -109,25 +114,6 @@ export function WhiteboardToolbar() {
                 </ToggleGroup>
 
                 <ToolGroup label="Shapes" choices={SHAPES} />
-
-                <ToggleGroup
-                  value={[tool]}
-                  onValueChange={([next]) => next && setTool(next as Tool)}
-                  className="tool-toggles"
-                >
-                  {TOOLS.slice(2).map(({ name, label, Icon }) => (
-                    <Toolbar.Button
-                      key={name}
-                      className="icon-button"
-                      aria-label={label}
-                      title={label}
-                      render={<Toggle value={name} />}
-                    >
-                      <Icon size={ICON_SIZE} />
-                    </Toolbar.Button>
-                  ))}
-                </ToggleGroup>
-
                 <ToolGroup label="Widgets" choices={WIDGETS} />
               </div>
 
@@ -145,6 +131,15 @@ export function WhiteboardToolbar() {
                   onClick={() => actions?.undo()}
                 >
                   <Undo2 size={ICON_SIZE} />
+                </Toolbar.Button>
+                <Toolbar.Button
+                  className="icon-button"
+                  aria-label="Redo"
+                  title="Redo"
+                  disabled={!actions?.canRedo}
+                  onClick={() => actions?.redo()}
+                >
+                  <Redo2 size={ICON_SIZE} />
                 </Toolbar.Button>
                 <Toolbar.Button
                   className="icon-button clear-button"

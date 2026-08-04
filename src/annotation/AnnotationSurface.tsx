@@ -20,6 +20,7 @@ import {
   uniformFactors,
   type Corner,
 } from './geometry'
+import * as timeline from './history'
 import { shapeAt, shapeNear, shapesAlong } from './hit'
 import { SelectionOverlay } from './Selection'
 import { ShapeView } from './ShapeView'
@@ -44,6 +45,18 @@ type Gesture = {
   | { kind: 'move'; origin: Point }
   | { kind: 'resize'; anchor: Point; startCorner: Point }
 )
+
+/**
+ * A highlight starts broader and fainter than the pen it borrows its weight
+ * from. Faint enough that the lesson text reads through it, broad enough to
+ * cover a line of it in one pass.
+ *
+ * ponytail: a flat opacity rather than a multiply blend. Multiply is what makes
+ * two overlapping highlights deepen instead of doubling up, but it turns
+ * invisible on a dark theme — worth doing per-theme if it ever comes up.
+ */
+const HIGHLIGHT_WEIGHT = 3
+const HIGHLIGHT_OPACITY = 0.35
 
 /** Guards a resize against dividing by a zero-width box. */
 function factor(moved: number, original: number): number {
@@ -80,11 +93,6 @@ type Props = {
   children: ReactNode
 }
 
-/** Shapes and their history move together, so undo can never fall out of step. */
-type SurfaceState = {
-  shapes: Shape[]
-  history: Shape[][]
-}
 
 /**
  * An annotatable region, declared by the host app. The annotation layer renders
@@ -110,9 +118,10 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
 
   // What was saved wins over the seed — the seed only furnishes a surface
   // nobody has annotated yet.
-  const [state, setState] = useState<SurfaceState>(() => ({
+  const [state, setState] = useState<timeline.Timeline>(() => ({
     shapes: load(id) ?? initialShapes,
     history: [],
+    future: [],
   }))
 
   // Shapes still being drawn, keyed by pointer. Only one pointer draws at a
@@ -166,20 +175,12 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
   }, [id])
 
   function commit(update: (shapes: Shape[]) => Shape[]) {
-    setState(({ shapes, history }) => ({ shapes: update(shapes), history: [...history, shapes] }))
-  }
-
-  function undo() {
-    setState(({ shapes, history }) =>
-      history.length === 0
-        ? { shapes, history }
-        : { shapes: history[history.length - 1], history: history.slice(0, -1) },
-    )
+    setState((state) => timeline.commit(state, update))
   }
 
   /** Edits mid-gesture: history is pushed once, when the gesture ends. */
   function replace(update: (shapes: Shape[]) => Shape[]) {
-    setState(({ shapes, history }) => ({ shapes: update(shapes), history }))
+    setState((state) => timeline.amend(state, update))
   }
 
   function clear() {
@@ -211,9 +212,11 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
   // buttons know whether there is anything to act on.
   useEffect(() => {
     publish(id, {
-      undo,
+      undo: () => setState(timeline.undo),
+      redo: () => setState(timeline.redo),
       clear,
       canUndo: state.history.length > 0,
+      canRedo: state.future.length > 0,
       hasSelection: selected !== null,
       selectedStyle: selectedShape ? styleOf(selectedShape) : null,
       restyleSelected,
@@ -223,7 +226,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     })
     return () => publish(id, null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, publish, state.history.length, selected, state.shapes])
+  }, [id, publish, state.history.length, state.future.length, selected, state.shapes])
 
   // A selection only means anything while the select tool is active.
   useEffect(() => {
@@ -341,6 +344,18 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     const shape: Shape =
       tool === 'pen'
         ? { id: crypto.randomUUID(), type: 'stroke', points: [point], ...ink }
+        : tool === 'highlighter'
+          ? {
+              id: crypto.randomUUID(),
+              type: 'stroke',
+              points: [point],
+              ...ink,
+              highlight: true,
+              // Broad and see-through, whatever the pen was last set to. The
+              // weight control still moves it from here; this is where it starts.
+              weight: style.weight * HIGHLIGHT_WEIGHT,
+              opacity: HIGHLIGHT_OPACITY,
+            }
         : tool === 'timer'
           ? { id: crypto.randomUUID(), type: 'timer', from: point, to: point, opacity: style.opacity }
           : {
@@ -446,7 +461,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       // One history entry for the whole gesture, not one per pointer move.
       const { before } = gesture.current
       gesture.current = null
-      setState(({ shapes, history }) => ({ shapes, history: [...history, before] }))
+      setState((state) => timeline.record(state, before))
       return
     }
 
