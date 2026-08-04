@@ -109,7 +109,17 @@
         color 120ms ease;
     }
 
-    &:hover:not(:disabled) {
+    /*
+      Base UI keeps a disabled toolbar button focusable, so it marks it
+      `aria-disabled` and `data-disabled` rather than setting the DOM's own
+      `disabled`. Keying off `:disabled` alone, undo sat there at full strength
+      with nothing to undo.
+
+      Wrapped in `:where()` so the two negations weigh nothing. Spelled out
+      plainly they lifted this rule above `button[data-pressed]` below, and the
+      active tool went grey the moment a pointer crossed it.
+    */
+    &:hover:where(:not(:disabled, [data-disabled])) {
       background: color-mix(in srgb, var(--text) 12%, transparent);
     }
 
@@ -129,7 +139,8 @@
       color: #fff;
     }
 
-    &:disabled {
+    &:disabled,
+    &[data-disabled] {
       opacity: 0.35;
       cursor: default;
     }
@@ -174,22 +185,37 @@
   }
 
   /*
-    Undo and Clear all float in a pill of their own above the tools, which is
-    where the live board keeps them. They undo work rather than make it, so
-    they do not belong in the run of buttons a teacher sweeps along — reaching
-    for the eraser and landing on Clear all is a lesson gone.
+    Undo, redo and Clear all sit in a shelf on top of the tools rather than in
+    among them: they undo work rather than make it, and reaching for the eraser
+    and landing on Clear all is a lesson gone.
+
+    Joined to the pill below, not floating over it. A gap made it read as a
+    second, unrelated toolbar that happened to be nearby; sharing an edge says
+    it belongs to this one.
   */
   .bar-extras {
-    @include surface;
-
     position: absolute;
-    bottom: calc(100% + 8px);
+    bottom: 100%;
     left: 50%;
     translate: -50%;
     display: flex;
     gap: 2px;
     padding: 5px;
-    border-radius: 14px;
+    // Square along the join, so the two read as one panel with a step in it.
+    border-radius: 14px 14px 0 0;
+    background: var(--bg);
+    // Cast upward only. A shadow all round would fall across the pill it is
+    // sitting on and draw the seam it is meant to hide.
+    box-shadow: 0 -6px 16px -6px rgb(0 0 0 / 12%);
+
+    @media (prefers-color-scheme: dark) {
+      // Three sides, so the hairline stops at the join rather than ruling a
+      // line between the shelf and the bar.
+      box-shadow:
+        inset 0 1px 0 var(--border),
+        inset 1px 0 0 var(--border),
+        inset -1px 0 0 var(--border);
+    }
   }
 
   /*
@@ -324,7 +350,7 @@
   .clear-button {
     color: #e5484d;
 
-    &:hover:not(:disabled) {
+    &:hover:where(:not(:disabled, [data-disabled])) {
       background: color-mix(in srgb, #e5484d 12%, transparent);
       color: #e5484d;
     }
@@ -357,14 +383,22 @@
   }
 
   /*
-    A rule between groups rather than a word above each. The names cost a line
-    apiece in a column this narrow, and every control already shows what it
-    does — the group's name lives on its `aria-label`, where the only reader
-    that needs it will find it.
+    12px: small enough that the name reads as a heading over its controls
+    rather than as another control, large enough to read from across a
+    classroom. With a name on every group, a rule between them as well would be
+    two separators doing one job.
   */
-  .setting + .setting {
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
+  .setting-label {
+    font-size: 12px;
+    // Left to inherit, a 12px label took 26px of line — a fifth of the panel's
+    // height would be the words naming the groups.
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding-left: 4px;
+    color: color-mix(in srgb, var(--text) 75%, transparent);
   }
 
   .choices {
@@ -424,9 +458,9 @@
   }
 
   /*
-    Standing up, the history pill comes back into the column. Floated off the
-    side it would hang over whichever screen edge the bar was dragged to, and
-    a pill that is off-screen is worse than one in the wrong order.
+    Standing up, the shelf comes back into the column. Kept on top it would
+    hang off whichever screen edge the bar was dragged to, and a control that
+    is off-screen is worse than one in the wrong order.
   */
   .bar-extras {
     position: static;

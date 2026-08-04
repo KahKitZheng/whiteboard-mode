@@ -19,15 +19,16 @@ import { useWhiteboardMode } from './WhiteboardMode'
 const DOT = 18
 
 /**
- * A group of choices, told apart by a rule between them rather than a word
- * above them. In a column this narrow each name cost a line of its own, and
- * every control here already shows what it does — a swatch is its colour, a
- * dot is its thickness. The name stays on the group for anyone reading the
- * panel rather than looking at it.
+ * A named group of choices. Most of these controls show what they do — a
+ * swatch is its colour, a dot is its thickness — but not all of them can:
+ * four discs of decreasing solidity are only obviously *opacity* once
+ * something says so. So the names come back, small enough not to compete with
+ * the controls they head.
  */
 function Setting({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="setting" role="group" aria-label={label}>
+      <span className="setting-label">{label}</span>
       {children}
     </div>
   )
@@ -196,7 +197,7 @@ export function ToolSettings() {
                 title={`${name} text`}
                 render={<Toggle value={String(value)} />}
               >
-                <span className="size-letter" style={{ fontSize: 12 + index * 5 }}>
+                <span className="size-letter" style={{ fontSize: 11 + index * 4 }}>
                   A
                 </span>
               </Toolbar.Button>
@@ -233,5 +234,5 @@ export function ToolSettings() {
 }
 
 function dotSize(index: number): number {
-  return Math.round(DOT * (0.4 + index * 0.3))
+  return Math.round(DOT * (0.35 + index * 0.22))
 }

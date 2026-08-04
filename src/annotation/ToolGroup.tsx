@@ -19,7 +19,10 @@ type Props = {
  * of anything else.
  *
  * The button wears whichever of its tools was last used, so the one a teacher
- * keeps reaching for stays a single press away.
+ * keeps reaching for stays a single press away — and pressing it picks that
+ * tool there and then, rather than only offering the list. Reaching for the
+ * rectangle and getting a menu instead of a rectangle is one press too many
+ * for something done mid-sentence.
  */
 export function ToolGroup({ label, choices }: Props) {
   const { tool, setTool } = useWhiteboardMode()
@@ -42,6 +45,8 @@ export function ToolGroup({ label, choices }: Props) {
         aria-label={label}
         title={label}
         data-pressed={active ? '' : undefined}
+        // The tool is picked as well as the list offered, so one press draws.
+        onClick={() => setTool(showing.name)}
         render={<Popover.Trigger />}
       >
         <showing.Icon size={ICON_SIZE} />

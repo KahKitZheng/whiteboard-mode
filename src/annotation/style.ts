@@ -41,16 +41,23 @@ export const COLORS: Swatch[] = [
   { name: 'Slate', value: '#8b8d98' },
 ]
 
+/*
+  Four to a row, matching the colour grid above them. Three left every settings
+  row a different width from the twelve swatches, and a panel of rows that each
+  stop somewhere else reads as unfinished.
+*/
 export const WEIGHTS: { name: string; value: number }[] = [
   { name: 'Thin', value: 4 },
   { name: 'Medium', value: 9 },
   { name: 'Thick', value: 18 },
+  { name: 'Extra thick', value: 30 },
 ]
 
 export const TEXT_SIZES: { name: string; value: number }[] = [
   { name: 'Small', value: 20 },
   { name: 'Medium', value: 30 },
   { name: 'Large', value: 46 },
+  { name: 'Extra large', value: 64 },
 ]
 
 export const BORDERS: { name: string; value: BorderStyle }[] = [
@@ -74,6 +81,7 @@ export const TINT_OPACITY = 0.18
 export const OPACITIES: { name: string; value: number }[] = [
   { name: 'Faint', value: 0.25 },
   { name: 'Half', value: 0.5 },
+  { name: 'Mostly solid', value: 0.75 },
   { name: 'Full', value: 1 },
 ]
 
