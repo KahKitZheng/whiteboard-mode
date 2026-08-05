@@ -191,7 +191,16 @@
         inset 0 -1px 0 var(--border);
     }
 
+    /*
+      The shared `button` hover tints with a *translucent* grey, which is fine
+      for a button sitting on an opaque panel but not for one that IS the panel:
+      the grip stopped hiding what is behind it, and the panel's own drop shadow
+      — cast downward, onto the grip — showed through as a dark band along the
+      join. So the tint is mixed into the surface colour instead of laid over
+      it. Same shade, still opaque.
+    */
     &:hover {
+      background: color-mix(in srgb, var(--text) 12%, var(--bg));
       color: var(--text-h);
     }
   }
