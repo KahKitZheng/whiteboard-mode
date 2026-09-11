@@ -14,9 +14,11 @@ import { toReference, type Point } from './coords'
 import {
   aspectOf,
   bounds,
+  bendFor,
   cornerAt,
   cornerPoint,
   keepAspect,
+  onBendHandle,
   oppositeCorner,
   scaleAbout,
   translate,
@@ -29,9 +31,10 @@ import { interactiveAncestor } from './interactive'
 import { SelectionOverlay } from './Selection'
 import { ShapeView } from './ShapeView'
 import { TextEditor } from './TextEditor'
+import { recognise, type Recognised } from './recognise'
 import { load, save } from './storage'
 import { restyle, styleOf, type Style } from './style'
-import type { Mark, Shape, Text } from './types'
+import type { Mark, Primitive, Shape, Stroke, Text } from './types'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './annotation.scss'
 
@@ -48,6 +51,7 @@ type Gesture = {
 } & (
   | { kind: 'move'; origin: Point }
   | { kind: 'resize'; anchor: Point; startCorner: Point }
+  | { kind: 'bend' }
 )
 
 /**
@@ -77,6 +81,14 @@ const DEFAULT_TAP_SLOP = 8
  */
 const TAP_TOOLS: ReadonlySet<Tool> = new Set<Tool>(['select', 'eraser', 'text'])
 
+/*
+  Hold the pen still this long before lifting and a stroke that was nearly a
+  shape becomes one — previewed while you hold, undone if you move on. A
+  hand is never quite still; movement under the jitter counts as holding.
+*/
+const HOLD_MS = 600
+const HOLD_JITTER = 3
+
 /** Guards a resize against dividing by a zero-width box. */
 function factor(moved: number, original: number): number {
   return Math.abs(original) < 0.001 ? 1 : moved / original
@@ -94,6 +106,17 @@ function resizeFactors(
   const fy = factor(point.y - gesture.anchor.y, gesture.startCorner.y - gesture.anchor.y)
 
   return aspectOf(gesture.original) ? uniformFactors(fx, fy) : [fx, fy]
+}
+
+/** The gesture's shape as the pointer has it now. */
+function transform(gesture: Gesture, point: Point): Shape {
+  if (gesture.kind === 'move') {
+    return translate(gesture.original, point.x - gesture.origin.x, point.y - gesture.origin.y)
+  }
+  if (gesture.kind === 'bend') {
+    return gesture.original.type === 'line' ? { ...gesture.original, bend: bendFor(gesture.original, point) } : gesture.original
+  }
+  return scaleAbout(gesture.original, gesture.anchor, ...resizeFactors(gesture, point))
 }
 
 /** A tap that never moved, or an empty string, is not worth storing. */
@@ -173,6 +196,10 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     A highlight or underline being dragged over words. It grows word by word,
     within the block it started in, and becomes a mark on release — ADR 0008.
   */
+  // Hold-to-snap, for the pen stroke in progress. See ADR 0009.
+  const holdTimer = useRef(0)
+  const lastMove = useRef<Point | null>(null)
+  const snapped = useRef<Primitive | null>(null)
   const marking = useRef<{
     pointerId: number
     id: string
@@ -253,6 +280,53 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   function settle(shape: Shape): Shape {
     const frame = currentFrame()
     return frame ? anchorShape(shape, frame) : shape
+  }
+
+  /** The shape a stroke was nearly, drawn in the stroke's ink and the tray's border and fill. */
+  function primitiveFrom(found: Recognised, stroke: Stroke): Primitive {
+    return {
+      id: stroke.id,
+      type: found.type,
+      from: found.from,
+      to: found.to,
+      color: stroke.color,
+      weight: stroke.weight,
+      opacity: stroke.opacity,
+      border: style.border,
+      ...(found.type === 'rect' || found.type === 'ellipse' ? { fill: style.fill } : {}),
+      ...(found.type === 'line' ? { heads: found.heads ?? 'none', ...(found.bend ? { bend: found.bend } : {}) } : {}),
+    }
+  }
+
+  /**
+   * Called on every pen move. A move past the jitter restarts the clock and
+   * takes back a preview; the clock running out recognises what has been
+   * drawn so far and previews it.
+   */
+  function watchHold(pointerId: number, clientX: number, clientY: number) {
+    const last = lastMove.current
+    if (last && Math.hypot(clientX - last.x, clientY - last.y) < HOLD_JITTER) return
+    lastMove.current = { x: clientX, y: clientY }
+
+    if (snapped.current) {
+      snapped.current = null
+      setDraft(inProgress.current.get(pointerId) ?? null)
+    }
+
+    window.clearTimeout(holdTimer.current)
+    holdTimer.current = window.setTimeout(() => {
+      const stroke = inProgress.current.get(pointerId)
+      const found = stroke?.type === 'stroke' ? recognise(stroke.points) : null
+      if (!found || !stroke || stroke.type !== 'stroke') return
+      snapped.current = primitiveFrom(found, stroke)
+      setDraft(snapped.current)
+    }, HOLD_MS)
+  }
+
+  function forgetHold() {
+    window.clearTimeout(holdTimer.current)
+    lastMove.current = null
+    snapped.current = null
   }
 
   /** The mark a drag over words has grown to so far. */
@@ -473,6 +547,15 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
         return
       }
 
+      // A line's bend handle sits on the line, where a grab to move it would
+      // land too. The handle wins; move a line by either end instead.
+      if (selectedShape && onBendHandle(selectedShape, point)) {
+        surface.setPointerCapture(pointerId)
+        replace((shapes) => shapes.map((shape) => (shape.id === selectedShape.id ? unanchored(selectedShape) : shape)))
+        gesture.current = { kind: 'bend', shapeId: selectedShape.id, original: selectedShape, before: state.shapes }
+        return
+      }
+
       // Picking uses the shape's outline; a shape already selected can also be
       // grabbed anywhere inside its box, which is how you move a thin one.
       const hit = shapeNear(placed, point)
@@ -572,10 +655,12 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
               // A line has no inside, so it is left without one rather than
               // carrying a fill nothing will ever read.
               ...(tool === 'rect' || tool === 'ellipse' ? { fill: style.fill } : {}),
+              ...(tool === 'line' ? { heads: style.heads } : {}),
             }
 
     inProgress.current.set(pointerId, shape)
     setDraft(shape)
+    if (tool === 'pen') watchHold(pointerId, clientX, clientY)
   }
 
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
@@ -682,10 +767,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     if (active_) {
       const point = pointFrom(event, event.currentTarget.getBoundingClientRect())
 
-      const transformed =
-        active_.kind === 'move'
-          ? translate(active_.original, point.x - active_.origin.x, point.y - active_.origin.y)
-          : scaleAbout(active_.original, active_.anchor, ...resizeFactors(active_, point))
+      const transformed = transform(active_, point)
 
       replace((shapes) => shapes.map((shape) => (shape.id === active_.shapeId ? transformed : shape)))
       return
@@ -698,6 +780,11 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     const next = grow(shape, event, box)
 
     inProgress.current.set(event.pointerId, next)
+    if (next.type === 'stroke' && !next.highlight) {
+      watchHold(event.pointerId, event.clientX, event.clientY)
+      // Still holding on a preview: the preview stays, the ink keeps collecting underneath.
+      if (snapped.current) return
+    }
     setDraft(next)
   }
 
@@ -759,6 +846,16 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     inProgress.current.delete(event.pointerId)
     setDraft(null)
 
+    // Held still at the end, or asked for tidy shapes: the stroke becomes
+    // what it was nearly — if it was nearly anything.
+    const held = snapped.current
+    forgetHold()
+    if (held) return commit((shapes) => [...shapes, settle(held)])
+    if (shape.type === 'stroke' && !shape.highlight && style.tidy) {
+      const found = recognise(shape.points)
+      if (found) return commit((shapes) => [...shapes, settle(primitiveFrom(found, shape))])
+    }
+
     if (worthKeeping(shape)) commit((shapes) => [...shapes, settle(shape)])
   }
 
@@ -785,6 +882,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     }
 
     inProgress.current.delete(event.pointerId)
+    forgetHold()
     setDraft(null)
   }
 

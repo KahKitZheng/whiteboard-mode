@@ -1,5 +1,5 @@
 import type { Point } from './coords'
-import type { Shape } from './types'
+import type { Primitive, Shape } from './types'
 
 /**
  * Everything that needs to reason about *where* a shape is — hit-testing,
@@ -8,6 +8,8 @@ import type { Shape } from './types'
  */
 
 const ELLIPSE_STEPS = 24
+/** How finely a bent line is approximated for hit-testing and bounds. */
+const BEND_STEPS = 16
 
 /** Only used where the browser can't be asked — see `textMetrics`. */
 const CHARACTER_WIDTH = 0.55
@@ -21,6 +23,32 @@ const TEXT_PADDING = 0.12
 const TEXT_FONT = "system-ui, 'Segoe UI', Roboto, sans-serif"
 
 export const TEXT_SIZE = 28
+
+/** A point along the quadratic curve from `from`, pulled by `bend`, to `to`. */
+export function quadratic(from: Point, bend: Point, to: Point, t: number): Point {
+  const u = 1 - t
+  return {
+    x: u * u * from.x + 2 * u * t * bend.x + t * t * to.x,
+    y: u * u * from.y + 2 * u * t * bend.y + t * t * to.y,
+  }
+}
+
+/**
+ * Where a line's bend handle sits: on the curve, halfway along — its middle
+ * when straight. Dragging the handle to `p` wants `bendFor(shape, p)`.
+ */
+export function bendHandle(shape: Primitive): Point {
+  const middle = { x: (shape.from.x + shape.to.x) / 2, y: (shape.from.y + shape.to.y) / 2 }
+  return shape.bend ? quadratic(shape.from, shape.bend, shape.to, 0.5) : middle
+}
+
+/** The control point that puts the curve's middle at `through`. */
+export function bendFor(shape: Primitive, through: Point): Point {
+  return {
+    x: 2 * through.x - (shape.from.x + shape.to.x) / 2,
+    y: 2 * through.y - (shape.from.y + shape.to.y) / 2,
+  }
+}
 
 let measurer: CanvasRenderingContext2D | null | undefined
 
@@ -71,8 +99,10 @@ export function outline(shape: Shape): Point[] {
       return shape.points
 
     case 'line':
-    case 'arrow':
-      return [shape.from, shape.to]
+      if (!shape.bend) return [shape.from, shape.to]
+      return Array.from({ length: BEND_STEPS + 1 }, (_, step) =>
+        quadratic(shape.from, shape.bend!, shape.to, step / BEND_STEPS),
+      )
 
     case 'mark':
       // The line the ink runs along in each box: through the middle of a
@@ -139,7 +169,12 @@ export function mapPoints(shape: Shape, move: (point: Point) => Point): Shape {
         }),
       }
     default:
-      return { ...shape, from: move(shape.from), to: move(shape.to) }
+      return {
+        ...shape,
+        from: move(shape.from),
+        to: move(shape.to),
+        ...(shape.type === 'line' && shape.bend ? { bend: move(shape.bend) } : {}),
+      }
   }
 }
 
@@ -189,6 +224,13 @@ export function cornerAt(shape: Shape, point: Point): Corner | null {
     }
   }
   return null
+}
+
+/** Whether a point is on a line's bend handle. */
+export function onBendHandle(shape: Shape, point: Point): boolean {
+  if (shape.type !== 'line') return false
+  const at = bendHandle(shape)
+  return Math.abs(point.x - at.x) <= HANDLE_REACH && Math.abs(point.y - at.y) <= HANDLE_REACH
 }
 
 /** Inside a shape's box, handle reach included. */

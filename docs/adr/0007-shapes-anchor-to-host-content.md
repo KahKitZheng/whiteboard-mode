@@ -20,7 +20,7 @@ At creation the shape's screen box is probed with `elementFromPoint` — centre 
 - **Words** under the box (reaching a little out, since an underline sits below its word): anchor to the element and a quote of those words, origin the first word's rect, basis the block's font size. A shape covering more than half the block's text is about the block, not its words.
 - Anything else: anchor to the block, basis its font size — text does not grow when its column does.
 
-A line or arrow anchors each end separately, so one drawn from a word to a picture keeps pointing at both.
+A line anchors each end separately, so one drawn from a word to a picture keeps pointing at both; its bend, if it has one, goes halfway with each.
 
 The element is named by a `>` path of `tag:nth-of-type` steps from the surface, or from the nearest ancestor with an `id`, which survives the host reordering things. A snippet of its text rejects a different element that took its place. **Hosts should give annotatable blocks stable ids** — app-react's assignment blocks already have them.
 

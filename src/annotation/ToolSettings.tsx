@@ -6,8 +6,10 @@ import {
   BORDERS,
   COLORS,
   FILLS,
+  HEADS,
   OPACITIES,
   PEN_MARKS,
+  SHAPE_MODES,
   SNAP_MODES,
   TEXT_SIZES,
   TINT_OPACITY,
@@ -62,9 +64,11 @@ export function ToolSettings() {
   const textSize = selected?.textSize ?? style.textSize
   const border = selected?.border ?? style.border
   const fill = selected?.fill ?? style.fill
+  const heads = selected?.heads ?? style.heads
   const opacity = selected?.opacity ?? style.opacity
   const snap = style.snap
   const penMark = style.penMark
+  const tidy = style.tidy
 
   return (
     <>
@@ -135,6 +139,40 @@ export function ToolSettings() {
         </Setting>
       )}
 
+      {shown.tidy && (
+        <Setting label="Shapes">
+          <ToggleGroup
+            value={[tidy ? 'tidy' : 'free']}
+            onValueChange={([next]) => next && apply({ tidy: next === 'tidy' })}
+            className="choices"
+          >
+            {SHAPE_MODES.map(({ name, value }) => (
+              <Toolbar.Button
+                key={name}
+                className="icon-button"
+                aria-label={name}
+                title={name}
+                render={<Toggle value={value ? 'tidy' : 'free'} />}
+              >
+                <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
+                  {value ? (
+                    <circle cx="10" cy="10" r="6.5" stroke={color} strokeWidth="1.8" fill="none" />
+                  ) : (
+                    <path
+                      d="M4 11 c 1 -5 5 -7 8 -4 s 3 6 -1 8 s -7 -1 -6 -4 s 4 -3 5 -1"
+                      stroke={color}
+                      strokeWidth="1.8"
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                  )}
+                </svg>
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+        </Setting>
+      )}
+
       {shown.fill && (
         <Setting label="Fill">
           <ToggleGroup
@@ -162,6 +200,32 @@ export function ToolSettings() {
                     fill={value === 'none' ? 'none' : color}
                     fillOpacity={value === 'tinted' ? TINT_OPACITY : 1}
                   />
+                </svg>
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+        </Setting>
+      )}
+
+      {shown.heads && (
+        <Setting label="Heads">
+          <ToggleGroup
+            value={[heads]}
+            onValueChange={([next]) => next && apply({ heads: next as Style['heads'] })}
+            className="choices"
+          >
+            {HEADS.map(({ name, value }) => (
+              <Toolbar.Button
+                key={value}
+                className="icon-button"
+                aria-label={name}
+                title={name}
+                render={<Toggle value={value} />}
+              >
+                <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true" stroke={color} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="10" x2="17" y2="10" />
+                  {value !== 'none' && <polyline points="13,6 17,10 13,14" />}
+                  {value === 'both' && <polyline points="7,6 3,10 7,14" />}
                 </svg>
               </Toolbar.Button>
             ))}

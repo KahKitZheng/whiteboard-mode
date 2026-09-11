@@ -109,7 +109,7 @@ describe('unanchored', () => {
     }
     const shape: Shape = {
       id: 'a',
-      type: 'arrow',
+      type: 'line',
       from: { x: 0, y: 0 },
       to: { x: 1, y: 1 },
       color: '#000',
@@ -122,7 +122,7 @@ describe('unanchored', () => {
 
     expect(unanchored(shape)).toEqual({
       id: 'a',
-      type: 'arrow',
+      type: 'line',
       from: { x: 0, y: 0 },
       to: { x: 1, y: 1 },
       color: '#000',

@@ -29,7 +29,7 @@ A shape produced by freehand drawing, stored as the captured input points.
 _Avoid_: Line, path, scribble, ink
 
 **Primitive**:
-A shape with a fixed geometric form the user places rather than draws freely — rectangle, ellipse, arrow, line, text.
+A shape with a fixed geometric form the user places rather than draws freely — rectangle, ellipse, line (straight or bent, with or without arrowheads), text.
 _Avoid_: Basic shape, standard shape
 
 **Widget**:
@@ -48,6 +48,11 @@ What a shape remembers about the host content under it — the words or the pict
 _Avoid_: Attachment, binding, target (the target is the element; the anchor is the memory of it)
 
 ### Acting on a surface
+
+**Tidy**:
+A pen stroke that was nearly a primitive becoming exactly that primitive — on release with the setting on, or by holding the pen still before lifting.
+_Avoid_: Shape recognition (the mechanism, not the thing), auto-correct, snap (that is what the highlighter does to words)
+
 
 **Tool**:
 The input state machine active while drawing — what pointer down, move and up do. The pen is a tool; the stroke it produces is a shape.

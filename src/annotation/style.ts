@@ -1,4 +1,4 @@
-import type { BorderStyle, FillStyle, Shape } from './types'
+import type { BorderStyle, FillStyle, Heads, Shape } from './types'
 
 /**
  * What a shape looks like, as opposed to where it is. Kept apart from geometry
@@ -23,10 +23,14 @@ export type Style = {
   textSize: number
   border: BorderStyle
   fill: FillStyle
+  /** Lines: arrowheads at neither end, the far end, or both. */
+  heads: Heads
   opacity: number
   /** Highlighter: mark the words under the drag rather than laying ink over them. */
   snap: boolean
   penMark: PenMark
+  /** Pen: a stroke that was nearly a circle, box, line, curve or arrow becomes one (ADR 0009). */
+  tidy: boolean
 }
 
 export type Swatch = { name: string; value: string }
@@ -75,6 +79,12 @@ export const BORDERS: { name: string; value: BorderStyle }[] = [
   { name: 'Dotted', value: 'dotted' },
 ]
 
+export const HEADS: { name: string; value: Heads }[] = [
+  { name: 'No heads', value: 'none' },
+  { name: 'Arrow at end', value: 'end' },
+  { name: 'Arrows at both ends', value: 'both' },
+]
+
 export const FILLS: { name: string; value: FillStyle }[] = [
   { name: 'No fill', value: 'none' },
   { name: 'Tinted', value: 'tinted' },
@@ -99,6 +109,11 @@ export const SNAP_MODES: { name: string; value: boolean }[] = [
   { name: 'Snap to words', value: true },
 ]
 
+export const SHAPE_MODES: { name: string; value: boolean }[] = [
+  { name: 'Free', value: false },
+  { name: 'Tidy shapes', value: true },
+]
+
 export const PEN_MARKS: { name: string; value: PenMark }[] = [
   { name: 'Free', value: 'none' },
   { name: 'Underline', value: 'underline' },
@@ -111,10 +126,24 @@ export const DEFAULT_STYLE: Style = {
   textSize: TEXT_SIZES[1].value,
   border: 'solid',
   fill: 'none',
+  heads: 'none',
   opacity: 1,
   // Opt in: a teacher who wants ink gets ink.
   snap: false,
   penMark: 'none',
+  tidy: false,
+}
+
+/**
+ * The next style after a change. Two of the pen's options cannot both hold:
+ * a stroke that is tidied into a shape cannot also be an underline of the
+ * words it crossed. Turning one on turns the other off.
+ */
+export function applyStyle(current: Style, patch: Partial<Style>): Style {
+  const next = { ...current, ...patch }
+  if (patch.tidy) next.penMark = 'none'
+  if (patch.penMark && patch.penMark !== 'none') next.tidy = false
+  return next
 }
 
 /** Closed shapes are the only ones with an inside to fill. */
@@ -161,6 +190,7 @@ export function restyle(shape: Shape, patch: Partial<Style>): Shape {
         ...(patch.weight === undefined ? {} : { weight: patch.weight }),
         ...(patch.border === undefined ? {} : { border: patch.border }),
         ...(patch.fill === undefined || !canFill(shape) ? {} : { fill: patch.fill }),
+        ...(patch.heads === undefined || shape.type !== 'line' ? {} : { heads: patch.heads }),
       }
   }
 }
@@ -185,6 +215,7 @@ export function styleOf(shape: Shape): Partial<Style> {
         opacity: shape.opacity,
         border: shape.border,
         ...(canFill(shape) ? { fill: shape.fill ?? 'none' } : {}),
+        ...(shape.type === 'line' ? { heads: shape.heads ?? 'none' } : {}),
       }
   }
 }

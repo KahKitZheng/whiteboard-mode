@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canFill, DEFAULT_STYLE, restyle, styleOf } from './style'
+import { applyStyle, canFill, DEFAULT_STYLE, restyle, styleOf } from './style'
 import type { Shape } from './types'
 
 const stroke: Shape = {
@@ -138,5 +138,28 @@ describe('canFill', () => {
     expect(canFill(line)).toBe(false)
     expect(canFill(stroke)).toBe(false)
     expect(canFill(label)).toBe(false)
+  })
+})
+
+describe('applyStyle', () => {
+  const base = { ...DEFAULT_STYLE }
+
+  it('merges an ordinary change', () => {
+    expect(applyStyle(base, { color: '#123456' }).color).toBe('#123456')
+  })
+
+  it('turns word marking off when tidy shapes go on', () => {
+    const marking = applyStyle(base, { penMark: 'underline' })
+    expect(applyStyle(marking, { tidy: true })).toMatchObject({ tidy: true, penMark: 'none' })
+  })
+
+  it('turns tidy shapes off when word marking goes on', () => {
+    const tidy = applyStyle(base, { tidy: true })
+    expect(applyStyle(tidy, { penMark: 'strikethrough' })).toMatchObject({ tidy: false, penMark: 'strikethrough' })
+  })
+
+  it('leaves tidy alone when marking is switched off', () => {
+    const tidy = applyStyle(base, { tidy: true })
+    expect(applyStyle(tidy, { penMark: 'none' }).tidy).toBe(true)
   })
 })

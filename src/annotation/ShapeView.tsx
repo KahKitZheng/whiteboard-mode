@@ -101,48 +101,32 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
     case 'line': {
       const from = at(shape.from)
       const to = at(shape.to)
+      const bend = shape.bend ? at(shape.bend) : null
       const line = shape.weight * scale
-      return (
-        <line
-          x1={from.x}
-          y1={from.y}
-          x2={to.x}
-          y2={to.y}
-          fill="none"
-          stroke={shape.color}
-          strokeWidth={line}
-          strokeDasharray={dashes(shape.border, line)}
-          opacity={shape.opacity}
-        />
-      )
-    }
-
-    case 'arrow': {
-      const from = at(shape.from)
-      const to = at(shape.to)
-      const line = shape.weight * scale
-      const angle = Math.atan2(to.y - from.y, to.x - from.x)
+      const heads = shape.heads ?? 'none'
       // Proportional to the line, so a thick arrow gets a head to match rather
       // than the same small one on every weight.
       const head = ARROWHEAD * line
-      const wing = (spread: number) => ({
-        x: to.x - Math.cos(angle + spread) * head,
-        y: to.y - Math.sin(angle + spread) * head,
-      })
-      const left = wing(Math.PI / 7)
-      const right = wing(-Math.PI / 7)
+      const wings = (tip: Point, towards: Point) => {
+        const angle = Math.atan2(tip.y - towards.y, tip.x - towards.x)
+        const wing = (spread: number) => ({
+          x: tip.x - Math.cos(angle + spread) * head,
+          y: tip.y - Math.sin(angle + spread) * head,
+        })
+        const left = wing(Math.PI / 7)
+        const right = wing(-Math.PI / 7)
+        return `${left.x},${left.y} ${tip.x},${tip.y} ${right.x},${right.y}`
+      }
 
       return (
         <g fill="none" stroke={shape.color} strokeWidth={line} opacity={shape.opacity}>
           {/* The shaft carries the dash; a dashed arrowhead just looks broken. */}
-          <line
-            x1={from.x}
-            y1={from.y}
-            x2={to.x}
-            y2={to.y}
+          <path
+            d={bend ? `M ${from.x} ${from.y} Q ${bend.x} ${bend.y} ${to.x} ${to.y}` : `M ${from.x} ${from.y} L ${to.x} ${to.y}`}
             strokeDasharray={dashes(shape.border, line)}
           />
-          <polyline points={`${left.x},${left.y} ${to.x},${to.y} ${right.x},${right.y}`} />
+          {heads !== 'none' && <polyline points={wings(to, bend ?? from)} />}
+          {heads === 'both' && <polyline points={wings(from, bend ?? to)} />}
         </g>
       )
     }

@@ -10,6 +10,9 @@ export type BorderStyle = 'solid' | 'dashed' | 'dotted'
 /** Only closed shapes have an inside to fill. */
 export type FillStyle = 'none' | 'tinted' | 'solid'
 
+/** Which ends of a line carry an arrowhead. */
+export type Heads = 'none' | 'end' | 'both'
+
 /**
  * What was under the shape when it was made, so it can follow that when the
  * page reflows. Absent, the shape sits at its coordinates. See anchor.ts.
@@ -47,14 +50,18 @@ export type Stroke = Inked & {
  */
 export type Primitive = Inked & {
   id: string
-  type: 'rect' | 'ellipse' | 'line' | 'arrow'
+  type: 'rect' | 'ellipse' | 'line'
   from: Point
   to: Point
-  /** A line or arrow may hold on to two things: `anchor` is `from`'s, this is `to`'s. */
+  /** A line may hold on to two things: `anchor` is `from`'s, this is `to`'s. */
   toAnchor?: Anchor
   border: BorderStyle
   /** Closed shapes only — a line has no inside. */
   fill?: FillStyle
+  /** Lines only. An arrow is a line with a head; a curve is a line with a bend. */
+  heads?: Heads
+  /** The control point of a quadratic curve. Absent, the line is straight. */
+  bend?: Point
 }
 
 export type Text = Anchored & {

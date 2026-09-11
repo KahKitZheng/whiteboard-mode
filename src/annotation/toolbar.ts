@@ -6,10 +6,10 @@ import type { Tool } from './WhiteboardMode'
 export const ICON_SIZE = 20
 
 /** Tools that put ink on the surface, and so have a colour and a weight. */
-const INK_TOOLS: Tool[] = ['pen', 'highlighter', 'rect', 'ellipse', 'line', 'arrow']
+const INK_TOOLS: Tool[] = ['pen', 'highlighter', 'rect', 'ellipse', 'line']
 
 /** Tools that draw a stroked line, which is what a dash pattern needs. */
-const BORDER_TOOLS: Tool[] = ['rect', 'ellipse', 'line', 'arrow']
+const BORDER_TOOLS: Tool[] = ['rect', 'ellipse', 'line']
 
 /** Tools that draw a closed shape, which is what a fill needs. */
 const FILL_TOOLS: Tool[] = ['rect', 'ellipse']
@@ -33,10 +33,12 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
       textSize: selected.textSize !== undefined,
       border: selected.border !== undefined,
       fill: selected.fill !== undefined,
+      heads: selected.heads !== undefined,
       opacity: selected.opacity !== undefined,
       // A mark's kind is what it is; these only steer the next one.
       snap: false,
       penMark: false,
+      tidy: false,
     }
   }
 
@@ -48,9 +50,11 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
     textSize: tool === 'text',
     border: BORDER_TOOLS.includes(tool),
     fill: FILL_TOOLS.includes(tool),
+    heads: tool === 'line',
     opacity: SHAPE_TOOLS.includes(tool),
     snap: tool === 'highlighter',
     penMark: tool === 'pen',
+    tidy: tool === 'pen',
   }
 }
 

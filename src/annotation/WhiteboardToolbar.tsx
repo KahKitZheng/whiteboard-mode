@@ -2,7 +2,6 @@ import { Toggle } from '@base-ui-components/react/toggle'
 import { ToggleGroup } from '@base-ui-components/react/toggle-group'
 import { Toolbar } from '@base-ui-components/react/toolbar'
 import {
-  ArrowUpRight,
   Circle,
   Eraser,
   Highlighter,
@@ -38,14 +37,15 @@ const TOOLS: { name: Tool; label: string; Icon: LucideIcon }[] = [
   { name: 'highlighter', label: 'Highlighter', Icon: Highlighter },
   { name: 'eraser', label: 'Eraser', Icon: Eraser },
   { name: 'text', label: 'Text', Icon: Type },
+  // Its own button, not a shape: straight, bent, arrowed — it is reached for
+  // as often as the pen, to point at things.
+  { name: 'line', label: 'Line', Icon: Slash },
 ]
 
 /** Siblings of each other, rather than of the pen. */
 const SHAPES: ToolChoice[] = [
   { name: 'rect', label: 'Rectangle', Icon: Square },
   { name: 'ellipse', label: 'Ellipse', Icon: Circle },
-  { name: 'line', label: 'Line', Icon: Slash },
-  { name: 'arrow', label: 'Arrow', Icon: ArrowUpRight },
 ]
 
 /** A timer is not a drawing tool; it only shares the tray with them. */

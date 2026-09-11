@@ -278,7 +278,7 @@ export function findQuote(root: Node, quote: Quote): Range | null {
 /**
  * The words a box covers, first to last, or null when it covers none. A
  * shape's box has to cover a good part of a word; a point — the end of a line
- * or an arrow — only has to touch one.
+ * or a curve — only has to touch one.
  */
 function wordsUnder(element: Element, box: Box, fontSize: number, how: 'cover' | 'touch'): Range | null {
   // A stroke reaches up, since an underline sits under its word. A point is
@@ -429,14 +429,14 @@ export function unanchored(shape: Shape): Shape {
 }
 
 /**
- * A shape remembering what is under it. A line or arrow remembers each end
+ * A shape remembering what is under it. A line remembers each end
  * separately, so one drawn from a word to a picture keeps pointing at both.
  */
 export function anchorShape(shape: Shape, frame: Frame): Shape {
   if (shape.type === 'mark') return shape
   const bare = unanchored(shape)
 
-  if (bare.type === 'line' || bare.type === 'arrow') {
+  if (bare.type === 'line') {
     const reach = 4
     const around = (point: Point): Box => {
       const at = toClient(frame, point)
@@ -462,10 +462,15 @@ export function placeShape(shape: Shape, frame: Frame): Shape {
   if (!now) return shape
   const move = follow(shape.anchor, now)
 
-  if ((shape.type === 'line' || shape.type === 'arrow') && shape.toAnchor) {
+  if (shape.type === 'line' && shape.toAnchor) {
     const toNow = resolveAnchor(shape.toAnchor, frame)
     const moveTo = toNow ? follow(shape.toAnchor, toNow) : move
-    return { ...shape, from: move(shape.from), to: moveTo(shape.to), weight: shape.weight * now.scale }
+    // The bend belongs to both ends; it goes halfway with each.
+    const bend = shape.bend && {
+      x: (move(shape.bend).x + moveTo(shape.bend).x) / 2,
+      y: (move(shape.bend).y + moveTo(shape.bend).y) / 2,
+    }
+    return { ...shape, from: move(shape.from), to: moveTo(shape.to), bend, weight: shape.weight * now.scale }
   }
 
   // Size and weight follow too, so the ink stays in proportion to what it marks.

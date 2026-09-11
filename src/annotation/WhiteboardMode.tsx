@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
-import { DEFAULT_STYLE, type Style } from './style'
+import { applyStyle, DEFAULT_STYLE, type Style } from './style'
 
 export type Tool =
   | 'select'
@@ -8,7 +8,6 @@ export type Tool =
   | 'rect'
   | 'ellipse'
   | 'line'
-  | 'arrow'
   | 'text'
   | 'timer'
   | 'eraser'
@@ -64,7 +63,7 @@ export function WhiteboardModeProvider({ children }: { children: ReactNode }) {
   const claim = useCallback((surfaceId: string) => setCurrent(surfaceId), [])
 
   const setStyle = useCallback(
-    (patch: Partial<Style>) => setWholeStyle((current) => ({ ...current, ...patch })),
+    (patch: Partial<Style>) => setWholeStyle((current) => applyStyle(current, patch)),
     [],
   )
 

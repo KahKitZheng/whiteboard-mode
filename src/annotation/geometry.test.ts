@@ -35,7 +35,8 @@ const ellipse: Shape = {
 }
 const arrow: Shape = {
   id: 'a',
-  type: 'arrow',
+  type: 'line',
+  heads: 'end',
   from: { x: 0, y: 0 },
   to: { x: 100, y: 0 },
   ...INK,
@@ -69,7 +70,7 @@ describe('outline', () => {
     expect(Math.max(...ys)).toBeCloseTo(100)
   })
 
-  it('reduces an arrow to its two ends', () => {
+  it('reduces a straight line to its two ends', () => {
     expect(outline(arrow)).toEqual([{ x: 0, y: 0 }, { x: 100, y: 0 }])
   })
 
@@ -102,7 +103,7 @@ describe('hit-testing every shape type', () => {
     expect(shapeAt([ellipse], { x: 100, y: 50 })).toBeNull()
   })
 
-  it('finds an arrow along its shaft', () => {
+  it('finds a line along its shaft', () => {
     expect(shapeAt([arrow], { x: 50, y: 4 })?.id).toBe('a')
     expect(shapeAt([arrow], { x: 50, y: 90 })).toBeNull()
   })

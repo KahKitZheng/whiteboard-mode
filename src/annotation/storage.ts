@@ -39,6 +39,11 @@ export function load(surfaceId: string): Shape[] | null {
 
   if (stored.version !== VERSION || !Array.isArray(stored.shapes)) return null
 
+  // An arrow used to be a shape type of its own; it is a line with a head now.
+  stored.shapes = stored.shapes.map((shape) =>
+    (shape as { type: string }).type === 'arrow' ? ({ ...shape, type: 'line', heads: 'end' } as Shape) : shape,
+  )
+
   // A stored reference width that isn't the current one would silently misplace
   // every shape. Rescale instead.
   if (stored.refWidth !== REFERENCE_WIDTH) {
