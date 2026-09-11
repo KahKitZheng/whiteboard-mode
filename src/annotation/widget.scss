@@ -2,15 +2,9 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  // The layer around it is pointer-events: none, so a widget has to opt back
-  // in. It is the only thing on the layer that is interactive with whiteboard
-  // mode off — which is the point of it.
+  // The layer around it is never hit-tested, so a widget opts back in. Armed,
+  // a tap on its buttons is still its own; a drag over it draws (ADR 0006).
   pointer-events: auto;
-}
-
-// With whiteboard mode on you draw *over* a widget, not into it.
-.annotation-layer[data-active] .widget {
-  pointer-events: none;
 }
 
 .timer {

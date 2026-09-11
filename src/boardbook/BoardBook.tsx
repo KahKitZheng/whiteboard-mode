@@ -1,0 +1,213 @@
+import OpenSeadragon from 'openseadragon'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { AnnotationSurface } from '../annotation/AnnotationSurface'
+import { useWhiteboardMode } from '../annotation/WhiteboardMode'
+import { ItemDialog, Marker } from './BoardBookItem'
+import { fitWidth, percentToImage, zoomRatio, type Size } from './coords'
+import { FocusArea, Walkthrough } from './FocusAreas'
+import type { AssignmentBoardBookEntity, BoardBookFocusAreaEntity, BoardBookItemEntity } from './types'
+import { byOrder, neighbour } from './walkthrough'
+import './boardbook.scss'
+
+const ZOOM_STEP = 1.4
+
+/** What a press may land on that is not the image: a marker or a focus area. */
+const CONTROLS = '.boardbook-marker, .boardbook-area'
+
+function containerSize(viewer: OpenSeadragon.Viewer): Size {
+  const size = viewer.viewport.getContainerSize()
+  return { width: size.x, height: size.y }
+}
+
+type Props = {
+  /** Stable id for the image's own surface; item dialogs derive theirs from it. */
+  id: string
+  boardbook: AssignmentBoardBookEntity
+}
+
+/**
+ * The image in an OpenSeadragon viewer, with one overlay the size of the whole
+ * image holding the annotation surface — and, as that surface's children, the
+ * boardbook's markers and focus areas. See docs/adr/0005-osd-overlay-annotation-layer.md.
+ */
+export function BoardBook({ id, boardbook }: Props) {
+  // What goes fullscreen: it has to hold the viewer and the chrome both.
+  const stage = useRef<HTMLDivElement>(null)
+  const host = useRef<HTMLDivElement>(null)
+  const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null)
+  const [image, setImage] = useState<Size | null>(null)
+  // The one element OSD positions: the image's box, holding everything React.
+  const [layer, setLayer] = useState<HTMLDivElement | null>(null)
+  const [homeWidth, setHomeWidth] = useState(0)
+  const [currentId, setCurrentId] = useState<string | null>(null)
+  const [openItem, setOpenItem] = useState<BoardBookItemEntity | null>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+  const { active } = useWhiteboardMode()
+  // For the native listener below, which outlives any one render.
+  const armed = useRef(active)
+  armed.current = active
+
+  const ordered = byOrder(boardbook.focusAreas)
+  const current = ordered.find((area) => area.id === currentId) ?? null
+
+  useEffect(() => {
+    const element = host.current
+    if (!element) return
+
+    const viewer = OpenSeadragon({
+      element,
+      // ponytail: one flat image. A `.dzi` swaps in here per image once pages
+      // are pre-tiled; nothing else in this file cares.
+      tileSources: { type: 'image', url: boardbook.images.background },
+      showNavigationControl: false,
+      showNavigator: true,
+      navigatorPosition: 'BOTTOM_RIGHT',
+      maxZoomPixelRatio: 2,
+      visibilityRatio: 0.8,
+      // A click means "this marker" or "this area", never "zoom here".
+      gestureSettingsMouse: { clickToZoom: false },
+      gestureSettingsTouch: { clickToZoom: false },
+      gestureSettingsPen: { clickToZoom: false },
+    })
+
+    let opened: Size | null = null
+
+    viewer.addOnceHandler('open', () => {
+      const size = viewer.world.getItemAt(0).getContentSize()
+      opened = { width: size.x, height: size.y }
+
+      const layer = document.createElement('div')
+      /*
+        Off, OSD's tracker captures the pointer on any press inside its canvas
+        — the overlay included — and a marker pressed that way never gets its
+        click. Stop the press short of the canvas. Armed, the tracker is off
+        and the press is the surface's, which listens at React's root above
+        us, so it has to pass.
+      */
+      layer.addEventListener('pointerdown', (event) => {
+        if (armed.current) return
+        if (event.target instanceof Element && event.target.closest(CONTROLS)) event.stopPropagation()
+      })
+      viewer.addOverlay({
+        element: layer,
+        location: viewer.viewport.imageToViewportRectangle(0, 0, opened.width, opened.height),
+      })
+
+      setImage(opened)
+      setLayer(layer)
+      setHomeWidth(fitWidth(containerSize(viewer), opened))
+    })
+
+    // Home zoom moves with the container, so a marker's at-rest size does too.
+    viewer.addHandler('resize', () => {
+      if (opened) setHomeWidth(fitWidth(containerSize(viewer), opened))
+    })
+
+    setViewer(viewer)
+
+    return () => {
+      viewer.destroy()
+      setViewer(null)
+      setLayer(null)
+      setImage(null)
+    }
+  }, [boardbook])
+
+  // Armed, every press is the surface's; OSD's own pan and zoom would fight
+  // the pen for it. Navigation goes through the chrome meanwhile.
+  useEffect(() => {
+    viewer?.setMouseNavEnabled(!active)
+  }, [viewer, active])
+
+  useEffect(() => {
+    function onChange() {
+      setFullscreen(document.fullscreenElement === stage.current)
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
+  function focus(area: BoardBookFocusAreaEntity) {
+    if (!viewer || !image) return
+    const box = percentToImage(area, image)
+    viewer.viewport.fitBounds(viewer.viewport.imageToViewportRectangle(box.x, box.y, box.width, box.height))
+    setCurrentId(area.id)
+  }
+
+  function step(direction: 'previous' | 'next') {
+    const next = neighbour(ordered, currentId, direction)
+    if (next) focus(next)
+  }
+
+  function overview() {
+    viewer?.viewport.goHome()
+    setCurrentId(null)
+  }
+
+  function zoom(direction: 'in' | 'out') {
+    if (!viewer) return
+    viewer.viewport.zoomBy(direction === 'in' ? ZOOM_STEP : 1 / ZOOM_STEP)
+    viewer.viewport.applyConstraints()
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen()
+    else stage.current?.requestFullscreen()
+  }
+
+  /** Read as a shape is created, so a zoom animation mid-stroke is not a problem. */
+  function inkScale() {
+    if (!viewer) return 1
+    return zoomRatio(viewer.viewport.getZoom(true), viewer.viewport.getHomeZoom())
+  }
+
+  return (
+    <div className="boardbook" ref={stage} data-armed={active ? '' : undefined}>
+      {/* Above the image, clear of the whiteboard bars that float along the bottom. */}
+      <Walkthrough
+        ordered={ordered}
+        current={current}
+        canStep={{
+          previous: neighbour(ordered, currentId, 'previous') !== null,
+          next: neighbour(ordered, currentId, 'next') !== null,
+        }}
+        fullscreen={fullscreen}
+        onStep={step}
+        onOverview={overview}
+        onZoom={zoom}
+        onFullscreen={toggleFullscreen}
+      />
+      <div className="boardbook-viewer">
+        {/* OSD sizes itself at 100% of its element, which is indefinite on a
+            flex-sized box; an absolutely positioned one is not. */}
+        <div className="boardbook-osd" ref={host} />
+      </div>
+      {layer &&
+        image &&
+        createPortal(
+          /*
+            Markers and areas are the surface's children, not overlays of their
+            own: the surface has to see what a press landed on to leave a tap to
+            it (ADR 0006). The surface is the image's box, so the authored
+            percentages position them directly — as app-react does.
+          */
+          <AnnotationSurface id={id} className="boardbook-layer" viewBox={image} inkScale={inkScale}>
+            {ordered.map((area) => (
+              <FocusArea
+                key={area.id}
+                area={area}
+                current={area.id === currentId}
+                onToggle={() => (area.id === currentId ? overview() : focus(area))}
+              />
+            ))}
+            {boardbook.items.map((item) => (
+              <Marker key={item.id} item={item} image={image} homeWidth={homeWidth} onOpen={() => setOpenItem(item)} />
+            ))}
+          </AnnotationSurface>,
+          layer,
+        )}
+      <ItemDialog pageId={id} item={openItem} onClose={() => setOpenItem(null)} />
+    </div>
+  )
+}

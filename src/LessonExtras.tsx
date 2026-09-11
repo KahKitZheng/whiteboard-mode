@@ -44,19 +44,18 @@ function DiagramPopup({ slug }: { slug: string }) {
     >
       <Dialog.Trigger className="extra-button">Open the diagram</Dialog.Trigger>
       <Dialog.Portal>
-        {/* The backdrop dismisses; the toolbar, which is also "outside", does not. */}
-        <Dialog.Backdrop className="dialog-backdrop" onClick={() => setOpen(false)} />
         {/*
           The popup's surface spans the whole viewport, so with whiteboard mode
           armed you can annotate anywhere on screen and the marks belong to the
           popup. It sits in the same portal, so it paints above the page's layer
           for the reason the dialog itself does — no z-index arithmetic.
 
-          It also decides what a press outside the popup means: armed, the layer
-          takes it and draws; off, the layer is inert and the backdrop below
-          gets it and dismisses.
+          The backdrop is the surface's child, so a press on it is a press on
+          the backdrop whether armed or not: a tap dismisses, a drag draws
+          (ADR 0006). The toolbar, which is also "outside", does neither.
         */}
         <AnnotationSurface id={`lesson-${slug}:popup`} className="popup-surface">
+          <Dialog.Backdrop className="dialog-backdrop" onClick={() => setOpen(false)} />
           <Dialog.Popup className="dialog-popup">
             <Dialog.Title>Diagram</Dialog.Title>
             <div className="diagram">

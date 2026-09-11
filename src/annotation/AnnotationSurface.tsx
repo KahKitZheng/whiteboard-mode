@@ -3,6 +3,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type DragEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
@@ -22,13 +23,14 @@ import {
 } from './geometry'
 import * as timeline from './history'
 import { shapeAt, shapeNear, shapesAlong } from './hit'
+import { interactiveAncestor } from './interactive'
 import { SelectionOverlay } from './Selection'
 import { ShapeView } from './ShapeView'
 import { TextEditor } from './TextEditor'
 import { load, save } from './storage'
 import { restyle, styleOf, type Style } from './style'
 import type { Shape, Text } from './types'
-import { useWhiteboardMode } from './WhiteboardMode'
+import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './annotation.scss'
 
 /**
@@ -57,6 +59,21 @@ type Gesture = {
  */
 const HIGHLIGHT_WEIGHT = 3
 const HIGHLIGHT_OPACITY = 0.35
+
+/**
+ * How far, in screen pixels, a press may wander and still be a tap. A mouse
+ * barely moves; a finger on a board moves a lot, and a tap that comes out as
+ * a dot on the button it meant to press is the worse mistake.
+ */
+const TAP_SLOP: Record<string, number> = { mouse: 6, pen: 8, touch: 12 }
+const DEFAULT_TAP_SLOP = 8
+
+/**
+ * Tools for which a tap on content means something — pick this shape, erase
+ * that one, put a label here. Every other tool draws nothing on a tap, so a
+ * tap can be left to the host wherever it lands. See ADR 0006.
+ */
+const TAP_TOOLS: ReadonlySet<Tool> = new Set<Tool>(['select', 'eraser', 'text'])
 
 /** Guards a resize against dividing by a zero-width box. */
 function factor(moved: number, original: number): number {
@@ -90,9 +107,22 @@ type Props = {
   /** How the host sizes the surface. Its box is what gets annotated. */
   className?: string
   initialShapes?: Shape[]
-  children: ReactNode
+  /**
+   * Lay shapes out in these SVG user units instead of the surface's measured
+   * pixel width. For a surface the host scales — an image being zoomed — this
+   * is the image's pixel size: shapes are placed once in image space and the
+   * browser scales the whole layer, so nothing here has to know the zoom.
+   * See docs/adr/0005-osd-overlay-annotation-layer.md.
+   */
+  viewBox?: { width: number; height: number }
+  /**
+   * How much larger the surface is on screen than at rest, read as a shape is
+   * created. Weight and text size are divided by it, so ink drawn while zoomed
+   * in reads as drawn — and then stays anchored to the content at that size.
+   */
+  inkScale?: () => number
+  children?: ReactNode
 }
-
 
 /**
  * An annotatable region, declared by the host app. The annotation layer renders
@@ -111,9 +141,12 @@ export function AnnotationSurface(props: Props) {
   return <Surface key={props.id} {...props} />
 }
 
-function Surface({ id, className, initialShapes = [], children }: Props) {
+function Surface({ id, className, initialShapes = [], viewBox, inkScale, children }: Props) {
   const element = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
+  // What shapes are scaled by when drawn. Pointer input is scaled by the box
+  // the event arrived in instead — the two only coincide without a viewBox.
+  const renderWidth = viewBox?.width ?? width
   const { active, tool, style, claim, publish } = useWhiteboardMode()
 
   // What was saved wins over the seed — the seed only furnishes a surface
@@ -134,6 +167,15 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
   const gesture = useRef<Gesture | null>(null)
   const erasing = useRef<{ pointerId: number; last: Point } | null>(null)
   const [marked, setMarked] = useState<string[]>([])
+  /*
+    A press that may still be the host's. Whether it is a click or the start
+    of a stroke is not known until the pointer lifts or moves, so nothing
+    happens yet. See docs/adr/0006-taps-go-to-the-host.md.
+  */
+  const pending = useRef<{ pointerId: number; pointerType: string; clientX: number; clientY: number } | null>(null)
+  // Set when a stroke grew out of a pending press: the browser still delivers
+  // the control's click on release, and that click is ours to drop.
+  const swallowClick = useRef(false)
 
   const selectedShape = state.shapes.find((shape) => shape.id === selected) ?? null
 
@@ -264,18 +306,52 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
   }
 
   function pointFrom(event: { clientX: number; clientY: number }, box: DOMRect): Point {
-    return toReference({ x: event.clientX - box.left, y: event.clientY - box.top }, width)
+    return toReference({ x: event.clientX - box.left, y: event.clientY - box.top }, box.width)
   }
 
-  function handlePointerDown(event: ReactPointerEvent<SVGSVGElement>) {
+  function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    // A surface nested in this one has handled it already. Same in the other three.
+    event.stopPropagation()
+    swallowClick.current = false
+    // Whatever this press turns out to be, the toolbar now acts on this surface.
     claim(id)
-    const point = pointFrom(event, event.currentTarget.getBoundingClientRect())
+
+    // A drawing tool waits on every press; a tap tool only on a control.
+    if (!TAP_TOOLS.has(tool) || interactiveAncestor(event.target as Element)) {
+      pending.current = {
+        pointerId: event.pointerId,
+        pointerType: event.pointerType,
+        clientX: event.clientX,
+        clientY: event.clientY,
+      }
+      return
+    }
+
+    // Otherwise the press moves focus, selects text or starts dragging an
+    // image — none of which is what a press on content means here.
+    event.preventDefault()
+    begin(event.pointerId, event.clientX, event.clientY)
+  }
+
+  /** A press that is ours: what the tool does with it. */
+  function begin(pointerId: number, clientX: number, clientY: number) {
+    const surface = element.current
+    if (!surface) return
+
+    const point = pointFrom({ clientX, clientY }, surface.getBoundingClientRect())
+    // Ink laid down on a zoomed-in surface would be that many times thicker
+    // once the view is back at rest. Divide it out here, once, at creation.
+    const zoom = inkScale?.() ?? 1
+
+    // A label being typed is finished by a press anywhere else. The text tool
+    // sees to that itself — it may be retyping this very label.
+    if (tool !== 'text' && editing) beginEditing(null)
 
     if (tool === 'select') {
       // A handle on the current selection beats picking something else up.
       const corner = selectedShape ? cornerAt(selectedShape, point) : null
       if (selectedShape && corner) {
-        event.currentTarget.setPointerCapture(event.pointerId)
+        surface.setPointerCapture(pointerId)
         const box = bounds(selectedShape)
         gesture.current = {
           kind: 'resize',
@@ -295,7 +371,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       setSelected(hit?.id ?? null)
       if (!hit) return
 
-      event.currentTarget.setPointerCapture(event.pointerId)
+      surface.setPointerCapture(pointerId)
       gesture.current = { kind: 'move', shapeId: hit.id, original: hit, before: state.shapes, origin: point }
       return
     }
@@ -303,8 +379,8 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     if (tool === 'eraser') {
       // Shapes are marked while the pointer sweeps and deleted together on
       // release, so a scribble across five strokes is one undo, not five.
-      event.currentTarget.setPointerCapture(event.pointerId)
-      erasing.current = { pointerId: event.pointerId, last: point }
+      surface.setPointerCapture(pointerId)
+      erasing.current = { pointerId, last: point }
 
       const hit = shapeAt(state.shapes, point)
       setMarked(hit ? [hit.id] : [])
@@ -312,11 +388,6 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     }
 
     if (tool === 'text') {
-      // Without this the press moves focus as it normally would, which blurs
-      // the editor the instant it mounts — and blur commits, so an empty label
-      // vanished in the same tick it appeared.
-      event.preventDefault()
-
       // Aiming at existing text retypes it rather than stacking a second label
       // on top of the first.
       const existing = shapeNear(state.shapes, point)
@@ -330,7 +401,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
         type: 'text',
         at: point,
         text: '',
-        size: style.textSize,
+        size: style.textSize / zoom,
         color: style.color,
         opacity: style.opacity,
       })
@@ -339,8 +410,8 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
 
     if (inProgress.current.size > 0) return
 
-    event.currentTarget.setPointerCapture(event.pointerId)
-    const ink = { color: style.color, weight: style.weight, opacity: style.opacity }
+    surface.setPointerCapture(pointerId)
+    const ink = { color: style.color, weight: style.weight / zoom, opacity: style.opacity }
     const shape: Shape =
       tool === 'pen'
         ? { id: crypto.randomUUID(), type: 'stroke', points: [point], ...ink }
@@ -353,7 +424,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
               highlight: true,
               // Broad and see-through, whatever the pen was last set to. The
               // weight control still moves it from here; this is where it starts.
-              weight: style.weight * HIGHLIGHT_WEIGHT,
+              weight: (style.weight * HIGHLIGHT_WEIGHT) / zoom,
               opacity: HIGHLIGHT_OPACITY,
             }
         : tool === 'timer'
@@ -370,12 +441,71 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
               ...(tool === 'rect' || tool === 'ellipse' ? { fill: style.fill } : {}),
             }
 
-    inProgress.current.set(event.pointerId, shape)
+    inProgress.current.set(pointerId, shape)
     setDraft(shape)
   }
 
+  function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    event.stopPropagation()
+
+    const wait = pending.current
+    if (wait) {
+      if (wait.pointerId !== event.pointerId) return
+      const slop = TAP_SLOP[wait.pointerType] ?? DEFAULT_TAP_SLOP
+      if (Math.hypot(event.clientX - wait.clientX, event.clientY - wait.clientY) < slop) return
+
+      // It moved: a stroke after all, from where the press landed — not from
+      // here, or a stroke that starts on a button would be missing its start.
+      pending.current = null
+      swallowClick.current = true
+      begin(wait.pointerId, wait.clientX, wait.clientY)
+    }
+
+    extendShape(event)
+  }
+
+  function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    event.stopPropagation()
+
+    if (pending.current?.pointerId === event.pointerId) {
+      // Never moved: a tap. The browser delivers the click to the control.
+      pending.current = null
+      return
+    }
+
+    endShape(event)
+  }
+
+  function handlePointerCancel(event: ReactPointerEvent<HTMLDivElement>) {
+    event.stopPropagation()
+
+    if (pending.current?.pointerId === event.pointerId) {
+      pending.current = null
+      return
+    }
+
+    cancelShape(event)
+  }
+
+  /*
+    The press is not prevented any more while it may still be a tap, so a
+    stroke that starts on an image would also start dragging the image — and
+    the browser's drag takes the pointer with it, killing the stroke.
+  */
+  function preventNativeDrag(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault()
+  }
+
+  function handleClickCapture(event: ReactMouseEvent<HTMLDivElement>) {
+    if (!swallowClick.current) return
+
+    swallowClick.current = false
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
   /** Double-click with the select tool retypes a label in place. */
-  function retypeText(event: ReactMouseEvent<SVGSVGElement>) {
+  function retypeText(event: ReactMouseEvent<HTMLDivElement>) {
     if (tool !== 'select') return
 
     const hit = shapeNear(state.shapes, pointFrom(event, event.currentTarget.getBoundingClientRect()))
@@ -385,7 +515,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     beginEditing(hit)
   }
 
-  function extendShape(event: ReactPointerEvent<SVGSVGElement>) {
+  function extendShape(event: ReactPointerEvent<HTMLDivElement>) {
     const erase = erasing.current
     if (erase && erase.pointerId === event.pointerId) {
       const box = event.currentTarget.getBoundingClientRect()
@@ -426,7 +556,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     setDraft(next)
   }
 
-  function grow(shape: Shape, event: ReactPointerEvent<SVGSVGElement>, box: DOMRect): Shape {
+  function grow(shape: Shape, event: ReactPointerEvent<HTMLDivElement>, box: DOMRect): Shape {
     if (shape.type === 'text') return shape
 
     if (shape.type === 'stroke') {
@@ -447,7 +577,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     return { ...shape, to: ratio ? keepAspect(shape.from, to, ratio) : to }
   }
 
-  function endShape(event: ReactPointerEvent<SVGSVGElement>) {
+  function endShape(event: ReactPointerEvent<HTMLDivElement>) {
     if (erasing.current) {
       erasing.current = null
       if (marked.length > 0) {
@@ -474,7 +604,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
     if (worthKeeping(shape)) commit((shapes) => [...shapes, shape])
   }
 
-  function cancelShape(event: ReactPointerEvent<SVGSVGElement>) {
+  function cancelShape(event: ReactPointerEvent<HTMLDivElement>) {
     if (erasing.current) {
       // A cancelled sweep deletes nothing.
       erasing.current = null
@@ -499,14 +629,26 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
       className={className ? `annotation-surface ${className}` : 'annotation-surface'}
       ref={element}
       data-surface-id={id}
+      data-active={active ? '' : undefined}
+      data-tool={active ? tool : undefined}
+      /*
+        The handlers sit here, not on the layer: the layer is never hit-tested,
+        so what a press lands on is the host's own element — which is how a
+        press can tell a button from a paragraph. See ADR 0006.
+      */
+      onPointerDown={active ? handlePointerDown : undefined}
+      onPointerMove={active ? handlePointerMove : undefined}
+      onPointerUp={active ? handlePointerUp : undefined}
+      onPointerCancel={active ? handlePointerCancel : undefined}
+      onClickCapture={active ? handleClickCapture : undefined}
+      onDragStart={active ? preventNativeDrag : undefined}
+      onDoubleClick={active ? retypeText : undefined}
     >
       {children}
       {/* Width 0 means layout hasn't settled; scaling by it would misplace every shape. */}
       {width > 0 && (
         <svg
           className="annotation-layer"
-          data-active={active ? '' : undefined}
-          data-tool={active ? tool : undefined}
           /*
             Not aria-hidden. It was, while the layer held only ink — but a
             widget puts real controls in here, and hiding the subtree took the
@@ -515,11 +657,11 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
             assistive tech either way.
           */
           role="presentation"
-          onPointerDown={active ? handlePointerDown : undefined}
-          onPointerMove={active ? extendShape : undefined}
-          onPointerUp={active ? endShape : undefined}
-          onPointerCancel={active ? cancelShape : undefined}
-          onDoubleClick={active ? retypeText : undefined}
+          viewBox={viewBox ? `0 0 ${viewBox.width} ${viewBox.height}` : undefined}
+          // The host sizes the layer to the image's own aspect, so there is
+          // nothing to letterbox; this only stops a sub-pixel mismatch from
+          // shifting every shape by half a pixel.
+          preserveAspectRatio={viewBox ? 'none' : undefined}
         >
           {state.shapes
             .filter((shape) => shape.id !== editing?.id)
@@ -527,14 +669,14 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
             /* Marked shapes fade rather than vanish, so a sweep can be seen
                before the pointer lifts and can still be cancelled. */
               <g key={shape.id} data-marked={marked.includes(shape.id) ? '' : undefined}>
-                <ShapeView shape={shape} width={width} />
+                <ShapeView shape={shape} width={renderWidth} />
               </g>
             ))}
-          {draft && <ShapeView shape={draft} width={width} />}
+          {draft && <ShapeView shape={draft} width={renderWidth} />}
           {editing && (
             <TextEditor
               shape={editing}
-              width={width}
+              width={renderWidth}
               onChange={setEditing}
               onCommit={() => {
                 if (worthKeeping(editing)) commitText(editing)
@@ -544,7 +686,7 @@ function Surface({ id, className, initialShapes = [], children }: Props) {
             />
           )}
           {tool === 'select' && selectedShape && (
-            <SelectionOverlay shape={selectedShape} width={width} />
+            <SelectionOverlay shape={selectedShape} width={renderWidth} />
           )}
         </svg>
       )}

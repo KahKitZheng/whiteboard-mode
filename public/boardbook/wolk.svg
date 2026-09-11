@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300">
+  <rect width="480" height="300" fill="#e3f2f8"/>
+  <path d="M120 200 c-60 0 -80 -60 -40 -85 c0 -70 110 -85 140 -30 c55 -40 140 0 110 55 c55 15 40 85 -15 85 z" fill="#fff" stroke="#8ab6c8" stroke-width="4"/>
+  <g fill="#3a86c8">
+    <circle cx="120" cy="245" r="6"/><circle cx="170" cy="265" r="6"/><circle cx="220" cy="245" r="6"/><circle cx="270" cy="265" r="6"/>
+  </g>
+  <text x="290" y="150" font-family="system-ui, sans-serif" font-size="18" fill="#1f6f8b">waterdamp → druppels</text>
+</svg>

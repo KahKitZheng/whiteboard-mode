@@ -76,6 +76,8 @@
 }
 
 .dialog-backdrop {
+  // Its surface is transparent to presses while off (below); the backdrop itself is not.
+  pointer-events: auto;
   position: fixed;
   inset: 0;
   background: rgb(0 0 0 / 40%);

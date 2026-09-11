@@ -2,6 +2,8 @@ import { BrowserRouter, NavLink, Redirect, Route, Switch, useParams } from 'reac
 import { AnnotationSurface } from './annotation/AnnotationSurface'
 import { WhiteboardModeProvider } from './annotation/WhiteboardMode'
 import { WhiteboardToolbar } from './annotation/WhiteboardToolbar'
+import { BoardBook } from './boardbook/BoardBook'
+import { BOARDBOOKS } from './boardbook/fixtures'
 import { LESSONS } from './Lesson'
 import { LessonExtras } from './LessonExtras'
 import './App.scss'
@@ -16,10 +18,16 @@ export default function App() {
               {lesson.title}
             </NavLink>
           ))}
+          {BOARDBOOKS.map((page) => (
+            <NavLink key={page.slug} to={`/boardbook/${page.slug}`} activeClassName="is-active">
+              {page.title}
+            </NavLink>
+          ))}
         </nav>
 
         <Switch>
           <Route path="/lesson/:slug" component={LessonRoute} />
+          <Route path="/boardbook/:slug" component={BoardBookRoute} />
           <Redirect to={`/lesson/${LESSONS[0].slug}`} />
         </Switch>
 
@@ -54,4 +62,17 @@ function LessonRoute() {
       <LessonExtras slug={lesson.slug} />
     </AnnotationSurface>
   )
+}
+
+/**
+ * A second host context over the same annotation module: the surface here is
+ * an image being zoomed rather than a page being scrolled.
+ */
+function BoardBookRoute() {
+  const { slug } = useParams<{ slug: string }>()
+  const page = BOARDBOOKS.find((candidate) => candidate.slug === slug)
+
+  if (!page) return <Redirect to={`/lesson/${LESSONS[0].slug}`} />
+
+  return <BoardBook id={`boardbook-${page.slug}`} boardbook={page.boardbook} />
 }

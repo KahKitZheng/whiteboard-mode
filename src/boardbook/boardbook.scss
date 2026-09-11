@@ -1,0 +1,217 @@
+.boardbook {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 60vh;
+  background: #1c1d24;
+
+  &:fullscreen {
+    min-height: 100%;
+  }
+}
+
+.boardbook-viewer {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+
+  // OSD sizes the overlay wrappers; nothing inside them may add to that.
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.boardbook-osd {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+  The overlay and the surface in it are the size of the whole image. Off, a
+  press has to fall through them to OSD's canvas to pan — only the controls
+  inside take one. Armed, the surface opts itself back in (annotation.scss).
+*/
+.boardbook-osd .openseadragon-overlay-wrapper,
+.boardbook-osd .openseadragon-overlay-wrapper > div,
+.boardbook-layer {
+  pointer-events: none;
+}
+
+.boardbook-layer {
+  width: 100%;
+  height: 100%;
+}
+
+.boardbook-area {
+  pointer-events: auto;
+  position: absolute;
+  display: block;
+  padding: 0;
+  border: 2px solid rgb(31 111 139 / 45%);
+  border-radius: 8px;
+  background: transparent;
+  cursor: zoom-in;
+
+  &:hover {
+    background: rgb(31 111 139 / 12%);
+  }
+
+  &[data-current] {
+    border-color: var(--accent);
+    cursor: zoom-out;
+  }
+}
+
+.boardbook-area-number {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 6px 0 8px 0;
+  background: rgb(31 111 139 / 85%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 22px;
+  text-align: center;
+
+  .boardbook-area[data-current] & {
+    background: var(--accent);
+  }
+}
+
+.boardbook-marker {
+  pointer-events: auto;
+  position: absolute;
+  // `left`/`top` name the authored centre.
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: #3c3c3c;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 0 4px rgb(0 0 0 / 10%);
+  cursor: pointer;
+
+  &[data-kind='text'] {
+    justify-content: space-between;
+    padding: 0 0.6em;
+    border-radius: 0.35em;
+    font-size: 0.75em !important;
+  }
+
+  &[data-theme='light'] {
+    background: #fff;
+    color: #3c3c3c;
+  }
+}
+
+.boardbook-marker-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boardbook-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  background: #16171d;
+  color: #e5e4e7;
+  border-bottom: 1px solid #2e303a;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #2e303a;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+}
+
+.boardbook-bar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.boardbook-bar-name {
+  min-width: 180px;
+  text-align: center;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.boardbook-popup {
+  display: grid;
+  gap: 24px;
+
+  &[data-layout='two-column'] {
+    width: min(960px, 92vw);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.boardbook-popup-image {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.boardbook-popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  p,
+  ul,
+  ol {
+    margin: 0;
+  }
+}
+
+.boardbook-popup-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.boardbook-popup-link {
+  color: var(--accent);
+}
+
+.boardbook-popup-audio {
+  width: 100%;
+}

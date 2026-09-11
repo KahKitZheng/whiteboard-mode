@@ -16,9 +16,10 @@ The host app must render annotatable dialogs with `modal={false}` (or `'trap-foc
 
 A non-modal dialog closes when focus leaves it, and reaching for the whiteboard toolbar looks exactly like that. Focus-out dismissal is therefore ignored while a dialog declares a surface. Pressing the backdrop, its own control, or Escape all still close it.
 
-A dialog's surface spans the whole viewport rather than the dialog's own box, so with whiteboard mode armed the teacher can annotate anywhere on screen and the marks belong to the dialog. That surface is also what decides what a press outside the dialog means, without any code asking:
+A dialog's surface spans the whole viewport rather than the dialog's own box, so with whiteboard mode armed the teacher can annotate anywhere on screen and the marks belong to the dialog. The backdrop is rendered *inside* that surface, so a press outside the dialog lands on the backdrop whether armed or not, and ADR 0006 decides what it means:
 
-- **Armed** — the layer is live and takes the press, so it draws. The dialog stays open.
-- **Off** — the layer is inert, so the press falls through to the backdrop beneath and dismisses.
+- **Off** — the press is the backdrop's, and dismisses.
+- **Armed, a tap** — still the backdrop's, and dismisses. Pressing outside means "done" with or without a pen in hand, so nobody has to remember which controls work while armed.
+- **Armed, a drag** — a stroke. The dialog stays open; an errant drag should not throw away the thing you are annotating.
 
-Which is the behaviour you want either way: while drawing, an errant press should not throw away the thing you are annotating; while not drawing, pressing outside means "done".
+*Amended:* the first version had the backdrop beneath the surface, so armed, every press outside drew. That made dismissing a dialog depend on disarming first.

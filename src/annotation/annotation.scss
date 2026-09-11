@@ -1,5 +1,30 @@
 .annotation-surface {
   position: relative;
+
+  /*
+    Armed, the surface takes every press and decides per press whether it is a
+    stroke or the host's — ADR 0006. This wins over a host wrapper's
+    `pointer-events: none` (ADR 0001), which only has to hold while off.
+  */
+  &[data-active] {
+    pointer-events: auto;
+    // Without this the browser claims a drag as a scroll and the stroke dies
+    // halfway through on any touch device.
+    touch-action: none;
+    // Dragging across the host's text would otherwise select it.
+    user-select: none;
+    -webkit-user-select: none;
+    // A control underneath sets its own cursor, which is the affordance.
+    cursor: crosshair;
+  }
+
+  &[data-tool='eraser'] {
+    cursor: cell;
+  }
+
+  &[data-tool='select'] {
+    cursor: default;
+  }
 }
 
 /*
@@ -17,8 +42,9 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  // Whiteboard mode off: annotations are visible but the host app is clickable
-  // straight through them.
+  // Never hit-tested, armed or not: what is under the pointer is the host's
+  // element, and the surface around this layer listens. Widgets and the text
+  // editor opt back in below.
   pointer-events: none;
   // Strokes may run past the surface box; don't clip them to it.
   overflow: visible;
@@ -26,22 +52,6 @@
   // browser's blue highlight sitting behind the letters mid-drag.
   user-select: none;
   -webkit-user-select: none;
-
-  &[data-active] {
-    pointer-events: auto;
-    // Without this the browser claims a drag as a scroll and the stroke dies
-    // halfway through on any touch device.
-    touch-action: none;
-    cursor: crosshair;
-  }
-
-  &[data-tool='eraser'] {
-    cursor: cell;
-  }
-
-  &[data-tool='select'] {
-    cursor: default;
-  }
 
   [data-marked] {
     opacity: 0.25;
@@ -84,6 +94,7 @@
   }
 
   .text-input {
+    pointer-events: auto;
     // ...but the editor itself is text, and selecting it is the point.
     user-select: text;
     -webkit-user-select: text;
