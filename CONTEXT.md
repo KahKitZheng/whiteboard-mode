@@ -36,8 +36,16 @@ _Avoid_: Basic shape, standard shape
 A shape whose rendering is interactive rather than static — a timer, a coin flip. A widget is a shape in every other respect: placed, moved, persisted, restored.
 _Avoid_: Plugin, tool (a widget is not a tool), gadget
 
+**Mark**:
+A highlight or underline stored as the words it covers rather than as ink, and drawn from wherever those words are. A shape like any other for selecting, restyling and deleting; not for moving.
+_Avoid_: Highlight (as the noun for the shape — it is one kind of mark), decoration, text annotation
+
 **Annotation**:
 Collective, uncountable — what a surface holds. Use *shape* when counting or referring to one.
+
+**Anchor**:
+What a shape remembers about the host content under it — the words or the picture, and where they were — so it can follow them when the page reflows. A shape without one sits at its coordinates.
+_Avoid_: Attachment, binding, target (the target is the element; the anchor is the memory of it)
 
 ### Acting on a surface
 

@@ -74,6 +74,17 @@ export function outline(shape: Shape): Point[] {
     case 'arrow':
       return [shape.from, shape.to]
 
+    case 'mark':
+      // The line the ink runs along in each box: through the middle of a
+      // highlight or strikethrough, under an underline.
+      return shape.boxes.flatMap((box) => {
+        const y = shape.kind === 'underline' ? box.y + box.height : box.y + box.height / 2
+        return [
+          { x: box.x, y },
+          { x: box.x + box.width, y },
+        ]
+      })
+
     case 'rect':
     case 'timer': {
       const { from, to } = shape
@@ -117,6 +128,16 @@ export function mapPoints(shape: Shape, move: (point: Point) => Point): Shape {
       return { ...shape, points: shape.points.map(move) }
     case 'text':
       return { ...shape, at: move(shape.at) }
+    case 'mark':
+      // Its words decide where it is; this only matters for the fallback boxes.
+      return {
+        ...shape,
+        boxes: shape.boxes.map((box) => {
+          const from = move({ x: box.x, y: box.y })
+          const to = move({ x: box.x + box.width, y: box.y + box.height })
+          return { x: from.x, y: from.y, width: to.x - from.x, height: to.y - from.y }
+        }),
+      }
     default:
       return { ...shape, from: move(shape.from), to: move(shape.to) }
   }

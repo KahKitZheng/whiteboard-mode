@@ -15,22 +15,31 @@ const OPTIONS = {
 const HIGHLIGHT_OPTIONS = { ...OPTIONS, thinning: 0 }
 
 /**
+ * A mark's line is computed, not drawn: its ends are exactly where the words
+ * end. Streamlining — which drags each point toward the one before it, and
+ * makes a live pen feel steady — would pull those ends a word short.
+ */
+const MARK_OPTIONS = { ...HIGHLIGHT_OPTIONS, streamline: 0 }
+
+export type Nib = 'pen' | 'highlighter' | 'mark'
+
+function optionsFor(nib: Nib) {
+  if (nib === 'mark') return MARK_OPTIONS
+  return nib === 'highlighter' ? HIGHLIGHT_OPTIONS : OPTIONS
+}
+
+/**
  * Reference-space input points -> an SVG path describing the stroke's filled
  * outline, in surface pixels. The thickness scales with the surface too,
  * otherwise a stroke drawn on a laptop looks like a marker on a 4K panel.
  */
-export function strokePath(
-  points: Point[],
-  surfaceWidth: number,
-  weight: number,
-  highlight = false,
-): string {
+export function strokePath(points: Point[], surfaceWidth: number, weight: number, nib: Nib = 'pen'): string {
   if (points.length === 0) return ''
 
   const scale = scaleFor(surfaceWidth)
   const outline = getStroke(
     points.map((point) => [point.x * scale, point.y * scale]),
-    { ...(highlight ? HIGHLIGHT_OPTIONS : OPTIONS), size: weight * scale },
+    { ...optionsFor(nib), size: weight * scale },
   )
 
   return pathFromOutline(outline)

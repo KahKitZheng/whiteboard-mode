@@ -1,6 +1,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type DragEvent,
@@ -8,6 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
+import { anchorShape, markOver, placeShape, unanchored, wordAt, wordsBetween, type Frame } from './anchor'
 import { toReference, type Point } from './coords'
 import {
   aspectOf,
@@ -29,7 +31,7 @@ import { ShapeView } from './ShapeView'
 import { TextEditor } from './TextEditor'
 import { load, save } from './storage'
 import { restyle, styleOf, type Style } from './style'
-import type { Shape, Text } from './types'
+import type { Mark, Shape, Text } from './types'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './annotation.scss'
 
@@ -98,6 +100,7 @@ function resizeFactors(
 function worthKeeping(shape: Shape): boolean {
   if (shape.type === 'stroke') return shape.points.length >= 2
   if (shape.type === 'text') return shape.text.length > 0
+  if (shape.type === 'mark') return shape.boxes.length > 0
   return Math.hypot(shape.to.x - shape.from.x, shape.to.y - shape.from.y) > 4
 }
 
@@ -166,6 +169,18 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   const [selected, setSelected] = useState<string | null>(null)
   const gesture = useRef<Gesture | null>(null)
   const erasing = useRef<{ pointerId: number; last: Point } | null>(null)
+  /*
+    A highlight or underline being dragged over words. It grows word by word,
+    within the block it started in, and becomes a mark on release — ADR 0008.
+  */
+  const marking = useRef<{
+    pointerId: number
+    id: string
+    kind: Mark['kind']
+    block: Element
+    start: Range
+    range: Range
+  } | null>(null)
   const [marked, setMarked] = useState<string[]>([])
   /*
     A press that may still be the host's. Whether it is a click or the start
@@ -177,7 +192,97 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   // the control's click on release, and that click is ours to drop.
   const swallowClick = useRef(false)
 
-  const selectedShape = state.shapes.find((shape) => shape.id === selected) ?? null
+  /*
+    Shapes follow the host content under them (ADR 0007) — except on a surface
+    with a viewBox, where the content is one image that scales as a whole and
+    the coordinates are already exact.
+  */
+  const anchoring = !viewBox
+  const [layoutTick, setLayoutTick] = useState(0)
+
+  useEffect(() => {
+    const observed = element.current
+    if (!observed || !anchoring) return
+
+    let frame = 0
+    function bump() {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        setLayoutTick((tick) => tick + 1)
+      })
+    }
+
+    // The host can reflow without the surface changing width — an image
+    // arriving, a block appearing, a font swapping in. The layer itself
+    // mutates on every stroke, and placing again for that would loop.
+    const observer = new MutationObserver((mutations) => {
+      const host = mutations.some((mutation) => {
+        const target = mutation.target instanceof Element ? mutation.target : mutation.target.parentElement
+        return !target?.closest('.annotation-layer')
+      })
+      if (host) bump()
+    })
+    observer.observe(observed, { childList: true, subtree: true, characterData: true })
+    observed.addEventListener('load', bump, true)
+    document.fonts?.ready.then(bump)
+
+    return () => {
+      observer.disconnect()
+      observed.removeEventListener('load', bump, true)
+      cancelAnimationFrame(frame)
+    }
+  }, [anchoring])
+
+  // Reads layout during render, deliberately: the observers above and the
+  // width state make sure a render follows every change worth reading.
+  const placed = useMemo(() => {
+    const surface = element.current
+    if (!anchoring || !surface || width === 0) return state.shapes
+    const frame: Frame = { surface, width }
+    return state.shapes.map((shape) => placeShape(shape, frame))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.shapes, width, layoutTick, anchoring])
+
+  function currentFrame(): Frame | null {
+    const surface = element.current
+    return anchoring && surface && width > 0 ? { surface, width } : null
+  }
+
+  /** A shape as it is stored: remembering what is under it, when there is something. */
+  function settle(shape: Shape): Shape {
+    const frame = currentFrame()
+    return frame ? anchorShape(shape, frame) : shape
+  }
+
+  /** The mark a drag over words has grown to so far. */
+  function markSoFar(): Mark | null {
+    const frame = currentFrame()
+    const drag = marking.current
+    if (!frame || !drag) return null
+    return markOver(frame, drag.block, drag.range, {
+      id: drag.id,
+      kind: drag.kind,
+      color: style.color,
+      weight: style.weight,
+      opacity: drag.kind === 'highlight' ? HIGHLIGHT_OPACITY : style.opacity,
+    })
+  }
+
+  // Shapes from before anchoring — seeds, or a surface saved by an earlier
+  // build — are adopted once, where they sit now. Not a history entry: the
+  // teacher did nothing.
+  const adopted = useRef(false)
+  useEffect(() => {
+    if (adopted.current || !anchoring || width === 0) return
+    adopted.current = true
+    if (!state.shapes.some((shape) => !shape.anchor)) return
+    replace((shapes) => shapes.map((shape) => (shape.anchor ? shape : settle(shape))))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anchoring, width])
+
+  // What the pointer meets, and what is drawn, is the placed shape.
+  const selectedShape = placed.find((shape) => shape.id === selected) ?? null
 
   useLayoutEffect(() => {
     const observed = element.current
@@ -298,10 +403,11 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   }
 
   function commitText(label: Text) {
+    const settled = settle(label)
     commit((shapes) =>
-      shapes.some((shape) => shape.id === label.id)
-        ? shapes.map((shape) => (shape.id === label.id ? label : shape))
-        : [...shapes, label],
+      shapes.some((shape) => shape.id === settled.id)
+        ? shapes.map((shape) => (shape.id === settled.id ? settled : shape))
+        : [...shapes, settled],
     )
   }
 
@@ -349,9 +455,12 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
 
     if (tool === 'select') {
       // A handle on the current selection beats picking something else up.
-      const corner = selectedShape ? cornerAt(selectedShape, point) : null
+      const corner = selectedShape && selectedShape.type !== 'mark' ? cornerAt(selectedShape, point) : null
       if (selectedShape && corner) {
         surface.setPointerCapture(pointerId)
+        // The gesture transforms the shape from where it is drawn, so that is
+        // what goes in the store for its duration; it is anchored afresh at the end.
+        replace((shapes) => shapes.map((shape) => (shape.id === selectedShape.id ? unanchored(selectedShape) : shape)))
         const box = bounds(selectedShape)
         gesture.current = {
           kind: 'resize',
@@ -366,12 +475,14 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
 
       // Picking uses the shape's outline; a shape already selected can also be
       // grabbed anywhere inside its box, which is how you move a thin one.
-      const hit = shapeNear(state.shapes, point)
+      const hit = shapeNear(placed, point)
 
       setSelected(hit?.id ?? null)
-      if (!hit) return
+      // A mark sits where its words are; it can be restyled and deleted, not dragged.
+      if (!hit || hit.type === 'mark') return
 
       surface.setPointerCapture(pointerId)
+      replace((shapes) => shapes.map((shape) => (shape.id === hit.id ? unanchored(hit) : shape)))
       gesture.current = { kind: 'move', shapeId: hit.id, original: hit, before: state.shapes, origin: point }
       return
     }
@@ -382,7 +493,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
       surface.setPointerCapture(pointerId)
       erasing.current = { pointerId, last: point }
 
-      const hit = shapeAt(state.shapes, point)
+      const hit = shapeAt(placed, point)
       setMarked(hit ? [hit.id] : [])
       return
     }
@@ -390,7 +501,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     if (tool === 'text') {
       // Aiming at existing text retypes it rather than stacking a second label
       // on top of the first.
-      const existing = shapeNear(state.shapes, point)
+      const existing = shapeNear(placed, point)
       if (existing?.type === 'text') return beginEditing(existing)
 
       // Typed straight onto the surface rather than through window.prompt: a
@@ -409,6 +520,28 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     }
 
     if (inProgress.current.size > 0) return
+
+    // Set to, these tools mark the words under the drag rather than laying
+    // ink over them. Over anything but words they are ink as usual.
+    const wants: Mark['kind'] | null =
+      tool === 'highlighter' ? (style.snap ? 'highlight' : null) : tool === 'pen' && style.penMark !== 'none' ? style.penMark : null
+    if (wants) {
+      const frame = currentFrame()
+      const word = frame && wordAt(frame, clientX, clientY)
+      if (word) {
+        surface.setPointerCapture(pointerId)
+        marking.current = {
+          pointerId,
+          id: crypto.randomUUID(),
+          kind: wants,
+          block: word.block,
+          start: word.range,
+          range: word.range,
+        }
+        setDraft(markSoFar())
+        return
+      }
+    }
 
     surface.setPointerCapture(pointerId)
     const ink = { color: style.color, weight: style.weight / zoom, opacity: style.opacity }
@@ -508,7 +641,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   function retypeText(event: ReactMouseEvent<HTMLDivElement>) {
     if (tool !== 'select') return
 
-    const hit = shapeNear(state.shapes, pointFrom(event, event.currentTarget.getBoundingClientRect()))
+    const hit = shapeNear(placed, pointFrom(event, event.currentTarget.getBoundingClientRect()))
     if (hit?.type !== 'text') return
 
     setSelected(null)
@@ -516,6 +649,18 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   }
 
   function extendShape(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = marking.current
+    if (drag && drag.pointerId === event.pointerId) {
+      const frame = currentFrame()
+      const word = frame && wordAt(frame, event.clientX, event.clientY)
+      // Only words in the block it started in: a mark is one block's.
+      if (word && word.block === drag.block) {
+        drag.range = wordsBetween(drag.start, word.range)
+        setDraft(markSoFar())
+      }
+      return
+    }
+
     const erase = erasing.current
     if (erase && erase.pointerId === event.pointerId) {
       const box = event.currentTarget.getBoundingClientRect()
@@ -525,7 +670,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
 
       for (const move of moves) {
         const next = pointFrom(move, box)
-        for (const shape of shapesAlong(state.shapes, erase.last, next)) swept.push(shape.id)
+        for (const shape of shapesAlong(placed, erase.last, next)) swept.push(shape.id)
         erase.last = next
       }
 
@@ -557,7 +702,8 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   }
 
   function grow(shape: Shape, event: ReactPointerEvent<HTMLDivElement>, box: DOMRect): Shape {
-    if (shape.type === 'text') return shape
+    // A label is placed, a mark grows word by word elsewhere; neither is dragged out.
+    if (shape.type === 'text' || shape.type === 'mark') return shape
 
     if (shape.type === 'stroke') {
       // Boards fire pointer events faster than frames render; the coalesced
@@ -578,6 +724,14 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   }
 
   function endShape(event: ReactPointerEvent<HTMLDivElement>) {
+    if (marking.current?.pointerId === event.pointerId) {
+      const mark = markSoFar()
+      marking.current = null
+      setDraft(null)
+      if (mark) commit((shapes) => [...shapes, mark])
+      return
+    }
+
     if (erasing.current) {
       erasing.current = null
       if (marked.length > 0) {
@@ -589,9 +743,13 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
 
     if (gesture.current) {
       // One history entry for the whole gesture, not one per pointer move.
-      const { before } = gesture.current
+      const { before, shapeId } = gesture.current
       gesture.current = null
-      setState((state) => timeline.record(state, before))
+      setState((state) => {
+        const recorded = timeline.record(state, before)
+        // Moved or resized, the shape is over something else now.
+        return { ...recorded, shapes: recorded.shapes.map((shape) => (shape.id === shapeId ? settle(shape) : shape)) }
+      })
       return
     }
 
@@ -601,10 +759,16 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     inProgress.current.delete(event.pointerId)
     setDraft(null)
 
-    if (worthKeeping(shape)) commit((shapes) => [...shapes, shape])
+    if (worthKeeping(shape)) commit((shapes) => [...shapes, settle(shape)])
   }
 
   function cancelShape(event: ReactPointerEvent<HTMLDivElement>) {
+    if (marking.current?.pointerId === event.pointerId) {
+      marking.current = null
+      setDraft(null)
+      return
+    }
+
     if (erasing.current) {
       // A cancelled sweep deletes nothing.
       erasing.current = null
@@ -663,7 +827,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
           // shifting every shape by half a pixel.
           preserveAspectRatio={viewBox ? 'none' : undefined}
         >
-          {state.shapes
+          {placed
             .filter((shape) => shape.id !== editing?.id)
             .map((shape) => (
             /* Marked shapes fade rather than vanish, so a sweep can be seen

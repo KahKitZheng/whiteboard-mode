@@ -34,6 +34,9 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
       border: selected.border !== undefined,
       fill: selected.fill !== undefined,
       opacity: selected.opacity !== undefined,
+      // A mark's kind is what it is; these only steer the next one.
+      snap: false,
+      penMark: false,
     }
   }
 
@@ -46,6 +49,8 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
     border: BORDER_TOOLS.includes(tool),
     fill: FILL_TOOLS.includes(tool),
     opacity: SHAPE_TOOLS.includes(tool),
+    snap: tool === 'highlighter',
+    penMark: tool === 'pen',
   }
 }
 

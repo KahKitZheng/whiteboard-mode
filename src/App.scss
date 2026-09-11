@@ -26,12 +26,55 @@
   flex-direction: column;
 }
 
-.lesson {
-  padding: 40px 48px 40px;
+// Two columns that stack below a tablet width — the reflow that moves content
+// out from under an annotation.
+.lesson-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 40px 56px;
+  padding: 40px 48px 0;
 
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lesson {
   p {
     margin: 0 0 24px;
     max-width: 62ch;
+  }
+}
+
+.lesson-aside {
+  padding-top: 32px;
+
+  h2 {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-h);
+  }
+
+  p {
+    margin: 0 0 16px;
+  }
+}
+
+.lesson-figure {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 0 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+
+  circle,
+  path {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 2;
   }
 }
 
@@ -39,7 +82,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 0 48px 96px;
+  padding: 24px 48px 96px;
 }
 
 .extra-button {

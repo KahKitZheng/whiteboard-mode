@@ -1,3 +1,4 @@
+import { rescaleAnchor } from './anchor'
 import { REFERENCE_WIDTH } from './coords'
 import { scaleAbout } from './geometry'
 import type { Shape } from './types'
@@ -44,7 +45,15 @@ export function load(surfaceId: string): Shape[] | null {
     const factor = REFERENCE_WIDTH / stored.refWidth
     // scaleAbout rather than mapPoints: text carries a size that has to travel
     // with its position.
-    return stored.shapes.map((shape) => scaleAbout(shape, { x: 0, y: 0 }, factor, factor))
+    return stored.shapes.map((shape) => {
+      const scaled = scaleAbout(shape, { x: 0, y: 0 }, factor, factor)
+      if (scaled.type === 'mark') return { ...scaled, anchor: rescaleAnchor(scaled.anchor, factor) }
+      return {
+        ...scaled,
+        anchor: shape.anchor && rescaleAnchor(shape.anchor, factor),
+        ...('toAnchor' in shape && shape.toAnchor ? { toAnchor: rescaleAnchor(shape.toAnchor, factor) } : {}),
+      }
+    })
   }
 
   return stored.shapes

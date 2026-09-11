@@ -25,6 +25,8 @@ export type Lesson = {
   slug: string
   title: string
   body: string[]
+  /** The second column — the thing that moves when the columns stack. */
+  aside: { title: string; body: string[] }
   /** Hardcoded until #2 — proves placement, scaling and scrolling. */
   shapes: Shape[]
 }
@@ -43,6 +45,13 @@ export const LESSONS: Lesson[] = [
     slug: 'one',
     title: 'Lesson one',
     body: PARAGRAPHS,
+    aside: {
+      title: 'Why annotations follow the words',
+      body: [
+        'Circle a word here, then make the window narrower until this column drops below the other one. The circle drops with it.',
+        'A shape remembers what was under it — the words, or the picture — and is placed against wherever that is now, not against a fraction of the page.',
+      ],
+    },
     shapes: [
       { id: 'one-title', type: 'stroke', points: ellipse(215, 120, 195, 58), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 },
       { id: 'one-body', type: 'stroke', points: underline(60, 640, 505), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 },
@@ -52,6 +61,10 @@ export const LESSONS: Lesson[] = [
     slug: 'two',
     title: 'Lesson two',
     body: [...PARAGRAPHS].reverse(),
+    aside: {
+      title: 'The same, reversed',
+      body: ['Same page, paragraphs in the other order. Annotations belong to the lesson, so the two pages start empty of each other.'],
+    },
     shapes: [
       { id: 'two-body', type: 'stroke', points: underline(60, 900, 330), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 },
     ],

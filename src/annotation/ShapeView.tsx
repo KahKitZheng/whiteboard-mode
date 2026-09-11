@@ -7,6 +7,26 @@ import type { BorderStyle, FillStyle, Shape } from './types'
 const ARROWHEAD = 4
 
 /**
+ * A pen's underline or strikethrough is a fraction of the pen's weight: at the
+ * pen's full width it covered the descenders. Still follows the weight
+ * setting, so a teacher can have it thicker.
+ */
+const MARK_WEIGHT = 0.35
+/** Where in the line box each mark's line runs, top to bottom. */
+const MARK_LINE = { highlight: 0.5, strikethrough: 0.55, underline: 0.92 }
+
+/** Points along a mark's line, with a hand's slight waver — deterministic per shape. */
+const MARK_STEPS = 6
+
+function waver(seed: string, x0: number, x1: number, y: number, amplitude: number): Point[] {
+  const phase = Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0) % 7
+  return Array.from({ length: MARK_STEPS + 1 }, (_, step) => ({
+    x: x0 + ((x1 - x0) * step) / MARK_STEPS,
+    y: y + Math.sin(step * 1.9 + phase) * amplitude,
+  }))
+}
+
+/**
  * Dash lengths are multiples of the line's own width, so a dashed thin line and
  * a dashed thick one read as the same pattern rather than the thick one looking
  * nearly solid. A dot is a zero-length dash relying on the round cap the layer
@@ -34,7 +54,7 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
     case 'stroke':
       return (
         <path
-          d={strokePath(shape.points, width, shape.weight, shape.highlight)}
+          d={strokePath(shape.points, width, shape.weight, shape.highlight ? 'highlighter' : 'pen')}
           fill={shape.color}
           opacity={shape.opacity}
         />
@@ -140,6 +160,28 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
         >
           {shape.text}
         </text>
+      )
+    }
+
+    case 'mark': {
+      /*
+        Drawn from the words' line boxes, as ink: a highlighter's chisel stroke
+        through each line, or a pen's line under it. Nothing here is stored —
+        wrap the words and the boxes change, and so does this.
+      */
+      return (
+        <g fill={shape.color} opacity={shape.opacity}>
+          {shape.boxes.map((box, index) => {
+            const highlight = shape.kind === 'highlight'
+            const y = box.y + box.height * MARK_LINE[shape.kind]
+            const weight = highlight ? box.height * 0.95 : Math.min(shape.weight * MARK_WEIGHT, box.height * 0.2)
+            // The round caps add half the weight at each end; pull the line in
+            // by that much so the ink covers the words and not their neighbours.
+            const inset = Math.min(weight / 2, box.width / 2)
+            const points = waver(`${shape.id}${index}`, box.x + inset, box.x + box.width - inset, y, weight * (highlight ? 0.03 : 0.25))
+            return <path key={index} d={strokePath(points, width, weight, 'mark')} />
+          })}
+        </g>
       )
     }
 

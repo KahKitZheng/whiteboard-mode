@@ -10,6 +10,12 @@ import type { BorderStyle, FillStyle, Shape } from './types'
  * pen stroke and a thick rectangle border read as the same thickness —
  * perfect-freehand's `size` and SVG's `stroke-width` both mean the same thing.
  */
+/**
+ * What the pen does over words. Free is ink; the other two turn the stroke
+ * into a mark on the words it passes over (ADR 0008).
+ */
+export type PenMark = 'none' | 'underline' | 'strikethrough'
+
 export type Style = {
   color: string
   weight: number
@@ -18,6 +24,9 @@ export type Style = {
   border: BorderStyle
   fill: FillStyle
   opacity: number
+  /** Highlighter: mark the words under the drag rather than laying ink over them. */
+  snap: boolean
+  penMark: PenMark
 }
 
 export type Swatch = { name: string; value: string }
@@ -85,6 +94,17 @@ export const OPACITIES: { name: string; value: number }[] = [
   { name: 'Full', value: 1 },
 ]
 
+export const SNAP_MODES: { name: string; value: boolean }[] = [
+  { name: 'Free', value: false },
+  { name: 'Snap to words', value: true },
+]
+
+export const PEN_MARKS: { name: string; value: PenMark }[] = [
+  { name: 'Free', value: 'none' },
+  { name: 'Underline', value: 'underline' },
+  { name: 'Strikethrough', value: 'strikethrough' },
+]
+
 export const DEFAULT_STYLE: Style = {
   color: COLORS[0].value,
   weight: WEIGHTS[1].value,
@@ -92,6 +112,9 @@ export const DEFAULT_STYLE: Style = {
   border: 'solid',
   fill: 'none',
   opacity: 1,
+  // Opt in: a teacher who wants ink gets ink.
+  snap: false,
+  penMark: 'none',
 }
 
 /** Closed shapes are the only ones with an inside to fill. */
@@ -122,6 +145,7 @@ export function restyle(shape: Shape, patch: Partial<Style>): Shape {
       }
 
     case 'stroke':
+    case 'mark':
       return {
         ...shape,
         ...color,
@@ -151,6 +175,7 @@ export function styleOf(shape: Shape): Partial<Style> {
       return { color: shape.color, textSize: shape.size, opacity: shape.opacity }
 
     case 'stroke':
+    case 'mark':
       return { color: shape.color, weight: shape.weight, opacity: shape.opacity }
 
     default:

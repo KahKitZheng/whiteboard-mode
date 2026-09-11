@@ -52,12 +52,26 @@ function LessonRoute() {
       className="page-surface"
       initialShapes={lesson.shapes}
     >
-      <article className="lesson">
-        <h1>{lesson.title}</h1>
-        {lesson.body.map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
-        ))}
-      </article>
+      <div className="lesson-columns">
+        <article className="lesson">
+          <h1>{lesson.title}</h1>
+          {lesson.body.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </article>
+        <aside className="lesson-aside">
+          {/* A picture: a shape over it follows its box, and scales with it. */}
+          <svg className="lesson-figure" viewBox="0 0 320 180" aria-hidden="true">
+            <circle cx="110" cy="90" r="58" />
+            <circle cx="210" cy="90" r="58" />
+            <path d="M40 150 Q 160 120 280 150" />
+          </svg>
+          <h2>{lesson.aside.title}</h2>
+          {lesson.aside.body.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </aside>
+      </div>
 
       <LessonExtras slug={lesson.slug} />
     </AnnotationSurface>

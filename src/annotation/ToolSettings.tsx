@@ -7,6 +7,8 @@ import {
   COLORS,
   FILLS,
   OPACITIES,
+  PEN_MARKS,
+  SNAP_MODES,
   TEXT_SIZES,
   TINT_OPACITY,
   WEIGHTS,
@@ -61,6 +63,8 @@ export function ToolSettings() {
   const border = selected?.border ?? style.border
   const fill = selected?.fill ?? style.fill
   const opacity = selected?.opacity ?? style.opacity
+  const snap = style.snap
+  const penMark = style.penMark
 
   return (
     <>
@@ -81,6 +85,50 @@ export function ToolSettings() {
                 render={<Toggle value={value} />}
               >
                 <span className="swatch-dot" />
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+        </Setting>
+      )}
+
+      {shown.snap && (
+        <Setting label="Words">
+          <ToggleGroup
+            value={[snap ? 'snap' : 'free']}
+            onValueChange={([next]) => next && apply({ snap: next === 'snap' })}
+            className="choices"
+          >
+            {SNAP_MODES.map(({ name, value }) => (
+              <Toolbar.Button
+                key={name}
+                className="icon-button"
+                aria-label={name}
+                title={name}
+                render={<Toggle value={value ? 'snap' : 'free'} />}
+              >
+                <WordsIcon color={color} mode={value ? 'highlight' : 'free'} />
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+        </Setting>
+      )}
+
+      {shown.penMark && (
+        <Setting label="Words">
+          <ToggleGroup
+            value={[penMark]}
+            onValueChange={([next]) => next && apply({ penMark: next as Style['penMark'] })}
+            className="choices"
+          >
+            {PEN_MARKS.map(({ name, value }) => (
+              <Toolbar.Button
+                key={value}
+                className="icon-button"
+                aria-label={name}
+                title={name}
+                render={<Toggle value={value} />}
+              >
+                <WordsIcon color={color} mode={value === 'none' ? 'free' : value} />
               </Toolbar.Button>
             ))}
           </ToggleGroup>
@@ -235,4 +283,19 @@ export function ToolSettings() {
 
 function dotSize(index: number): number {
   return Math.round(DOT * (0.35 + index * 0.22))
+}
+
+/** "Aa" with the mark the option makes on it — or a loose stroke for free ink. */
+function WordsIcon({ color, mode }: { color: string; mode: 'free' | 'highlight' | 'underline' | 'strikethrough' }) {
+  return (
+    <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
+      {mode === 'highlight' && <rect x="2" y="5" width="16" height="10" rx="2" fill={color} fillOpacity={0.35} />}
+      <text x="10" y="14" textAnchor="middle" fontSize="11" fontFamily="var(--sans)" fill="currentColor">
+        Aa
+      </text>
+      {mode === 'free' && <path d="M3 17 q 3 -3 6 0 t 6 0" stroke={color} strokeWidth="1.8" fill="none" strokeLinecap="round" />}
+      {mode === 'underline' && <line x1="3" y1="16.5" x2="17" y2="16.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />}
+      {mode === 'strikethrough' && <line x1="3" y1="10.5" x2="17" y2="10.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />}
+    </svg>
+  )
 }

@@ -8,7 +8,9 @@ Shape coordinates are stored against a fixed reference width rather than in raw 
 
 The host app's layout reflows — text rewraps at different widths — so scaling places a shape at the same *relative* position, not necessarily over the same *content*. An annotation circling a word will drift off it if the surface is resized after the annotation was made.
 
-This is accepted. Target devices are fixed-resolution school panels running fullscreen, where the scale factor never changes during a lesson. The broken case is a developer resizing a browser window.
+*Superseded by ADR 0007:* shapes now anchor to the content under them, and reference-width placement is the fallback for a shape over nothing. The rest of this section records the original reasoning.
+
+This was accepted. Target devices are fixed-resolution school panels running fullscreen, where the scale factor never changes during a lesson. The broken case is a developer resizing a browser window.
 
 The alternative that would survive reflow honestly is anchoring shapes to DOM elements (`{selector, dx, dy}`), which costs element identity, unmount handling and a resolution step on load. That is the upgrade path if reflow-mismatch turns out to bite real users.
 
