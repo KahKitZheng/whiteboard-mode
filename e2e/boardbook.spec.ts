@@ -342,3 +342,23 @@ test('off, a drag that starts on a focus area pans, and a tap on it still frames
   await page.mouse.click(again.x + again.width / 2, again.y + again.height / 2)
   await expect(page.locator('.boardbook-bar-name')).toHaveText('1/3 · De kringloop')
 })
+
+test('zoomed in, two fingers on a trackpad pan the page and a pinch zooms it', async ({ page }) => {
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  const viewer = (await page.locator('.boardbook-viewer').boundingBox())!
+  await page.mouse.move(viewer.x + viewer.width / 2, viewer.y + viewer.height / 2)
+  await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeGreaterThan(viewer.width)
+  const zoomed = (await layer(page).boundingBox())!
+
+  // A wheel is a pan: the page moves, its size does not change.
+  await page.mouse.wheel(0, 200)
+  await expect.poll(async () => (await layer(page).boundingBox())!.y).toBeLessThan(zoomed.y - 50)
+  expect(Math.abs((await layer(page).boundingBox())!.width - zoomed.width)).toBeLessThan(2)
+
+  // A pinch arrives as ctrl+wheel and zooms.
+  await page.keyboard.down('Control')
+  await page.mouse.wheel(0, -100)
+  await page.keyboard.up('Control')
+  await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeGreaterThan(zoomed.width * 1.5)
+})

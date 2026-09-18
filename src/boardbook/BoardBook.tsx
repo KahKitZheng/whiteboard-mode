@@ -12,6 +12,10 @@ import { byOrder, neighbour } from './walkthrough'
 import './boardbook.scss'
 
 const ZOOM_STEP = 1.4
+/** Zoom per pixel of pinch: a trackpad pinch arrives as ctrl+wheel, ~10px a tick. */
+const PINCH_RATE = 0.01
+/** A wheel in lines (Firefox) rather than pixels: about a line's worth each. */
+const LINE_PIXELS = 16
 
 /** What a press may land on that is not the image: a marker or a focus area. */
 const CONTROLS = '.boardbook-marker, .boardbook-area'
@@ -100,8 +104,9 @@ export function BoardBook({ id, boardbook, text }: Props) {
       // rest.
       visibilityRatio: 1,
       constrainDuringPan: true,
-      // A click means "this marker" or "this area", never "zoom here".
-      gestureSettingsMouse: { clickToZoom: false },
+      // A click means "this marker" or "this area", never "zoom here". The
+      // wheel is handled below, not by OSD.
+      gestureSettingsMouse: { clickToZoom: false, scrollToZoom: false },
       gestureSettingsTouch: { clickToZoom: false },
       gestureSettingsPen: { clickToZoom: false },
       // What still counts as a tap on a control: a finger on a board is slower
@@ -111,6 +116,33 @@ export function BoardBook({ id, boardbook, text }: Props) {
     })
 
     let opened: Size | null = null
+
+    /*
+      Two fingers on a trackpad pan, a pinch — which arrives as ctrl+wheel —
+      zooms about the fingers; a mouse wheel pans too. Straight on the DOM
+      rather than OSD's scroll event, which is throttled to one per 50ms and
+      would make a pan of dropped deltas stutter. Works armed as well, when
+      OSD's own tracker is off.
+    */
+    function onWheel(event: WheelEvent) {
+      if (!opened) return
+      event.preventDefault()
+      const { viewport } = viewer
+      const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? LINE_PIXELS : 1
+      if (event.ctrlKey || event.metaKey) {
+        const rect = viewer.canvas.getBoundingClientRect()
+        const at = viewport.pointFromPixel(new OpenSeadragon.Point(event.clientX - rect.left, event.clientY - rect.top))
+        viewport.zoomBy(Math.exp(-event.deltaY * unit * PINCH_RATE), at)
+      } else {
+        const adjustable = viewer as OpenSeadragon.Viewer & Adjustable
+        const delta = viewport.deltaPointsFromPixels(new OpenSeadragon.Point(event.deltaX * unit, event.deltaY * unit))
+        if (!adjustable.panHorizontal) delta.x = 0
+        if (!adjustable.panVertical) delta.y = 0
+        viewport.panBy(delta)
+      }
+      viewport.applyConstraints()
+    }
+    viewer.canvas.addEventListener('wheel', onWheel, { passive: false })
 
     viewer.addOnceHandler('open', () => {
       const size = viewer.world.getItemAt(0).getContentSize()
@@ -162,6 +194,7 @@ export function BoardBook({ id, boardbook, text }: Props) {
     setViewer(viewer)
 
     return () => {
+      viewer.canvas.removeEventListener('wheel', onWheel)
       viewer.destroy()
       setViewer(null)
       setLayer(null)
