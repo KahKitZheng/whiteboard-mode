@@ -1,21 +1,77 @@
-.lesson-nav {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+// One slide per route: the viewport, with the lesson on a card in the middle.
+// The page still scrolls when a card outgrows the screen.
+.slide {
   display: flex;
-  gap: 24px;
-  padding: 16px 48px;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: 32px 0;
+  box-sizing: border-box;
+}
+
+.slide-card {
+  width: 75vw;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
   background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 12px 40px rgb(0 0 0 / 8%);
+  // The boardbook inside is dark to its edges; the corners have to clip it.
+  overflow: hidden;
+}
 
-  a {
-    color: var(--text);
-    text-decoration: none;
+// Previous and next, hugging the sides of the screen at mid-height, and the
+// count in the corner — above the cards, below nothing.
+.slide-step {
+  position: fixed;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 320px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--bg);
+  color: var(--text-h);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 10%);
+  cursor: pointer;
 
-    &.is-active {
-      color: var(--accent);
-    }
+  &[data-side='left'] {
+    left: 24px;
   }
+
+  &[data-side='right'] {
+    right: 24px;
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--accent);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.slide-count {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .page-surface {

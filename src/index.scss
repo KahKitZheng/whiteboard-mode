@@ -2,6 +2,8 @@
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
+  // The page behind the slide cards, a step off the card.
+  --page: #f3f1f6;
   --border: #e5e4e7;
   --accent: #aa3bff;
 
@@ -26,6 +28,7 @@
     --text: #9ca3af;
     --text-h: #f3f4f6;
     --bg: #16171d;
+    --page: #0f1014;
     --border: #2e303a;
     --accent: #c084fc;
   }
@@ -35,15 +38,16 @@ body {
   margin: 0;
 }
 
+body {
+  background: var(--page);
+}
+
 #root {
-  // Fluid, like the assignments this stands in for: two columns on a wide
-  // screen, one on a narrow one. What an annotation sits on moves.
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  border-inline: 1px solid var(--border);
+  // A deck of slides, one per route; each is the viewport with the lesson on
+  // a card. The card is fluid, like the assignments this stands in for: two
+  // columns on a wide screen, one on a narrow one. What an annotation sits on
+  // moves.
   min-height: 100svh;
-  box-sizing: border-box;
   // So a page surface can stretch to fill whatever the content doesn't.
   display: flex;
   flex-direction: column;

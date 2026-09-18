@@ -1,4 +1,4 @@
-import { BrowserRouter, NavLink, Redirect, Route, Switch, useParams } from 'react-router-dom'
+import { BrowserRouter, Redirect, Route, Switch, useParams } from 'react-router-dom'
 import { AnnotationSurface } from './annotation/AnnotationSurface'
 import { WhiteboardModeProvider } from './annotation/WhiteboardMode'
 import { WhiteboardToolbar } from './annotation/WhiteboardToolbar'
@@ -6,31 +6,20 @@ import { BoardBook } from './boardbook/BoardBook'
 import { BOARDBOOKS } from './boardbook/fixtures'
 import { LESSONS } from './Lesson'
 import { LessonExtras } from './LessonExtras'
+import { SlideNav } from './SlideNav'
 import './App.scss'
 
 export default function App() {
   return (
     <WhiteboardModeProvider>
       <BrowserRouter>
-        <nav className="lesson-nav">
-          {LESSONS.map((lesson) => (
-            <NavLink key={lesson.slug} to={`/lesson/${lesson.slug}`} activeClassName="is-active">
-              {lesson.title}
-            </NavLink>
-          ))}
-          {BOARDBOOKS.map((page) => (
-            <NavLink key={page.slug} to={`/boardbook/${page.slug}`} activeClassName="is-active">
-              {page.title}
-            </NavLink>
-          ))}
-        </nav>
-
         <Switch>
           <Route path="/lesson/:slug" component={LessonRoute} />
           <Route path="/boardbook/:slug" component={BoardBookRoute} />
           <Redirect to={`/lesson/${LESSONS[0].slug}`} />
         </Switch>
 
+        <SlideNav />
         <WhiteboardToolbar />
       </BrowserRouter>
     </WhiteboardModeProvider>
@@ -43,15 +32,16 @@ function LessonRoute() {
 
   if (!lesson) return <Redirect to={`/lesson/${LESSONS[0].slug}`} />
 
-  // The lesson's surface covers the whole page, so anything on it can be
+  // The lesson's surface is the whole card, so anything on it can be
   // annotated — not just the article's box. The stage inside it declares its
   // own surface and paints above this one's layer.
   return (
-    <AnnotationSurface
-      id={`lesson-${lesson.slug}`}
-      className="page-surface"
-      initialShapes={lesson.shapes}
-    >
+    <section className="slide">
+      <AnnotationSurface
+        id={`lesson-${lesson.slug}`}
+        className="page-surface slide-card"
+        initialShapes={lesson.shapes}
+      >
       <div className="lesson-columns">
         <article className="lesson">
           <h1>{lesson.title}</h1>
@@ -74,7 +64,8 @@ function LessonRoute() {
       </div>
 
       <LessonExtras slug={lesson.slug} />
-    </AnnotationSurface>
+      </AnnotationSurface>
+    </section>
   )
 }
 
@@ -88,5 +79,11 @@ function BoardBookRoute() {
 
   if (!page) return <Redirect to={`/lesson/${LESSONS[0].slug}`} />
 
-  return <BoardBook id={`boardbook-${page.slug}`} boardbook={page.boardbook} text={page.text} />
+  return (
+    <section className="slide">
+      <div className="slide-card">
+        <BoardBook id={`boardbook-${page.slug}`} boardbook={page.boardbook} text={page.text} />
+      </div>
+    </section>
+  )
 }
