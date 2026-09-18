@@ -18,6 +18,6 @@ Markers and focus areas are children of that same surface, placed by percentage 
 
 *Amended for ADR 0006:* they were first built as OSD overlays of their own (point overlays for markers, rect for areas). They moved into the surface so a press on them is visible to it as a target.
 
-The overlay lives inside OSD's canvas element, whose tracker captures the pointer on any press. Off, a press on a marker or an area is stopped at the overlay element so the control gets its click instead of the tracker getting a pan (ADR 0006 has the armed side). Armed, `setMouseNavEnabled(false)` switches the tracker off altogether and the surface takes every press — a tap on a control stays the control's (ADR 0006), everything else draws. Navigation while armed goes through the chrome as well: the walkthrough, zoom buttons, and the navigator.
+The overlay lives inside OSD's canvas element, whose tracker captures the pointer on any press. Off, a press on a marker or an area is stopped at the overlay element so the control gets its click instead of the tracker getting a pan (ADR 0006 has the armed side). Armed, `setMouseNavEnabled(false)` switches the tracker off altogether and the surface takes every press — a tap on a control stays the control's (ADR 0006), everything else draws. Navigation while armed goes through the chrome as well: the walkthrough and the zoom buttons.
 
 Hit tolerance (`hit.ts`) and selection handle size (`Selection.tsx`) are in reference units, so both grow with zoom. Known, not yet addressed.

@@ -11,7 +11,7 @@ fixture shaped exactly like `AssignmentBoardBookEntity`.
 | 1 | OpenSeadragon renders the image, not `<img>` + CSS transform | Sharpness and fast first paint; deep zoom available later without a rewrite |
 | 2 | Annotation layer is **one OSD overlay** holding an `<svg viewBox="0 0 imgW imgH">` | OSD positions and sizes it every frame, the browser scales the contents. No transform maths, no per-shape work — the thing `useShapeScaling.ts` needed 336 lines for |
 | 3 | Free pan/zoom; focus areas are `fitBounds` shortcuts | Beyond app-react, which only zooms into authored areas at 1.2–2.5x |
-| 4 | Armed ⇒ `setMouseNavEnabled(false)`, layer takes every pointer | No gesture arbitration. Navigation while armed goes through chrome (zoom buttons, navigator, walkthrough) |
+| 4 | Armed ⇒ `setMouseNavEnabled(false)`, layer takes every pointer | No gesture arbitration. Navigation while armed goes through chrome (zoom buttons, walkthrough); the navigator minimap was dropped |
 | 5 | ~~Armed ⇒ markers and focus areas are `pointer-events: none`~~ Armed ⇒ a *tap* on a marker or area is still its own; a *drag* draws | Superseded by ADR 0006. Parity with app-react was the first build; a teacher shouldn't have to disarm to press a marker |
 | 6 | Stroke weight and text size are divided by the zoom ratio at creation | Ink reads as drawn, then stays anchored to the image. app-react's `creationZoom` meta as one line |
 | 7 | Markers are ~~**Point** overlays (`CENTER`)~~ children of the surface at `left/top: %`, fixed CSS size | Constant screen size while zoomed, authored size at home zoom — app-react's net behaviour without its per-item `requestAnimationFrame` loop. _Moved into the surface_ so a press on one is a target the surface can see (ADR 0006) |

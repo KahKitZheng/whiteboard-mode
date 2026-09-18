@@ -70,8 +70,7 @@ export function BoardBook({ id, boardbook, text }: Props) {
       element,
       tileSources: tileSource(boardbook.images.background),
       showNavigationControl: false,
-      showNavigator: true,
-      navigatorPosition: 'BOTTOM_RIGHT',
+      showNavigator: false,
       maxZoomPixelRatio: 2,
       visibilityRatio: 0.8,
       // A click means "this marker" or "this area", never "zoom here".
