@@ -21,6 +21,7 @@ fixture shaped exactly like `AssignmentBoardBookEntity`.
 | 11 | `AnnotationSurface` gains two optional props: `viewBox` and `inkScale` | Existing surfaces unchanged; module stays generic. _Built as_ one `viewBox: {width, height}` (render width is its width — two coupled props invited a mismatch) plus an `inkScale()` getter for decision 6 |
 | 12 | Scope: `images.background` + `items` + `focusAreas` | `answers`, hover popovers, Immersive Reader and audio are out (types kept) |
 | 13 | New `/boardbook/:slug` route; lesson demo stays | Two host contexts over one annotation module keeps the module honest |
+| 14 | The page's text is data, laid invisibly over the picture (`TextLayer.tsx`) | Marks snap to a boardbook's words (ADR 0008) without a second renderer next to OSD. Positioned in `%` and `cqw`, so it scales with the box like the markers. A PDF upload would supply it via pdf.js `getTextContent`; `npm run text` reads it off the fixture SVG meanwhile. No text layer, or a scan without one → the highlighter is ink, as over any picture |
 
 ## Coordinate chain
 

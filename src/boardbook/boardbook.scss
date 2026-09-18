@@ -215,3 +215,27 @@
 .boardbook-popup-audio {
   width: 100%;
 }
+
+/*
+  Invisible words over the picture, for the highlighter (TextLayer.tsx). Lines
+  are positioned one by one, so `data-block` makes the whole layer the block a
+  mark may run across. Pointer events follow the surface: off, a press falls
+  through to OSD; armed, a word is a target.
+*/
+.boardbook-text {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  // A stroke's reach over words is in font sizes: the page's body text.
+  font-size: 1.3cqw;
+  color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+
+  span {
+    position: absolute;
+    transform-origin: 0 0;
+    white-space: pre;
+  }
+}

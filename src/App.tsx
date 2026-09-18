@@ -88,5 +88,5 @@ function BoardBookRoute() {
 
   if (!page) return <Redirect to={`/lesson/${LESSONS[0].slug}`} />
 
-  return <BoardBook id={`boardbook-${page.slug}`} boardbook={page.boardbook} />
+  return <BoardBook id={`boardbook-${page.slug}`} boardbook={page.boardbook} text={page.text} />
 }

@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test'
+import { WATERKRINGLOOP_TEXT } from '../src/boardbook/waterkringloop.text'
 import { expect, test } from './test'
 
 const SURFACE = 'boardbook-waterkringloop'
@@ -37,8 +38,27 @@ async function draw(page: Page, target: Locator, at: { x: number; y: number } = 
 async function stored(page: Page, surfaceId = SURFACE) {
   return page.evaluate((key) => {
     const raw = sessionStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as { shapes: { weight?: number }[] }) : null
+    type Stored = { type: string; kind?: string; weight?: number; anchor?: { target: { quote?: { exact: string } } } }
+    return raw ? (JSON.parse(raw) as { shapes: Stored[] }) : null
   }, `wb:${surfaceId}`)
+}
+
+/** The box of a word in the text layer, in viewport coordinates. */
+async function wordRect(page: Page, word: string) {
+  return page.evaluate((word) => {
+    const root = document.querySelector('.boardbook-text')!
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const index = (node as Text).data.indexOf(word)
+      if (index === -1) continue
+      const range = document.createRange()
+      range.setStart(node, index)
+      range.setEnd(node, index + word.length)
+      const r = range.getBoundingClientRect()
+      return { x: r.x, y: r.y, width: r.width, height: r.height }
+    }
+    throw new Error(`no "${word}"`)
+  }, word)
 }
 
 test.beforeEach(async ({ page }) => {
@@ -195,4 +215,72 @@ test('pressing a focus area frames it, and pressing it again zooms back out', as
   await area.click()
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
   await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeLessThan(home * 1.05)
+})
+
+test('armed, the highlighter snapping to words marks the words the picture shows', async ({ page }) => {
+  await arm(page)
+  await page.getByRole('button', { name: 'Highlighter', exact: true }).click()
+  await page.getByRole('group', { name: 'Words' }).getByRole('button', { name: 'Snap to words' }).click()
+
+  const from = await wordRect(page, 'Water')
+  const to = await wordRect(page, 'altijd')
+  await page.mouse.move(from.x + 4, from.y + from.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(to.x + to.width - 4, to.y + to.height / 2, { steps: 12 })
+  await page.mouse.up()
+
+  await expect.poll(async () => (await stored(page))?.shapes.at(-1)?.type).toBe('mark')
+  const mark = (await stored(page))!.shapes.at(-1)!
+  expect(mark.kind).toBe('highlight')
+  expect(mark.anchor?.target.quote?.exact).toBe('Water is altijd')
+
+  // Drawn through the words, not where the pointer happened to be.
+  const path = (await strokes(page).last().boundingBox())!
+  expect(Math.abs(path.x - from.x)).toBeLessThan(8)
+  expect(Math.abs(path.x + path.width - (to.x + to.width))).toBeLessThan(8)
+  expect(Math.abs(path.y + path.height / 2 - (from.y + from.height / 2))).toBeLessThan(6)
+})
+
+test('the words end where the picture draws them, at rest and zoomed in', async ({ page }) => {
+  const line = WATERKRINGLOOP_TEXT.find((line) => line.text.startsWith('Water is altijd'))!
+  async function overshoot() {
+    const box = (await page.locator('.boardbook-text').boundingBox())!
+    const last = await wordRect(page, 'waterdamp,')
+    const pictureEnd = box.x + ((line.x + line.width) / 100) * box.width
+    // As a fraction of the line, so the check means the same at any zoom.
+    return Math.abs(last.x + last.width - pictureEnd) / ((line.width / 100) * box.width)
+  }
+  expect(await overshoot()).toBeLessThan(0.01)
+
+  // A zoom changes the font's rendered size, and with it the system font's tracking.
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await expect.poll(overshoot).toBeLessThan(0.01)
+})
+
+test('the highlighter snaps to words that lie under a focus area', async ({ page }) => {
+  await arm(page)
+  await page.getByRole('button', { name: 'Highlighter', exact: true }).click()
+  await page.getByRole('group', { name: 'Words' }).getByRole('button', { name: 'Snap to words' }).click()
+
+  // "Opdracht 3" is a focus area; its questions are under the area's button.
+  const from = await wordRect(page, 'Waardoor')
+  const to = await wordRect(page, 'Schrijf')
+  await page.mouse.move(from.x + 4, from.y + from.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(to.x + to.width - 4, to.y + to.height / 2, { steps: 12 })
+  await page.mouse.up()
+
+  await expect.poll(async () => (await stored(page))?.shapes.at(-1)?.type).toBe('mark')
+  expect((await stored(page))!.shapes.at(-1)!.anchor?.target.quote?.exact).toBe('Waardoor verdampt water uit de zee? Schrijf')
+})
+
+test('the highlighter over the diagram is still a highlighter, words or not', async ({ page }) => {
+  await arm(page)
+  await page.getByRole('button', { name: 'Highlighter', exact: true }).click()
+  await page.getByRole('group', { name: 'Words' }).getByRole('button', { name: 'Snap to words' }).click()
+
+  // The right half of the page is the picture of the cycle; its labels are single words far apart.
+  await draw(page, page.locator('.boardbook-viewer'), { x: 0.62, y: 0.45 })
+  await expect.poll(async () => (await stored(page))?.shapes.at(-1)?.type).toBe('stroke')
 })

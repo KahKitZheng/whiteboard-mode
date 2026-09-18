@@ -76,6 +76,10 @@ _Avoid_: Item (the marker is what you see; the item is the data behind it), hots
 An authored rectangle on the boardbook image that the view frames when pressed. Carries no content, owns no annotations — it moves the camera.
 _Avoid_: Zoom area, region
 
+**Text layer**:
+The page's words as data, laid invisibly over where the picture shows them, so a mark can snap to them. Comes with the page; a page without one is just a picture.
+_Avoid_: OCR layer, transcript, hidden text
+
 **Walkthrough**:
 Stepping through a boardbook's focus areas in their authored `order`, from the chrome, with the view framing each in turn.
 _Avoid_: Slideshow, tour

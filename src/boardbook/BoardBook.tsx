@@ -6,6 +6,7 @@ import { useWhiteboardMode } from '../annotation/WhiteboardMode'
 import { ItemDialog, Marker } from './BoardBookItem'
 import { fitWidth, percentToImage, zoomRatio, type Size } from './coords'
 import { FocusArea, Walkthrough } from './FocusAreas'
+import { TextLayer, type TextLine } from './TextLayer'
 import type { AssignmentBoardBookEntity, BoardBookFocusAreaEntity, BoardBookItemEntity } from './types'
 import { byOrder, neighbour } from './walkthrough'
 import './boardbook.scss'
@@ -32,6 +33,8 @@ type Props = {
   /** Stable id for the image's own surface; item dialogs derive theirs from it. */
   id: string
   boardbook: AssignmentBoardBookEntity
+  /** The page's words, if the page came with any, for marks to snap to. */
+  text?: TextLine[]
 }
 
 /**
@@ -39,7 +42,7 @@ type Props = {
  * image holding the annotation surface — and, as that surface's children, the
  * boardbook's markers and focus areas. See docs/adr/0005-osd-overlay-annotation-layer.md.
  */
-export function BoardBook({ id, boardbook }: Props) {
+export function BoardBook({ id, boardbook, text }: Props) {
   // What goes fullscreen: it has to hold the viewer and the chrome both.
   const stage = useRef<HTMLDivElement>(null)
   const host = useRef<HTMLDivElement>(null)
@@ -199,6 +202,7 @@ export function BoardBook({ id, boardbook }: Props) {
             percentages position them directly — as app-react does.
           */
           <AnnotationSurface id={id} className="boardbook-layer" viewBox={image} inkScale={inkScale}>
+            {text && <TextLayer lines={text} />}
             {ordered.map((area) => (
               <FocusArea
                 key={area.id}

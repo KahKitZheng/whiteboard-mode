@@ -1,4 +1,6 @@
+import type { TextLine } from './TextLayer'
 import type { AssignmentBoardBookEntity } from './types'
+import { WATERKRINGLOOP_TEXT } from './waterkringloop.text'
 
 /**
  * What the assignment API would hand a boardbook viewer, minus the editor's
@@ -10,6 +12,11 @@ export type BoardBookPage = {
   /** Stands in for the assignment id the real viewer keys everything on. */
   assignmentId: number
   boardbook: AssignmentBoardBookEntity
+  /**
+   * What a page job would extract from an uploaded PDF (pdf.js
+   * `getTextContent`); here, read off the fixture SVG by `npm run text`.
+   */
+  text?: TextLine[]
 }
 
 export const BOARDBOOKS: BoardBookPage[] = [
@@ -17,6 +24,7 @@ export const BOARDBOOKS: BoardBookPage[] = [
     slug: 'waterkringloop',
     title: 'De waterkringloop',
     assignmentId: 80042,
+    text: WATERKRINGLOOP_TEXT,
     boardbook: {
       images: { background: '/boardbook/tiles/waterkringloop.dzi' },
       items: [
