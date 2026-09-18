@@ -289,15 +289,16 @@ export function findQuote(root: Node, quote: Quote): Range | null {
  * or a curve — only has to touch one.
  */
 function wordsUnder(element: Element, box: Box, fontSize: number, how: 'cover' | 'touch'): Range | null {
-  // A stroke reaches up, since an underline sits under its word. A point is
-  // exactly where it is — reaching up from the first word of a line would
-  // catch the word above it.
+  // A thin stroke reaches up, since an underline sits under its word. A shape
+  // as tall as a line — a circle around a word — is where it is, and a point
+  // is too: reaching up from either would catch the line above.
+  const thin = box.bottom - box.top < fontSize
   const reach: Box =
     how === 'cover'
       ? {
           left: box.left - fontSize * REACH_SIDE,
           right: box.right + fontSize * REACH_SIDE,
-          top: box.top - fontSize * REACH_UP,
+          top: thin ? box.top - fontSize * REACH_UP : box.top,
           bottom: box.bottom,
         }
       : box
