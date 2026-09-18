@@ -15,6 +15,14 @@ const ZOOM_STEP = 1.4
 /** What a press may land on that is not the image: a marker or a focus area. */
 const CONTROLS = '.boardbook-marker, .boardbook-area'
 
+/**
+ * A page pre-tiled by `npm run tiles` is a `.dzi`, which OSD reads by URL;
+ * anything else is one flat image, blown up from its own pixels at zoom.
+ */
+function tileSource(background: string): OpenSeadragon.Options['tileSources'] {
+  return background.endsWith('.dzi') ? background : { type: 'image', url: background }
+}
+
 function containerSize(viewer: OpenSeadragon.Viewer): Size {
   const size = viewer.viewport.getContainerSize()
   return { width: size.x, height: size.y }
@@ -57,9 +65,7 @@ export function BoardBook({ id, boardbook }: Props) {
 
     const viewer = OpenSeadragon({
       element,
-      // ponytail: one flat image. A `.dzi` swaps in here per image once pages
-      // are pre-tiled; nothing else in this file cares.
-      tileSources: { type: 'image', url: boardbook.images.background },
+      tileSources: tileSource(boardbook.images.background),
       showNavigationControl: false,
       showNavigator: true,
       navigatorPosition: 'BOTTOM_RIGHT',

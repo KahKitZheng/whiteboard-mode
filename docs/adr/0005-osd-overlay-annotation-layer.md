@@ -6,7 +6,7 @@ A boardbook's background image is rendered by OpenSeadragon, and its annotation 
 
 **Transforming shapes ourselves** — reading OSD's zoom and pan each frame and mapping every shape's coordinates to the screen — is what app-react does (`useShapeScaling.ts`, 336 lines, plus a per-marker `requestAnimationFrame` loop). It was rejected: OSD already computes exactly that transform for overlays, and asking it for one rectangle is the whole job.
 
-**Rendering the image with `<img>` and a CSS transform**, as app-react does, was rejected in favour of OSD for sharpness at zoom and a fast first paint. A `{ type: 'image', url }` tile source keeps the pipeline trivial for now; a `.dzi` swaps in per image without a change to this decision.
+**Rendering the image with `<img>` and a CSS transform**, as app-react does, was rejected in favour of OSD for sharpness at zoom and a fast first paint. A `{ type: 'image', url }` tile source kept the pipeline trivial at first; the fixture page is now a `.dzi` pyramid (`npm run tiles`), and a plain image URL still opens the same way — no change to this decision.
 
 ## Consequences
 

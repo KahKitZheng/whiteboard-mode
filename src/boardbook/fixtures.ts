@@ -18,7 +18,7 @@ export const BOARDBOOKS: BoardBookPage[] = [
     title: 'De waterkringloop',
     assignmentId: 80042,
     boardbook: {
-      images: { background: '/boardbook/waterkringloop.svg' },
+      images: { background: '/boardbook/tiles/waterkringloop.dzi' },
       items: [
         {
           id: 'i1',

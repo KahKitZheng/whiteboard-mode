@@ -29,3 +29,6 @@ dist-ssr
 # Playwright
 test-results
 playwright-report
+
+# Generated tile pyramids; `npm run tiles` rebuilds them from the source image
+public/boardbook/tiles/
