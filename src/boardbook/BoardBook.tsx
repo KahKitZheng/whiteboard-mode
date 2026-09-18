@@ -24,6 +24,29 @@ function tileSource(background: string): OpenSeadragon.Options['tileSources'] {
   return background.endsWith('.dzi') ? background : { type: 'image', url: background }
 }
 
+// Plain properties at runtime, read by OSD's constraints and drag handler; the
+// typings only know them as options.
+type Adjustable = {
+  viewport: OpenSeadragon.Viewport & { minZoomLevel: number }
+  panHorizontal: boolean
+  panVertical: boolean
+}
+
+/**
+ * Keeps the page in its box. Zooming out stops at the fit, and a drag is
+ * allowed only along an axis the page overflows — fitted, it has nowhere to
+ * go. Re-read after every zoom and resize, since both move the answer.
+ */
+function keepInBox(viewer: OpenSeadragon.Viewer) {
+  const adjustable = viewer as OpenSeadragon.Viewer & Adjustable
+  const view = viewer.viewport.getBounds()
+  const page = viewer.world.getItemAt(0).getBounds()
+  const slack = 1e-6
+  adjustable.viewport.minZoomLevel = viewer.viewport.getHomeZoom()
+  adjustable.panHorizontal = page.width > view.width + slack
+  adjustable.panVertical = page.height > view.height + slack
+}
+
 function containerSize(viewer: OpenSeadragon.Viewer): Size {
   const size = viewer.viewport.getContainerSize()
   return { width: size.x, height: size.y }
@@ -72,7 +95,11 @@ export function BoardBook({ id, boardbook, text }: Props) {
       showNavigationControl: false,
       showNavigator: false,
       maxZoomPixelRatio: 2,
-      visibilityRatio: 0.8,
+      // The page never leaves its box: it covers the view at every zoom and a
+      // drag stops at its edge rather than bouncing back. `keepInBox` has the
+      // rest.
+      visibilityRatio: 1,
+      constrainDuringPan: true,
       // A click means "this marker" or "this area", never "zoom here".
       gestureSettingsMouse: { clickToZoom: false },
       gestureSettingsTouch: { clickToZoom: false },
@@ -105,11 +132,17 @@ export function BoardBook({ id, boardbook, text }: Props) {
       setImage(opened)
       setLayer(layer)
       setHomeWidth(fitWidth(containerSize(viewer), opened))
+      keepInBox(viewer)
     })
 
     // Home zoom moves with the container, so a marker's at-rest size does too.
     viewer.addHandler('resize', () => {
-      if (opened) setHomeWidth(fitWidth(containerSize(viewer), opened))
+      if (!opened) return
+      setHomeWidth(fitWidth(containerSize(viewer), opened))
+      keepInBox(viewer)
+    })
+    viewer.addHandler('zoom', () => {
+      if (opened) keepInBox(viewer)
     })
 
     setViewer(viewer)

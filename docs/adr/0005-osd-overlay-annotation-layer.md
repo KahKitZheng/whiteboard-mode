@@ -20,4 +20,6 @@ Markers and focus areas are children of that same surface, placed by percentage 
 
 The overlay lives inside OSD's canvas element, whose tracker captures the pointer on any press. Off, a press on a marker or an area is stopped at the overlay element so the control gets its click instead of the tracker getting a pan (ADR 0006 has the armed side). Armed, `setMouseNavEnabled(false)` switches the tracker off altogether and the surface takes every press — a tap on a control stays the control's (ADR 0006), everything else draws. Navigation while armed goes through the chrome as well: the walkthrough and the zoom buttons.
 
+Off, the page pans and zooms freely but never leaves its box: it covers the view at every zoom (`visibilityRatio: 1`), a drag stops at its edge instead of bouncing back (`constrainDuringPan`), the minimum zoom is the fit, and a drag is allowed only along an axis the page overflows — all re-read after every zoom and resize (`keepInBox`). Fitted, a drag therefore moves nothing.
+
 Hit tolerance (`hit.ts`) and selection handle size (`Selection.tsx`) are in reference units, so both grow with zoom. Known, not yet addressed.

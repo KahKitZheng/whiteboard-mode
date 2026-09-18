@@ -284,3 +284,37 @@ test('the highlighter over the diagram is still a highlighter, words or not', as
   await draw(page, page.locator('.boardbook-viewer'), { x: 0.62, y: 0.45 })
   await expect.poll(async () => (await stored(page))?.shapes.at(-1)?.type).toBe('stroke')
 })
+
+test('the page never leaves its box: no drag when fitted, and the view stays on the page zoomed in', async ({ page }) => {
+  const viewer = (await page.locator('.boardbook-viewer').boundingBox())!
+  const rest = (await layer(page).boundingBox())!
+
+  // Fitted, the whole page is in view; a drag has nowhere to take it.
+  const from = { x: rest.x + rest.width * 0.1, y: rest.y + rest.height * 0.2 }
+  await page.mouse.move(from.x, from.y)
+  await page.mouse.down()
+  await page.mouse.move(from.x + 120, from.y + 80, { steps: 8 })
+  await page.mouse.up()
+  await page.mouse.wheel(0, 600)
+  await page.getByRole('button', { name: 'Zoom out' }).click()
+  await page.waitForTimeout(400)
+  expect(await layer(page).boundingBox()).toEqual(rest)
+
+  // Zoomed in, a drag pans — but the page's edge never comes inside the box.
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeGreaterThan(rest.width * 1.9)
+  const zoomed = (await layer(page).boundingBox())!
+  const centre = { x: viewer.x + viewer.width / 2, y: viewer.y + viewer.height / 2 }
+  await page.mouse.move(centre.x, centre.y)
+  await page.mouse.down()
+  await page.mouse.move(centre.x + 4000, centre.y + 3000, { steps: 20 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+  const dragged = (await layer(page).boundingBox())!
+  expect(dragged.x).not.toEqual(zoomed.x)
+  expect(dragged.x).toBeLessThanOrEqual(viewer.x + 1)
+  expect(dragged.y).toBeLessThanOrEqual(viewer.y + 1)
+  expect(dragged.x + dragged.width).toBeGreaterThanOrEqual(viewer.x + viewer.width - 1)
+  expect(dragged.y + dragged.height).toBeGreaterThanOrEqual(viewer.y + viewer.height - 1)
+})
