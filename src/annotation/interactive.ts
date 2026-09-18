@@ -1,4 +1,17 @@
 /**
+ * How far a press may drift and still be a tap, per pointer type: a few pixels
+ * with a mouse, a dozen with a finger on a board. A real press moves a little
+ * between down and up, and a tap read as a stroke draws a dot on the very
+ * button it meant to press.
+ */
+const TAP_SLOP: Record<string, number> = { mouse: 6, pen: 8, touch: 12 }
+const DEFAULT_TAP_SLOP = 8
+
+export function tapSlop(pointerType: string): number {
+  return TAP_SLOP[pointerType] ?? DEFAULT_TAP_SLOP
+}
+
+/**
  * What the host means to be pressed, by platform semantics rather than a list
  * the host maintains: a third-party component's button is a <button>, and an
  * attribute someone forgets to add fails silently. `closest()` walks up, so a

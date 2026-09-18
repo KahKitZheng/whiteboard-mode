@@ -2,6 +2,7 @@ import OpenSeadragon from 'openseadragon'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnnotationSurface } from '../annotation/AnnotationSurface'
+import { tapSlop } from '../annotation/interactive'
 import { useWhiteboardMode } from '../annotation/WhiteboardMode'
 import { ItemDialog, Marker } from './BoardBookItem'
 import { fitWidth, percentToImage, zoomRatio, type Size } from './coords'
@@ -150,26 +151,48 @@ export function BoardBook({ id, boardbook, text }: Props) {
 
       const layer = document.createElement('div')
       /*
-        Off, OSD's tracker captures the pointer on any press inside its canvas
-        — the overlay included — so the browser delivers the click to the
-        canvas, and a marker or an area pressed that way never gets it. The
-        press has to reach the tracker all the same, or there is no dragging
-        the page from an area, and areas cover most of it. So: remember what
-        was pressed, and when OSD calls the release a click, click it. A drag
-        is OSD's. Armed, the tracker is off and the press is the surface's,
-        which listens at React's root above us (ADR 0006).
+        Off, a press on a marker or an area has to reach OSD's tracker — or
+        there is no dragging the page from an area, and areas cover most of
+        it — and the control still has to get its tap. The tracker usually
+        captures the pointer, and the browser then delivers the click to the
+        canvas rather than the control; sometimes it does not (a press it did
+        not take), and the click arrives at the control after a drag. So the
+        press is judged here, whichever way the browser goes: one that moved
+        past the tap slop is a drag, and its click is swallowed; one that did
+        not is a tap, and the control is clicked when the browser will not do
+        it. Armed, the tracker is off and the press is the surface's, which
+        listens at React's root above us (ADR 0006).
       */
-      let pressed: HTMLElement | null = null
+      type Press = { control: HTMLElement; x: number; y: number; slop: number; moved: boolean }
+      let press: Press | null = null
       layer.addEventListener('pointerdown', (event) => {
-        pressed = !armed.current && event.target instanceof Element ? event.target.closest<HTMLElement>(CONTROLS) : null
+        const control = !armed.current && event.target instanceof Element ? event.target.closest<HTMLElement>(CONTROLS) : null
+        press = control && { control, x: event.clientX, y: event.clientY, slop: tapSlop(event.pointerType), moved: false }
       })
-      viewer.addHandler('canvas-click', (event) => {
-        if (event.quick) pressed?.click()
-        pressed = null
+      // Captured, the moves go to the canvas and OSD reports the drag; uncaptured, they come through here.
+      layer.addEventListener('pointermove', (event) => {
+        if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > press.slop) press.moved = true
       })
       viewer.addHandler('canvas-drag', () => {
-        pressed = null
+        if (press) press.moved = true
       })
+      viewer.addHandler('canvas-click', (event) => {
+        const target = event.originalEvent?.target
+        // The browser clicks the control itself when the release landed on it.
+        const owed = press && !press.moved && event.quick && !(target instanceof Node && press.control.contains(target))
+        if (owed) press!.control.click()
+      })
+      layer.addEventListener(
+        'click',
+        (event) => {
+          if (press?.moved && event.target instanceof Node && press.control.contains(event.target)) {
+            event.stopPropagation()
+            event.preventDefault()
+          }
+          press = null
+        },
+        true,
+      )
       viewer.addOverlay({
         element: layer,
         location: viewer.viewport.imageToViewportRectangle(0, 0, opened.width, opened.height),

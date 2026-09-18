@@ -27,7 +27,7 @@ import {
 } from './geometry'
 import * as timeline from './history'
 import { shapeAt, shapeNear, shapesAlong } from './hit'
-import { interactiveAncestor } from './interactive'
+import { interactiveAncestor, tapSlop } from './interactive'
 import { SelectionOverlay } from './Selection'
 import { ShapeView } from './ShapeView'
 import { TextEditor } from './TextEditor'
@@ -66,13 +66,6 @@ type Gesture = {
 const HIGHLIGHT_WEIGHT = 3
 const HIGHLIGHT_OPACITY = 0.35
 
-/**
- * How far, in screen pixels, a press may wander and still be a tap. A mouse
- * barely moves; a finger on a board moves a lot, and a tap that comes out as
- * a dot on the button it meant to press is the worse mistake.
- */
-const TAP_SLOP: Record<string, number> = { mouse: 6, pen: 8, touch: 12 }
-const DEFAULT_TAP_SLOP = 8
 
 /**
  * Tools for which a tap on content means something — pick this shape, erase
@@ -675,7 +668,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     const wait = pending.current
     if (wait) {
       if (wait.pointerId !== event.pointerId) return
-      const slop = TAP_SLOP[wait.pointerType] ?? DEFAULT_TAP_SLOP
+      const slop = tapSlop(wait.pointerType)
       if (Math.hypot(event.clientX - wait.clientX, event.clientY - wait.clientY) < slop) return
 
       // It moved: a stroke after all, from where the press landed — not from

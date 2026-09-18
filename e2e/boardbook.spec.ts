@@ -362,3 +362,32 @@ test('zoomed in, two fingers on a trackpad pan the page and a pinch zooms it', a
   await page.keyboard.up('Control')
   await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeGreaterThan(zoomed.width * 1.5)
 })
+
+test('a press OSD did not capture still counts as a drag, and its click is swallowed', async ({ page }) => {
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  const area = page.getByRole('button', { name: /De kringloop/ })
+  await expect.poll(async () => (await area.boundingBox())!.width).toBeGreaterThan(300)
+
+  // Hand-made pointer events: their ids are unknown to the browser, so
+  // `setPointerCapture` fails and the click goes where the release lands.
+  await area.evaluate((button) => {
+    const box = button.getBoundingClientRect()
+    const at = (dx: number) => ({ clientX: box.x + box.width / 2 + dx, clientY: box.y + box.height / 2, bubbles: true, pointerId: 77, pointerType: 'mouse', isPrimary: true, button: 0, buttons: 1 })
+    button.dispatchEvent(new PointerEvent('pointerdown', at(0)))
+    for (let step = 1; step <= 6; step += 1) button.dispatchEvent(new PointerEvent('pointermove', at(step * 15)))
+    button.dispatchEvent(new PointerEvent('pointerup', { ...at(90), buttons: 0 }))
+    button.dispatchEvent(new MouseEvent('click', { ...at(90), buttons: 0 }))
+  })
+  await page.waitForTimeout(300)
+  await expect(page.locator('.boardbook-bar-name')).toHaveCount(0)
+
+  // The same without moving is a tap, and frames the area once.
+  await area.evaluate((button) => {
+    const box = button.getBoundingClientRect()
+    const at = { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2, bubbles: true, pointerId: 78, pointerType: 'mouse', isPrimary: true, button: 0, buttons: 1 }
+    button.dispatchEvent(new PointerEvent('pointerdown', at))
+    button.dispatchEvent(new PointerEvent('pointerup', { ...at, buttons: 0 }))
+    button.dispatchEvent(new MouseEvent('click', { ...at, buttons: 0 }))
+  })
+  await expect(page.locator('.boardbook-bar-name')).toHaveText('1/3 · De kringloop')
+})
