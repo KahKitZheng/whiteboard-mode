@@ -35,7 +35,7 @@ Placement happens whenever shapes, the surface's width, or the host's layout cha
 
 Editing works on the *placed* shape: a move or resize starts from where the shape is drawn, and the result is anchored afresh — it is over something else now. Undo restores the anchored original.
 
-Anchoring is off for a surface with a `viewBox` (ADR 0005): there the image *is* the content and scales as one, so reference coordinates are already exact.
+Anchoring is off for a surface with a `viewBox` (ADR 0005): there the image *is* the content and scales as one, so reference coordinates are already exact. Words are still looked up on such a surface, so a mark (ADR 0008) can be made over a text layer laid on the image; its line boxes are reference units and scale with the image like a stroke's points, so it is stored once and never re-placed.
 
 Anchors are stored with the shape. The stored format is unchanged in kind — an optional field — so existing surfaces load as before and their shapes simply stay put.
 

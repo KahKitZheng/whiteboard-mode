@@ -156,8 +156,16 @@ function hostElementUnder(frame: Frame, box: Box): Element | null {
   return null
 }
 
-/** Up from a hit to the thing worth anchoring to: a picture, or the block around the text. */
+/**
+ * Up from a hit to the thing worth anchoring to: a picture, or the block
+ * around the text. A host that positions its lines one by one — a text layer
+ * over a picture — says which element is the block with `data-block`, since
+ * each positioned line would otherwise read as a block of its own.
+ */
 function blockAround(hit: Element, surface: HTMLElement): Element | null {
+  const declared = hit.closest('[data-block]')
+  if (declared && surface.contains(declared)) return declared
+
   let node: Element | null = hit
   while (node && node !== surface) {
     if (REPLACED.has(node.tagName.toUpperCase())) return node
@@ -487,15 +495,26 @@ export function rescaleAnchor(anchor: Anchor, factor: number): Anchor {
 
 // ---- marks: the words under a pen, and the lines they occupy ---------------
 
-/** The word under a client point, with the block it is in. Null over anything but text. */
+/**
+ * The word under a client point, with the block it is in. Null over anything
+ * but text. Looks through everything stacked at the point, not just the top:
+ * a word under a see-through control — a boardbook's focus area over its
+ * page — is still a word.
+ */
 export function wordAt(frame: Frame, x: number, y: number): { block: Element; range: Range } | null {
-  const hit = hostElementAt(frame, x, y)
-  const block = hit && blockAround(hit, frame.surface)
-  if (!block || REPLACED.has(block.tagName.toUpperCase())) return null
-
   const reach = 2
-  const range = wordsUnder(block, { left: x - reach, right: x + reach, top: y - reach, bottom: y + reach }, fontSizeOf(block), 'touch')
-  return range ? { block, range } : null
+  const box = { left: x - reach, right: x + reach, top: y - reach, bottom: y + reach }
+  const stacked = document.elementsFromPoint(x, y).filter((element) => isHostContent(frame, element))
+  const deep = stacked.length === 0 ? deepestElementAt(frame, x, y) : null
+  if (deep) stacked.push(deep)
+
+  for (const hit of stacked) {
+    const block = blockAround(hit, frame.surface)
+    if (!block || REPLACED.has(block.tagName.toUpperCase())) continue
+    const range = wordsUnder(block, box, fontSizeOf(block), 'touch')
+    if (range) return { block, range }
+  }
+  return null
 }
 
 /** The words from the earlier of two ranges to the later — a drag may go either way. */

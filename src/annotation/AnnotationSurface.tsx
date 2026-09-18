@@ -222,7 +222,9 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
   /*
     Shapes follow the host content under them (ADR 0007) — except on a surface
     with a viewBox, where the content is one image that scales as a whole and
-    the coordinates are already exact.
+    the coordinates are already exact. Words are still looked up there, for
+    marks: a mark's boxes are reference units, exact under a viewBox like any
+    stroke's points, so it needs the words once and never re-placing.
   */
   const anchoring = !viewBox
   const [layoutTick, setLayoutTick] = useState(0)
@@ -273,12 +275,16 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
 
   function currentFrame(): Frame | null {
     const surface = element.current
-    return anchoring && surface && width > 0 ? { surface, width } : null
+    if (!surface) return null
+    // Under a viewBox the box is what pointer input is scaled by, and it can
+    // be a frame ahead of the measured width while the image zooms.
+    const boxWidth = viewBox ? surface.getBoundingClientRect().width : width
+    return boxWidth > 0 ? { surface, width: boxWidth } : null
   }
 
   /** A shape as it is stored: remembering what is under it, when there is something. */
   function settle(shape: Shape): Shape {
-    const frame = currentFrame()
+    const frame = anchoring ? currentFrame() : null
     return frame ? anchorShape(shape, frame) : shape
   }
 
