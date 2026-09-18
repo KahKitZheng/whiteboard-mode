@@ -318,3 +318,27 @@ test('the page never leaves its box: no drag when fitted, and the view stays on 
   expect(dragged.x + dragged.width).toBeGreaterThanOrEqual(viewer.x + viewer.width - 1)
   expect(dragged.y + dragged.height).toBeGreaterThanOrEqual(viewer.y + viewer.height - 1)
 })
+
+test('off, a drag that starts on a focus area pans, and a tap on it still frames it', async ({ page }) => {
+  await disarm(page)
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  const rest = (await layer(page).boundingBox())!
+  await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeGreaterThan(rest.width * 0.99)
+
+  const area = (await page.getByRole('button', { name: /De kringloop/ }).boundingBox())!
+  const on = { x: area.x + area.width / 2, y: area.y + area.height / 2 }
+  await page.mouse.move(on.x, on.y)
+  await page.mouse.down()
+  await page.mouse.move(on.x - 150, on.y - 100, { steps: 10 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+  const before = (await layer(page).boundingBox())!
+  expect(before.x).not.toEqual(rest.x)
+  // A drag is not a press: nothing was framed, so the bar shows no name.
+  await expect(page.locator('.boardbook-bar-name')).toHaveCount(0)
+
+  const again = (await page.getByRole('button', { name: /De kringloop/ }).boundingBox())!
+  await page.mouse.click(again.x + again.width / 2, again.y + again.height / 2)
+  await expect(page.locator('.boardbook-bar-name')).toHaveText('1/3 · De kringloop')
+})

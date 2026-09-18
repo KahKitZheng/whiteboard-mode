@@ -104,6 +104,10 @@ export function BoardBook({ id, boardbook, text }: Props) {
       gestureSettingsMouse: { clickToZoom: false },
       gestureSettingsTouch: { clickToZoom: false },
       gestureSettingsPen: { clickToZoom: false },
+      // What still counts as a tap on a control: a finger on a board is slower
+      // and less steady than OSD's defaults assume (the surface's TAP_SLOP).
+      clickTimeThreshold: 500,
+      clickDistThreshold: 12,
     })
 
     let opened: Size | null = null
@@ -115,14 +119,24 @@ export function BoardBook({ id, boardbook, text }: Props) {
       const layer = document.createElement('div')
       /*
         Off, OSD's tracker captures the pointer on any press inside its canvas
-        — the overlay included — and a marker pressed that way never gets its
-        click. Stop the press short of the canvas. Armed, the tracker is off
-        and the press is the surface's, which listens at React's root above
-        us, so it has to pass.
+        — the overlay included — so the browser delivers the click to the
+        canvas, and a marker or an area pressed that way never gets it. The
+        press has to reach the tracker all the same, or there is no dragging
+        the page from an area, and areas cover most of it. So: remember what
+        was pressed, and when OSD calls the release a click, click it. A drag
+        is OSD's. Armed, the tracker is off and the press is the surface's,
+        which listens at React's root above us (ADR 0006).
       */
+      let pressed: HTMLElement | null = null
       layer.addEventListener('pointerdown', (event) => {
-        if (armed.current) return
-        if (event.target instanceof Element && event.target.closest(CONTROLS)) event.stopPropagation()
+        pressed = !armed.current && event.target instanceof Element ? event.target.closest<HTMLElement>(CONTROLS) : null
+      })
+      viewer.addHandler('canvas-click', (event) => {
+        if (event.quick) pressed?.click()
+        pressed = null
+      })
+      viewer.addHandler('canvas-drag', () => {
+        pressed = null
       })
       viewer.addOverlay({
         element: layer,

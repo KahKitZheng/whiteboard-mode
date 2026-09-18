@@ -26,7 +26,7 @@ With a drawing tool this holds for *every* press: a tap draws nothing with a pen
 
 **Widgets are live while armed.** `widget.scss` no longer switches them off; a tap on the timer's buttons is the timer's, a drag over it draws.
 
-**The boardbook's markers and areas are children of its surface**, positioned by percentage of the image box, rather than OSD overlays of their own — the surface has to see them as targets. Their screen behaviour is unchanged (ADR 0005). While off, a press on one of them is stopped at the overlay element so OSD's tracker — which captures the pointer on any press in its canvas — never sees it and the control gets its click. While armed the press must pass: a stopped press never reaches React's root listener, and the surface is listening there.
+**The boardbook's markers and areas are children of its surface**, positioned by percentage of the image box, rather than OSD overlays of their own — the surface has to see them as targets. Their screen behaviour is unchanged (ADR 0005). While off, OSD's tracker captures the press and would keep the click; the boardbook clicks the control itself when OSD reports a quick release (ADR 0005). While armed the tracker is off and the press is the surface's, listening at React's root.
 
 **A tap is allowed to drift.** A real press moves between down and up — a few pixels with a mouse, a dozen with a finger on a board — and a tap read as a stroke draws a dot on the very button it meant to press. The slop is per pointer type (`TAP_SLOP`), sized from that rather than from what a test harness does.
 
