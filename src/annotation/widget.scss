@@ -54,9 +54,10 @@
 }
 
 // Where the select tool takes hold: a strip over the sheet's top edge, laid
-// over the text's own top padding so the words start at the top. Shown when
-// it can be used — under the pointer, or with the select tool in hand — as a
-// deeper band with a grip mark, and invisible otherwise.
+// over the text's own top padding so the words start at the top. Shown only
+// when it can be used — the select tool in hand, and then always, or any tool
+// with the note under the pointer — as a deeper band with a grip mark. Off,
+// nothing moves, so nothing shows.
 .note-bar {
   position: absolute;
   inset: 0 0 auto;
@@ -79,7 +80,7 @@
     background: rgb(0 0 0 / 22%);
   }
 
-  .note:hover &,
+  [data-active] .note:hover &,
   [data-tool='select'] & {
     opacity: 1;
   }
