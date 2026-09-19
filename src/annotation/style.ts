@@ -19,6 +19,8 @@ export type PenMark = 'none' | 'underline' | 'strikethrough'
 export type Style = {
   color: string
   weight: number
+  /** The highlighter's own width: a chisel tip is a different instrument from a nib, on its own scale. */
+  highlightWeight: number
   /** Cap height for text, in reference space. */
   textSize: number
   border: BorderStyle
@@ -62,8 +64,20 @@ export const COLORS: Swatch[] = [
 export const WEIGHTS: { name: string; value: number }[] = [
   { name: 'Thin', value: 4 },
   { name: 'Medium', value: 9 },
-  { name: 'Thick', value: 18 },
-  { name: 'Extra thick', value: 30 },
+  { name: 'Thick', value: 15 },
+  { name: 'Extra thick', value: 22 },
+]
+
+/**
+ * The highlighter's widths, in reference units: a line of body text is about
+ * 26 tall, so the second covers a line, the third a heading's, and the top is
+ * a fat marker without being a paint roller.
+ */
+export const HIGHLIGHT_WEIGHTS: { name: string; value: number }[] = [
+  { name: 'Thin', value: 16 },
+  { name: 'Medium', value: 26 },
+  { name: 'Thick', value: 38 },
+  { name: 'Extra thick', value: 52 },
 ]
 
 export const TEXT_SIZES: { name: string; value: number }[] = [
@@ -116,6 +130,8 @@ export const PEN_MARKS: { name: string; value: PenMark }[] = [
 export const DEFAULT_STYLE: Style = {
   color: COLORS[0].value,
   weight: WEIGHTS[1].value,
+  // A shade over a line of body text, so a highlight reads as a highlight.
+  highlightWeight: HIGHLIGHT_WEIGHTS[2].value,
   textSize: TEXT_SIZES[1].value,
   border: 'solid',
   fill: 'none',
@@ -171,6 +187,20 @@ export function restyle(shape: Shape, patch: Partial<Style>): Shape {
       }
 
     case 'stroke':
+      return {
+        ...shape,
+        ...color,
+        ...opacity,
+        // A highlight is on the highlighter's scale, a stroke on the pen's.
+        ...(shape.highlight
+          ? patch.highlightWeight === undefined
+            ? {}
+            : { weight: patch.highlightWeight }
+          : patch.weight === undefined
+            ? {}
+            : { weight: patch.weight }),
+      }
+
     case 'mark':
       return {
         ...shape,
@@ -205,6 +235,10 @@ export function styleOf(shape: Shape): Partial<Style> {
       return { color: shape.color, textSize: shape.size, opacity: shape.opacity }
 
     case 'stroke':
+      return shape.highlight
+        ? { color: shape.color, highlightWeight: shape.weight, opacity: shape.opacity }
+        : { color: shape.color, weight: shape.weight, opacity: shape.opacity }
+
     case 'mark':
       return { color: shape.color, weight: shape.weight, opacity: shape.opacity }
 

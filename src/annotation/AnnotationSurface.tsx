@@ -63,7 +63,6 @@ type Gesture = {
  * two overlapping highlights deepen instead of doubling up, but it turns
  * invisible on a dark theme — worth doing per-theme if it ever comes up.
  */
-const HIGHLIGHT_WEIGHT = 3
 const HIGHLIGHT_OPACITY = 0.35
 
 
@@ -502,17 +501,19 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     claim(id)
 
     // A drawing tool waits on every press; a tap tool only on a control — and
-    // not even then when a shape lies under the tap and the control is the
-    // host's: the shape is visibly on top, so the tap is the shape's. A
-    // widget's own buttons are a different matter; a tap on Start is a tap on
-    // Start, not a way to pick the timer.
+    // not even then over a host control when the tap is a shape's: select and
+    // the eraser take a shape lying under it, since it is visibly on top, and a
+    // placing tool puts its label or widget down, since placing is what it was
+    // picked for. A widget's own buttons are a different matter; a tap on Start
+    // is a tap on Start, not a way to pick the timer or put a label on it.
     const control = interactiveAncestor(event.target as Element)
     const hostControl = control !== null && !control.closest('.annotation-layer')
     const overShape =
       hostControl &&
       (tool === 'select' || tool === 'eraser') &&
       shapeNear(placed, pointFrom(event, event.currentTarget.getBoundingClientRect())) !== null
-    if (!TAP_TOOLS.has(tool) || (control && !overShape)) {
+    const places = hostControl && (tool === 'text' || tool === 'note' || tool === 'timer')
+    if (!TAP_TOOLS.has(tool) || (control && !overShape && !places)) {
       pending.current = {
         pointerId: event.pointerId,
         pointerType: event.pointerType,
@@ -658,9 +659,8 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
               points: [point],
               ...ink,
               highlight: true,
-              // Broad and see-through, whatever the pen was last set to. The
-              // weight control still moves it from here; this is where it starts.
-              weight: (style.weight * HIGHLIGHT_WEIGHT) / zoom,
+              // Broad and see-through, on the highlighter's own scale.
+              weight: style.highlightWeight / zoom,
               opacity: HIGHLIGHT_OPACITY,
             }
         : tool === 'timer'

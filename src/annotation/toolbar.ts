@@ -26,6 +26,7 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
     return {
       color: selected.color !== undefined,
       weight: selected.weight !== undefined,
+      highlightWeight: selected.highlightWeight !== undefined,
       textSize: selected.textSize !== undefined,
       border: selected.border !== undefined,
       fill: selected.fill !== undefined,
@@ -41,7 +42,8 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
 
   return {
     color: inkTool || tool === 'text' || tool === 'note',
-    weight: inkTool,
+    weight: inkTool && tool !== 'highlighter',
+    highlightWeight: tool === 'highlighter',
     textSize: tool === 'text',
     border: BORDER_TOOLS.includes(tool),
     fill: FILL_TOOLS.includes(tool),

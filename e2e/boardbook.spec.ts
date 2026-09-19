@@ -442,3 +442,15 @@ test('armed, the select tool picks a stroke lying over a focus area rather than 
   await expect(page.getByRole('button', { name: 'Delete shape' })).toBeVisible()
   await expect(page.locator('.boardbook-bar-name')).toHaveCount(0)
 })
+
+test('armed, the text tool places a label over a focus area rather than framing it', async ({ page }) => {
+  await arm(page)
+  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  // The tool's bubble sits over the bottom of the page; put it away first.
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.tool-bubble')).toHaveCount(0)
+  const area = (await page.getByRole('button', { name: /Opdracht 3/ }).boundingBox())!
+  await page.mouse.click(area.x + area.width * 0.7, area.y + area.height * 0.3)
+  await expect(page.locator('.text-input')).toBeVisible()
+  await expect(page.locator('.boardbook-bar-name')).toHaveCount(0)
+})

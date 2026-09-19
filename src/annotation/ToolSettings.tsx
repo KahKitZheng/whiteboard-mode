@@ -7,6 +7,7 @@ import {
   COLORS,
   FILLS,
   HEADS,
+  HIGHLIGHT_WEIGHTS,
   PEN_MARKS,
   SHAPE_MODES,
   SNAP_MODES,
@@ -60,6 +61,7 @@ export function ToolSettings() {
 
   const color = selected?.color ?? style.color
   const weight = selected?.weight ?? style.weight
+  const highlightWeight = selected?.highlightWeight ?? style.highlightWeight
   const textSize = selected?.textSize ?? style.textSize
   const border = selected?.border ?? style.border
   const fill = selected?.fill ?? style.fill
@@ -286,6 +288,28 @@ export function ToolSettings() {
                   className="weight-dot"
                   style={{ width: dotSize(index), height: dotSize(index) }}
                 />
+              </Toolbar.Button>
+            ))}
+          </ToggleGroup>
+        </Setting>
+      )}
+
+      {shown.highlightWeight && (
+        <Setting label="Weight">
+          <ToggleGroup
+            value={[String(highlightWeight)]}
+            onValueChange={([next]) => next && apply({ highlightWeight: Number(next) })}
+            className="choices"
+          >
+            {HIGHLIGHT_WEIGHTS.map(({ name, value }, index) => (
+              <Toolbar.Button
+                key={value}
+                className="icon-button"
+                aria-label={`${name} weight`}
+                title={`${name} weight`}
+                render={<Toggle value={String(value)} />}
+              >
+                <span className="weight-dot" style={{ width: dotSize(index), height: dotSize(index) }} />
               </Toolbar.Button>
             ))}
           </ToggleGroup>
