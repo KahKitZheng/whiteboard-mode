@@ -251,3 +251,14 @@ test('a sticky note is put down with a tap, keeps its words, and takes a colour'
   await page.getByRole('button', { name: 'Whiteboard' }).click()
   await expect(page.getByRole('textbox', { name: 'Sticky note' })).toHaveValue('Homework: page 42')
 })
+
+test('a tap puts down a timer of a useful size', async ({ page }) => {
+  await page.getByRole('button', { name: 'Whiteboard' }).click()
+  await page.getByRole('button', { name: 'Widgets', exact: true }).click()
+  await page.getByRole('button', { name: 'Timer', exact: true }).click()
+  await page.mouse.click(AT.x - 200, AT.y)
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  const box = (await page.locator('.timer').boundingBox())!
+  expect(box.width).toBeGreaterThan(100)
+  expect(box.width / box.height).toBeCloseTo(1.5, 1)
+})

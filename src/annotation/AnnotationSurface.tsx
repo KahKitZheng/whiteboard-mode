@@ -69,10 +69,10 @@ const HIGHLIGHT_OPACITY = 0.35
 
 /**
  * Tools for which a tap on content means something — pick this shape, erase
- * that one, put a label or a note here. Every other tool draws nothing on a tap, so a
+ * that one, put a label or a widget here. Every other tool draws nothing on a tap, so a
  * tap can be left to the host wherever it lands. See ADR 0006.
  */
-const TAP_TOOLS: ReadonlySet<Tool> = new Set<Tool>(['select', 'eraser', 'text', 'note'])
+const TAP_TOOLS: ReadonlySet<Tool> = new Set<Tool>(['select', 'eraser', 'text', 'note', 'timer'])
 
 /*
   Hold the pen still this long before lifting and a stroke that was nearly a
@@ -113,8 +113,11 @@ function transform(gesture: Gesture, point: Point): Shape {
 }
 
 /** A tap that never moved, or an empty string, is not worth storing. */
-/** What a tap puts down, in reference units: room for a sentence or two. */
-const NOTE_SIZE = { width: 180, height: 150 }
+/** What a tap puts down, in reference units: a note with room for a sentence or two, a timer readable from the back. */
+const TAP_SIZES: Record<'note' | 'timer', { width: number; height: number }> = {
+  note: { width: 180, height: 150 },
+  timer: { width: 180, height: 120 },
+}
 
 function worthKeeping(shape: Shape): boolean {
   if (shape.type === 'stroke') return shape.points.length >= 2
@@ -865,12 +868,13 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
       if (found) return commit((shapes) => [...shapes, settle(primitiveFrom(found, shape))])
     }
 
-    // A note is usually put down with a tap, not drawn; a tap gets a note of a
+    // A widget is usually put down with a tap, not drawn; a tap gets one of a
     // useful size, kept inside the surface — one hanging off the edge is clipped.
-    if (shape.type === 'note' && !worthKeeping(shape)) {
-      const x = Math.max(0, Math.min(shape.from.x, REFERENCE_WIDTH - NOTE_SIZE.width))
+    if ((shape.type === 'note' || shape.type === 'timer') && !worthKeeping(shape)) {
+      const size = TAP_SIZES[shape.type]
+      const x = Math.max(0, Math.min(shape.from.x, REFERENCE_WIDTH - size.width))
       const from = { x, y: shape.from.y }
-      return commit((shapes) => [...shapes, settle({ ...shape, from, to: { x: x + NOTE_SIZE.width, y: from.y + NOTE_SIZE.height } })])
+      return commit((shapes) => [...shapes, settle({ ...shape, from, to: { x: x + size.width, y: from.y + size.height } })])
     }
 
     if (worthKeeping(shape)) commit((shapes) => [...shapes, settle(shape)])

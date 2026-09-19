@@ -2,7 +2,7 @@
 
 With whiteboard mode on, a press is not decided at press time. If the pointer lifts without moving it was a tap, and the browser delivers the click to whatever was pressed as it normally would — a button, a marker, a backdrop, a plain `div` with a handler; no synthesised event, real focus, real `:active`. If it moves first, it was a stroke, started from where the press landed, and the click the browser still fires afterwards is dropped.
 
-With a drawing tool this holds for *every* press: a tap draws nothing with a pen anyway, so leaving it to the host costs no ink and means nobody has to remember which parts of the app still work while armed — they all do. The tools whose tap has a meaning of its own (select, eraser, text, and the sticky note, which a tap puts down) take a tap on content immediately and wait only over a control, where a control is decided by platform semantics (`interactive.ts`).
+With a drawing tool this holds for *every* press: a tap draws nothing with a pen anyway, so leaving it to the host costs no ink and means nobody has to remember which parts of the app still work while armed — they all do. The tools whose tap has a meaning of its own (select, eraser, text, and the widgets, which a tap puts down) take a tap on content immediately and wait only over a control, where a control is decided by platform semantics (`interactive.ts`).
 
 *Amended:* the first version waited only over controls, for every tool. A tap on a dialog's backdrop then drew nothing and dismissed nothing, which is exactly the "what works while armed?" question this decision exists to remove.
 
