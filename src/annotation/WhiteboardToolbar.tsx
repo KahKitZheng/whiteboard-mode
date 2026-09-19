@@ -131,7 +131,7 @@ export function WhiteboardToolbar() {
 
       <Popover.Root open={showing} onOpenChange={(next) => !next && setOpen(false)}>
         <Popover.Portal>
-          <Popover.Positioner anchor={buttons.current[tool] ?? null} side="top" sideOffset={12} collisionPadding={16}>
+          <Popover.Positioner anchor={buttons.current[tool] ?? null} side="top" sideOffset={22} collisionPadding={16}>
             <Popover.Popup className="tool-bubble" initialFocus={false}>
               <Popover.Arrow className="tool-bubble-arrow">
                 <svg width="20" height="10" viewBox="0 0 20 10" aria-hidden="true">

@@ -187,28 +187,28 @@
 }
 
 /*
-  One pill, fixed along the bottom and centred. It never moves and never
-  changes size with what is going on — a teacher's hand learns where the pen
-  is. Above the slide's own chrome, below nothing.
+  One bar docked along the bottom, the full width of the screen, with the
+  controls centred in it. The lesson sits above it, never under it: the page
+  keeps `--toolbar-height` clear. It never moves and never changes size with
+  what is going on — a teacher's hand learns where the pen is.
 */
 .whiteboard-toolbar {
-  @include surface;
   @include controls;
 
   position: fixed;
-  bottom: 24px;
-  left: 50%;
-  translate: -50%;
+  inset: auto 0 0;
+  height: var(--toolbar-height);
   z-index: 3;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 5px;
+  padding: 0 16px;
   box-sizing: border-box;
-  // A fixed element pinned by `left: 50%` gets half the viewport as its
-  // containing block and would shrink-wrap to that.
-  width: max-content;
-  max-width: calc(100vw - 32px);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  // Keeps the tools clear of the slide's fixed chrome on a narrow screen.
+  overflow-x: auto;
 
   /*
     The one control that is always there, so it is the one that carries a name.

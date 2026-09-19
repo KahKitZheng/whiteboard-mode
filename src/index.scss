@@ -8,6 +8,8 @@
   --accent: #aa3bff;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  // The whiteboard bar docked along the bottom; the page keeps clear of it.
+  --toolbar-height: 56px;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
@@ -40,6 +42,7 @@ body {
 
 body {
   background: var(--page);
+  padding-bottom: var(--toolbar-height);
 }
 
 #root {

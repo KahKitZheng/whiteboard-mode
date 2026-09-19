@@ -348,8 +348,16 @@ test('zoomed in, two fingers on a trackpad pan the page and a pinch zooms it', a
   await page.getByRole('button', { name: 'Zoom in' }).click()
   const viewer = (await page.locator('.boardbook-viewer').boundingBox())!
   await page.mouse.move(viewer.x + viewer.width / 2, viewer.y + viewer.height / 2)
-  await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeGreaterThan(viewer.width)
-  const zoomed = (await layer(page).boundingBox())!
+  // Settled, not mid-animation: two reads a frame apart agree.
+  let zoomed = (await layer(page).boundingBox())!
+  await expect
+    .poll(async () => {
+      const next = (await layer(page).boundingBox())!
+      const settled = next.width > viewer.width && Math.abs(next.width - zoomed.width) < 0.5
+      zoomed = next
+      return settled
+    })
+    .toBe(true)
 
   // A wheel is a pan: the page moves, its size does not change.
   await page.mouse.wheel(0, 200)

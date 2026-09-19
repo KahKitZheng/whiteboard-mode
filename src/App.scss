@@ -1,9 +1,9 @@
-// One slide per route: the viewport, with the lesson on a card in the middle.
-// The page still scrolls when a card outgrows the screen.
+// One slide per route: the screen above the whiteboard bar, with the lesson
+// on a card in the middle. The page still scrolls when a card outgrows it.
 .slide {
   display: flex;
   flex-direction: column;
-  min-height: 100svh;
+  min-height: calc(100svh - var(--toolbar-height));
   padding: 32px 0;
   box-sizing: border-box;
 }
@@ -62,7 +62,7 @@
 .slide-count {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: calc(var(--toolbar-height) + 16px);
   z-index: 2;
   padding: 8px 14px;
   border: 1px solid var(--border);
