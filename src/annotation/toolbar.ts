@@ -13,9 +13,6 @@ const BORDER_TOOLS: Tool[] = ['rect', 'ellipse', 'line']
 /** Tools that draw a closed shape, which is what a fill needs. */
 const FILL_TOOLS: Tool[] = ['rect', 'ellipse']
 
-/** Tools that leave a shape behind, all of which can be made more or less solid. */
-const SHAPE_TOOLS: Tool[] = [...INK_TOOLS, 'text', 'timer']
-
 /**
  * Which settings mean anything right now. A weight means nothing to the text
  * tool, a fill means nothing to a line, a dash means nothing to freehand ink —
@@ -33,7 +30,6 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
       border: selected.border !== undefined,
       fill: selected.fill !== undefined,
       heads: selected.heads !== undefined,
-      opacity: selected.opacity !== undefined,
       // A mark's kind is what it is; these only steer the next one.
       snap: false,
       penMark: false,
@@ -50,7 +46,6 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
     border: BORDER_TOOLS.includes(tool),
     fill: FILL_TOOLS.includes(tool),
     heads: tool === 'line',
-    opacity: SHAPE_TOOLS.includes(tool),
     snap: tool === 'highlighter',
     penMark: tool === 'pen',
     tidy: tool === 'pen',

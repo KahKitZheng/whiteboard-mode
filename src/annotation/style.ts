@@ -97,13 +97,6 @@ export const FILLS: { name: string; value: FillStyle }[] = [
  */
 export const TINT_OPACITY = 0.18
 
-export const OPACITIES: { name: string; value: number }[] = [
-  { name: 'Faint', value: 0.25 },
-  { name: 'Half', value: 0.5 },
-  { name: 'Mostly solid', value: 0.75 },
-  { name: 'Full', value: 1 },
-]
-
 export const SNAP_MODES: { name: string; value: boolean }[] = [
   { name: 'Free', value: false },
   { name: 'Snap to words', value: true },

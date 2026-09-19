@@ -7,7 +7,6 @@ import {
   COLORS,
   FILLS,
   HEADS,
-  OPACITIES,
   PEN_MARKS,
   SHAPE_MODES,
   SNAP_MODES,
@@ -24,10 +23,10 @@ const DOT = 18
 
 /**
  * A named group of choices. Most of these controls show what they do — a
- * swatch is its colour, a dot is its thickness — but not all of them can:
- * four discs of decreasing solidity are only obviously *opacity* once
- * something says so. So the names come back, small enough not to compete with
- * the controls they head.
+ * swatch is its colour, a dot is its thickness — but not all of them can: a
+ * filled, tinted or empty square is only obviously *fill* once something says
+ * so. So the names come back, small enough not to compete with the controls
+ * they head.
  */
 function Setting({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -65,7 +64,6 @@ export function ToolSettings() {
   const border = selected?.border ?? style.border
   const fill = selected?.fill ?? style.fill
   const heads = selected?.heads ?? style.heads
-  const opacity = selected?.opacity ?? style.opacity
   const snap = style.snap
   const penMark = style.penMark
   const tidy = style.tidy
@@ -317,30 +315,6 @@ export function ToolSettings() {
           </ToggleGroup>
         </Setting>
       )}
-      {shown.opacity && (
-        <Setting label="Opacity">
-          <ToggleGroup
-            value={[String(opacity)]}
-            onValueChange={([next]) => next && apply({ opacity: Number(next) })}
-            className="choices"
-          >
-            {OPACITIES.map(({ name, value }) => (
-              <Toolbar.Button
-                key={value}
-                className="icon-button"
-                aria-label={name}
-                title={name}
-                render={<Toggle value={String(value)} />}
-              >
-                <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
-                  <circle cx="10" cy="10" r="7" fill={color} opacity={value} />
-                </svg>
-              </Toolbar.Button>
-            ))}
-          </ToggleGroup>
-        </Setting>
-      )}
-
     </>
   )
 }
