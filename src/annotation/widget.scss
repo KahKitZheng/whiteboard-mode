@@ -7,21 +7,46 @@
   pointer-events: auto;
 }
 
+/*
+  A square of pastel paper: the chosen colour mixed well towards white, the
+  way the real thing is dyed, a slightly deeper strip along the top where the
+  glue is, a curl at the bottom corner, and a shadow that lifts it off the
+  page. Ink is dark whatever the theme — it is paper, not a panel.
+*/
 .note {
+  position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: 0.3em;
-  // The paper: a wash of the chosen colour, with the colour itself along the top.
-  background: color-mix(in srgb, var(--note) 22%, var(--bg));
+  border-radius: 0.1em;
+  background: color-mix(in srgb, var(--note) 42%, #fffdf6);
   font-family: var(--sans);
-  box-shadow: 0 0.3em 0.8em rgb(0 0 0 / 14%);
-  overflow: hidden;
+  color: #262626;
+  box-shadow:
+    0 0.1em 0.2em rgb(0 0 0 / 10%),
+    0 0.6em 1.1em -0.2em rgb(0 0 0 / 22%);
+
+  // The bottom corner lifts: cut away to what is behind, folded face darker.
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 1.6em;
+    height: 1.6em;
+    pointer-events: none;
+    background: linear-gradient(
+      225deg,
+      transparent 50%,
+      color-mix(in srgb, var(--note) 30%, #fff) 51%,
+      color-mix(in srgb, var(--note) 55%, #b8b8b8) 100%
+    );
+  }
 }
 
 .note-bar {
   flex: none;
-  height: 1.1em;
-  background: var(--note);
+  height: 1.4em;
+  background: color-mix(in srgb, var(--note) 58%, #fff);
   cursor: grab;
 }
 
@@ -29,17 +54,18 @@
   flex: 1;
   width: 100%;
   min-height: 0;
-  padding: 0.6em 0.7em;
+  padding: 0.5em 0.7em 1.4em;
   border: 0;
   background: transparent;
-  color: var(--text-h);
+  color: inherit;
+  caret-color: #262626;
   font: inherit;
   line-height: 1.3;
   resize: none;
   outline: none;
 
   &::placeholder {
-    color: color-mix(in srgb, var(--text-h) 40%, transparent);
+    color: rgb(0 0 0 / 35%);
   }
 }
 

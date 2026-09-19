@@ -520,6 +520,11 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     const surface = element.current
     if (!surface) return
 
+    // A press the surface takes has its default prevented, and moving focus is
+    // that default: a note being typed in would keep its caret while the pen
+    // drew elsewhere. Leave it, as a press on plain content would.
+    if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body) document.activeElement.blur()
+
     const point = pointFrom({ clientX, clientY }, surface.getBoundingClientRect())
     // Ink laid down on a zoomed-in surface would be that many times thicker
     // once the view is back at rest. Divide it out here, once, at creation.

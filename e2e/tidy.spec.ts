@@ -230,7 +230,11 @@ test('a sticky note is put down with a tap, keeps its words, and takes a colour'
   await expect(note).toBeVisible()
   await note.click()
   await page.keyboard.type('Homework: page 42')
-  await page.keyboard.press('Escape')
+  await expect(note).toBeFocused()
+  // A press elsewhere with the pen takes the caret with it, as on any page.
+  await page.getByRole('button', { name: 'Pen', exact: true }).click()
+  await page.mouse.click(AT.x - 300, AT.y)
+  await expect(note).not.toBeFocused()
   await expect.poll(async () => ((await stored(page)).at(-1) as { text?: string }).text).toBe('Homework: page 42')
 
   // Selected by its strip, not its paper, and recoloured from the bubble.
