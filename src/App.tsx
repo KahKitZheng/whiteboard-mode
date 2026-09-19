@@ -7,6 +7,7 @@ import { BOARDBOOKS } from './boardbook/fixtures'
 import { LESSONS } from './Lesson'
 import { LessonExtras } from './LessonExtras'
 import { SlideNav } from './SlideNav'
+import { SlideOverview } from './SlideOverview'
 import './App.scss'
 
 export default function App() {
@@ -20,7 +21,7 @@ export default function App() {
         </Switch>
 
         <SlideNav />
-        <WhiteboardToolbar />
+        <WhiteboardToolbar trailing={<SlideOverview />} />
       </BrowserRouter>
     </WhiteboardModeProvider>
   )

@@ -237,6 +237,16 @@
     gap: 2px;
   }
 
+  // The host's control, at the right end whatever the centred row is doing.
+  .toolbar-trailing {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    translate: 0 -50%;
+    display: flex;
+    align-items: center;
+  }
+
   // A hairline keeps undo apart from the tools: reaching for the eraser and
   // landing on Clear all is a lesson gone.
   .history {

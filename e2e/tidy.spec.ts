@@ -194,3 +194,17 @@ test('off, every tool is on the bar with none in hand, and pressing one arms the
   await expect(page.getByRole('button', { name: 'Line', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByRole('group', { name: 'Heads' })).toBeVisible()
 })
+
+test('the slide count opens the deck, and a thumbnail goes to its slide', async ({ page }) => {
+  const count = page.getByRole('button', { name: /Slide 1 of 3/ })
+  await expect(count).toHaveText('1/3')
+  await count.click()
+  await expect(page.getByRole('dialog', { name: 'Slides' })).toBeVisible()
+  const current = page.getByRole('button', { name: /1.*Lesson one/ })
+  await expect(current).toHaveAttribute('aria-current', 'true')
+
+  await page.getByRole('button', { name: /3.*De waterkringloop/ }).click()
+  await expect(page).toHaveURL(/\/boardbook\/waterkringloop$/)
+  await expect(page.getByRole('dialog', { name: 'Slides' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Slide 3 of 3/ })).toHaveText('3/3')
+})

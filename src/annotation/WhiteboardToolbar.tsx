@@ -18,7 +18,7 @@ import {
   Undo2,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ICON_SIZE, settingsFor } from './toolbar'
 import { ToolSettings } from './ToolSettings'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
@@ -49,7 +49,12 @@ const TOOLS: { name: Tool; label: string; Icon: LucideIcon }[] = [
  * the selected shape — is a bubble above that tool's button, so the pill keeps
  * one size and one place whatever is going on. See ADR 0010.
  */
-export function WhiteboardToolbar() {
+type Props = {
+  /** The host's own control at the bar's right end — a slide count, say. Not the module's business. */
+  trailing?: ReactNode
+}
+
+export function WhiteboardToolbar({ trailing }: Props) {
   const { active, setActive, tool, setTool, actions } = useWhiteboardMode()
   const buttons = useRef<Partial<Record<Tool, HTMLButtonElement | null>>>({})
   const [open, setOpen] = useState(false)
@@ -128,6 +133,8 @@ export function WhiteboardToolbar() {
           <Trash2 size={ICON_SIZE} />
         </Toolbar.Button>
       </div>
+
+      {trailing && <div className="toolbar-trailing">{trailing}</div>}
 
       <Popover.Root open={showing} onOpenChange={(next) => !next && setOpen(false)}>
         <Popover.Portal>

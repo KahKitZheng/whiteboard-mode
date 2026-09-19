@@ -59,19 +59,156 @@
   }
 }
 
+// The slide count, on the whiteboard bar, and the button that opens the deck.
 .slide-count {
-  position: fixed;
-  right: 24px;
-  bottom: calc(var(--toolbar-height) + 16px);
-  z-index: 2;
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 10px 0 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--bg);
   color: var(--text-h);
+  font: inherit;
   font-size: 15px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+  }
+}
+
+// The deck, as a drawer sliding up from the bar. The lesson dims behind it.
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  background: rgb(0 0 0 / 40%);
+}
+
+.slide-drawer {
+  position: fixed;
+  inset: auto 0 var(--toolbar-height);
+  z-index: 4;
+  max-height: calc(100svh - var(--toolbar-height) - 48px);
+  overflow: auto;
+  padding: 20px 32px 28px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -12px 40px rgb(0 0 0 / 12%);
+}
+
+.slide-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.slide-drawer-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.slide-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-h);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+  }
+}
+
+.slide-thumbs {
+  display: flex;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.slide-thumb {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 260px;
+  padding: 10px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  &[aria-current] {
+    border-color: var(--accent);
+    color: var(--text-h);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.slide-thumb-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slide-thumb-number {
+  min-width: 1.2em;
+  font-variant-numeric: tabular-nums;
+}
+
+.slide-thumb-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg));
+
+  .thumb-page {
+    fill: transparent;
+  }
+
+  .thumb-accent {
+    fill: var(--accent);
+  }
+
+  .thumb-picture,
+  .thumb-line {
+    fill: color-mix(in srgb, var(--text) 25%, transparent);
+  }
+
+  .thumb-picture {
+    fill: color-mix(in srgb, var(--text) 14%, transparent);
+  }
 }
 
 .page-surface {

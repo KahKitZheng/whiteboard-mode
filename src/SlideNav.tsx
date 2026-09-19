@@ -1,14 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
-import { BOARDBOOKS } from './boardbook/fixtures'
-import { LESSONS } from './Lesson'
-
-/** Every page as one deck, in the order the buttons step through. */
-const SLIDES = [
-  ...LESSONS.map((lesson) => ({ path: `/lesson/${lesson.slug}`, title: lesson.title })),
-  ...BOARDBOOKS.map((page) => ({ path: `/boardbook/${page.slug}`, title: page.title })),
-]
+import { SLIDES } from './slides'
 
 /** Keys pressed while typing — a label being edited, a form field — are not navigation. */
 function isTyping(target: EventTarget | null): boolean {
@@ -58,11 +51,6 @@ export function SlideNav() {
       >
         <ChevronRight size={28} aria-hidden="true" />
       </button>
-      {index >= 0 && (
-        <div className="slide-count" aria-label={`Slide ${index + 1} of ${SLIDES.length}`}>
-          {index + 1}/{SLIDES.length}
-        </div>
-      )}
     </>
   )
 }
