@@ -40,7 +40,7 @@ export function settingsFor(tool: Tool, selected: Partial<Style> | null) {
   const inkTool = INK_TOOLS.includes(tool)
 
   return {
-    color: inkTool || tool === 'text',
+    color: inkTool || tool === 'text' || tool === 'note',
     weight: inkTool,
     textSize: tool === 'text',
     border: BORDER_TOOLS.includes(tool),

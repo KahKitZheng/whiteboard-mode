@@ -485,7 +485,7 @@ export function placeShape(shape: Shape, frame: Frame): Shape {
   // Size and weight follow too, so the ink stays in proportion to what it marks.
   const moved = mapPoints(shape, move)
   if (moved.type === 'text') return { ...moved, size: moved.size * now.scale }
-  if (moved.type === 'timer') return moved
+  if (moved.type === 'timer' || moved.type === 'note') return moved
   return { ...moved, weight: moved.weight * now.scale }
 }
 

@@ -158,6 +158,10 @@ export function restyle(shape: Shape, patch: Partial<Style>): Shape {
     case 'timer':
       return { ...shape, ...opacity }
 
+    // A note's colour is its paper.
+    case 'note':
+      return { ...shape, ...color, ...opacity }
+
     case 'text':
       return {
         ...shape,
@@ -193,6 +197,9 @@ export function styleOf(shape: Shape): Partial<Style> {
   switch (shape.type) {
     case 'timer':
       return { opacity: shape.opacity }
+
+    case 'note':
+      return { color: shape.color, opacity: shape.opacity }
 
     case 'text':
       return { color: shape.color, textSize: shape.size, opacity: shape.opacity }

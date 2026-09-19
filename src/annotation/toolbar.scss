@@ -237,6 +237,18 @@
     gap: 2px;
   }
 
+  // A caret says the button holds more than it shows.
+  .tool-group {
+    position: relative;
+  }
+
+  .tool-group-caret {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    opacity: 0.5;
+  }
+
   // The host's control, at the right end whatever the centred row is doing.
   .toolbar-trailing {
     position: absolute;
@@ -313,6 +325,17 @@
     min-width: 30px;
     height: 30px;
   }
+}
+
+// A group's members, opened from its button on the bar.
+.tool-menu {
+  @include surface;
+  @include controls;
+
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 14px;
 }
 
 // The tail of the bubble, pointing at the tool it belongs to. Base UI places

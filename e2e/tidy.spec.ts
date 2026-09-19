@@ -185,7 +185,7 @@ test('the line tool draws an arrow when asked for heads', async ({ page }) => {
 test('off, every tool is on the bar with none in hand, and pressing one arms the whiteboard', async ({ page }) => {
   const pen = page.getByRole('button', { name: 'Pen', exact: true })
   await expect(pen).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Timer', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Widgets', exact: true })).toBeVisible()
   await expect(pen).toHaveAttribute('aria-pressed', 'false')
   await expect(page.locator('.tool-bubble')).toHaveCount(0)
 
@@ -218,4 +218,28 @@ test('the slide count opens the deck, and a thumbnail goes to its slide', async 
   await expect(page).toHaveURL(/\/boardbook\/waterkringloop$/)
   await expect(page.getByRole('dialog', { name: 'Slides' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Slide 9 of 9/ })).toHaveText('9/9')
+})
+
+test('a sticky note is put down with a tap, keeps its words, and takes a colour', async ({ page }) => {
+  await page.getByRole('button', { name: 'Whiteboard' }).click()
+  await page.getByRole('button', { name: 'Widgets', exact: true }).click()
+  await page.getByRole('button', { name: 'Sticky note', exact: true }).click()
+  await page.mouse.click(AT.x, AT.y)
+
+  const note = page.getByRole('textbox', { name: 'Sticky note' })
+  await expect(note).toBeVisible()
+  await note.click()
+  await page.keyboard.type('Homework: page 42')
+  await page.keyboard.press('Escape')
+  await expect.poll(async () => ((await stored(page)).at(-1) as { text?: string }).text).toBe('Homework: page 42')
+
+  // Selected by its strip, not its paper, and recoloured from the bubble.
+  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  const bar = (await page.locator('.note-bar').boundingBox())!
+  await page.mouse.click(bar.x + bar.width / 2, bar.y + bar.height / 2)
+  await page.getByRole('group', { name: 'Colour' }).getByRole('button', { name: 'Blue' }).click()
+  await expect.poll(async () => ((await stored(page)).at(-1) as { color?: string }).color).toBe('#3e63dd')
+
+  await page.reload()
+  await expect(page.getByRole('textbox', { name: 'Sticky note' })).toHaveValue('Homework: page 42')
 })

@@ -10,6 +10,7 @@ export type Tool =
   | 'line'
   | 'text'
   | 'timer'
+  | 'note'
   | 'eraser'
 
 /** What the toolbar can do to a surface. Published by the surface itself. */

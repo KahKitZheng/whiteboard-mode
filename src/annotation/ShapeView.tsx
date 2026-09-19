@@ -1,6 +1,7 @@
 import { scaleFor, type Point } from './coords'
 import { TINT_OPACITY } from './style'
 import { strokePath } from './stroke'
+import { Note } from './Note'
 import { Timer } from './Timer'
 import type { BorderStyle, FillStyle, Shape } from './types'
 
@@ -46,7 +47,14 @@ function fillOf(fill: FillStyle | undefined, color: string) {
 }
 
 /** One render branch per shape type — the only place shape types are drawn. */
-export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
+type Props = {
+  shape: Shape
+  width: number
+  /** A note's words were changed; the surface stores them. */
+  onNoteText?: (id: string, text: string) => void
+}
+
+export function ShapeView({ shape, width, onNoteText }: Props) {
   const scale = scaleFor(width)
   const at = (point: Point): Point => ({ x: point.x * scale, y: point.y * scale })
 
@@ -185,6 +193,23 @@ export function ShapeView({ shape, width }: { shape: Shape; width: number }) {
           opacity={shape.opacity}
         >
           <Timer fontSize={Math.max(8, height * 0.18)} />
+        </foreignObject>
+      )
+    }
+
+    case 'note': {
+      const from = at(shape.from)
+      const to = at(shape.to)
+      const boxWidth = Math.abs(to.x - from.x)
+      return (
+        <foreignObject
+          x={Math.min(from.x, to.x)}
+          y={Math.min(from.y, to.y)}
+          width={boxWidth}
+          height={Math.abs(to.y - from.y)}
+          opacity={shape.opacity}
+        >
+          <Note text={shape.text} color={shape.color} fontSize={Math.max(9, boxWidth * 0.08)} onText={(text) => onNoteText?.(shape.id, text)} />
         </foreignObject>
       )
     }

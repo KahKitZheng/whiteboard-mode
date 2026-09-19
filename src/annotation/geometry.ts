@@ -116,7 +116,8 @@ export function outline(shape: Shape): Point[] {
       })
 
     case 'rect':
-    case 'timer': {
+    case 'timer':
+    case 'note': {
       const { from, to } = shape
       return [from, { x: to.x, y: from.y }, to, { x: from.x, y: to.y }, from]
     }

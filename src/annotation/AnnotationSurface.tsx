@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import { anchorShape, markOver, placeShape, unanchored, wordAt, wordsBetween, type Frame } from './anchor'
-import { toReference, type Point } from './coords'
+import { REFERENCE_WIDTH, toReference, type Point } from './coords'
 import {
   aspectOf,
   bounds,
@@ -69,10 +69,10 @@ const HIGHLIGHT_OPACITY = 0.35
 
 /**
  * Tools for which a tap on content means something — pick this shape, erase
- * that one, put a label here. Every other tool draws nothing on a tap, so a
+ * that one, put a label or a note here. Every other tool draws nothing on a tap, so a
  * tap can be left to the host wherever it lands. See ADR 0006.
  */
-const TAP_TOOLS: ReadonlySet<Tool> = new Set<Tool>(['select', 'eraser', 'text'])
+const TAP_TOOLS: ReadonlySet<Tool> = new Set<Tool>(['select', 'eraser', 'text', 'note'])
 
 /*
   Hold the pen still this long before lifting and a stroke that was nearly a
@@ -113,6 +113,9 @@ function transform(gesture: Gesture, point: Point): Shape {
 }
 
 /** A tap that never moved, or an empty string, is not worth storing. */
+/** What a tap puts down, in reference units: room for a sentence or two. */
+const NOTE_SIZE = { width: 180, height: 150 }
+
 function worthKeeping(shape: Shape): boolean {
   if (shape.type === 'stroke') return shape.points.length >= 2
   if (shape.type === 'text') return shape.text.length > 0
@@ -644,6 +647,8 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
             }
         : tool === 'timer'
           ? { id: crypto.randomUUID(), type: 'timer', from: point, to: point, opacity: style.opacity }
+        : tool === 'note'
+          ? { id: crypto.randomUUID(), type: 'note', from: point, to: point, text: '', color: style.color, opacity: style.opacity }
           : {
               id: crypto.randomUUID(),
               type: tool,
@@ -855,7 +860,19 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
       if (found) return commit((shapes) => [...shapes, settle(primitiveFrom(found, shape))])
     }
 
+    // A note is usually put down with a tap, not drawn; a tap gets a note of a
+    // useful size, kept inside the surface — one hanging off the edge is clipped.
+    if (shape.type === 'note' && !worthKeeping(shape)) {
+      const x = Math.max(0, Math.min(shape.from.x, REFERENCE_WIDTH - NOTE_SIZE.width))
+      const from = { x, y: shape.from.y }
+      return commit((shapes) => [...shapes, settle({ ...shape, from, to: { x: x + NOTE_SIZE.width, y: from.y + NOTE_SIZE.height } })])
+    }
+
     if (worthKeeping(shape)) commit((shapes) => [...shapes, settle(shape)])
+  }
+
+  function setNoteText(id: string, text: string) {
+    commit((shapes) => shapes.map((shape) => (shape.id === id && shape.type === 'note' ? { ...shape, text } : shape)))
   }
 
   function cancelShape(event: ReactPointerEvent<HTMLDivElement>) {
@@ -930,7 +947,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
             /* Marked shapes fade rather than vanish, so a sweep can be seen
                before the pointer lifts and can still be cancelled. */
               <g key={shape.id} data-marked={marked.includes(shape.id) ? '' : undefined}>
-                <ShapeView shape={shape} width={renderWidth} />
+                <ShapeView shape={shape} width={renderWidth} onNoteText={setNoteText} />
               </g>
             ))}
           {draft && <ShapeView shape={draft} width={renderWidth} />}

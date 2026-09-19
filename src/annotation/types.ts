@@ -88,6 +88,17 @@ export type Widget = Anchored & {
   opacity: number
 }
 
+/** A sticky note: a coloured square of paper with words typed on it. A widget like the timer. */
+export type Note = Anchored & {
+  id: string
+  type: 'note'
+  from: Point
+  to: Point
+  text: string
+  color: string
+  opacity: number
+}
+
 /** One line of the words a mark covers, reference units. */
 export type LineBox = { x: number; y: number; width: number; height: number }
 
@@ -109,6 +120,6 @@ export type Mark = {
   opacity: number
 }
 
-export type Shape = Stroke | Primitive | Text | Widget | Mark
+export type Shape = Stroke | Primitive | Text | Widget | Note | Mark
 
 export type ShapeType = Shape['type']

@@ -33,7 +33,7 @@ A shape with a fixed geometric form the user places rather than draws freely —
 _Avoid_: Basic shape, standard shape
 
 **Widget**:
-A shape whose rendering is interactive rather than static — a timer, a coin flip. A widget is a shape in every other respect: placed, moved, persisted, restored.
+A shape whose rendering is interactive rather than static — a timer, a sticky note, a coin flip. A widget is a shape in every other respect: placed, moved, persisted, restored.
 _Avoid_: Plugin, tool (a widget is not a tool), gadget
 
 **Mark**:

@@ -12,6 +12,7 @@ import {
   Redo2,
   SendToBack,
   Slash,
+  StickyNote,
   Timer,
   Trash2,
   Type,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ICON_SIZE, settingsFor } from './toolbar'
+import { ToolGroup, type ToolChoice } from './ToolGroup'
 import { ToolSettings } from './ToolSettings'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 import './toolbar.scss'
@@ -39,8 +41,12 @@ const TOOLS: { name: Tool; label: string; Icon: LucideIcon }[] = [
   // Straight, bent, arrowed — reached for as often as the pen, to point at
   // things. Boxes and circles have no tool: the pen's Tidy setting makes them.
   { name: 'line', label: 'Line', Icon: Slash },
-  // Not a drawing tool; it only shares the row with them.
+]
+
+/** Not drawing tools; they share the bar behind one button. */
+const WIDGETS: ToolChoice[] = [
   { name: 'timer', label: 'Timer', Icon: Timer },
+  { name: 'note', label: 'Sticky note', Icon: StickyNote },
 ]
 
 /**
@@ -101,7 +107,7 @@ export function WhiteboardToolbar({ trailing }: Props) {
       </Toolbar.Button>
 
       {/* Every tool, always: off, none is in hand, and a press on one arms the whiteboard. */}
-      <ToggleGroup value={active ? [tool] : []} onValueChange={([next]) => next && pick(next as Tool)} className="tools">
+      <ToggleGroup value={active && !WIDGETS.some((widget) => widget.name === tool) ? [tool] : []} onValueChange={([next]) => next && pick(next as Tool)} className="tools">
         {TOOLS.map(({ name, label, Icon }) => (
           <Toolbar.Button
             key={name}
@@ -120,6 +126,15 @@ export function WhiteboardToolbar({ trailing }: Props) {
           </Toolbar.Button>
         ))}
       </ToggleGroup>
+
+      <ToolGroup
+        label="Widgets"
+        choices={WIDGETS}
+        onPick={pick}
+        buttonRef={(element) => {
+          for (const { name } of WIDGETS) buttons.current[name] = element
+        }}
+      />
 
       {/* They undo work rather than make it, so they keep apart from the tools. */}
       <div className="history" role="group" aria-label="History">
