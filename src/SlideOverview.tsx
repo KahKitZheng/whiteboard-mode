@@ -1,6 +1,6 @@
 import { Dialog } from '@base-ui-components/react/dialog'
 import { BookOpen, ChevronDown, ChevronUp, FileText } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import { SLIDES, type Slide } from './slides'
 
@@ -23,7 +23,12 @@ export function SlideOverview() {
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
+    /*
+      Not modal: a modal dialog locks the page's scroll, and taking the
+      scrollbar away moves the centred card by half its width while the drawer
+      is up. Nothing here needs the lock; a press outside still closes it.
+    */
+    <Dialog.Root open={open} onOpenChange={setOpen} modal={false}>
       <Dialog.Trigger className="slide-count" aria-label={`Slide ${index + 1} of ${SLIDES.length}. Show all slides`}>
         {index + 1}/{SLIDES.length}
         <ChevronUp size={16} aria-hidden="true" />
@@ -37,7 +42,7 @@ export function SlideOverview() {
               <ChevronDown size={22} aria-hidden="true" />
             </Dialog.Close>
           </div>
-          <ol className="slide-thumbs">
+          <Thumbs>
             {SLIDES.map((slide, at) => (
               <li key={slide.path}>
                 <button
@@ -55,10 +60,50 @@ export function SlideOverview() {
                 </button>
               </li>
             ))}
-          </ol>
+          </Thumbs>
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
+  )
+}
+
+/**
+ * The row of thumbnails, scrolling sideways when there are more than fit,
+ * with a shadow at whichever end has more behind it. Set from the scroll
+ * position rather than a scroll-driven animation, which Safari only got in
+ * 2025.
+ */
+function Thumbs({ children }: { children: ReactNode }) {
+  const scroller = useRef<HTMLOListElement>(null)
+  const [more, setMore] = useState({ start: false, end: false })
+
+  useEffect(() => {
+    const element = scroller.current
+    if (!element) return
+    function measure() {
+      if (!element) return
+      const slack = 1
+      setMore({
+        start: element.scrollLeft > slack,
+        end: element.scrollLeft + element.clientWidth < element.scrollWidth - slack,
+      })
+    }
+    measure()
+    element.addEventListener('scroll', measure, { passive: true })
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => {
+      element.removeEventListener('scroll', measure)
+      observer.disconnect()
+    }
+  }, [])
+
+  return (
+    <div className="slide-thumbs-wrap" data-more-start={more.start || undefined} data-more-end={more.end || undefined}>
+      <ol className="slide-thumbs" ref={scroller}>
+        {children}
+      </ol>
+    </div>
   )
 }
 

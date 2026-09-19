@@ -134,13 +134,63 @@
   }
 }
 
+// The row's shadows live on a wrapper, since the scroller itself scrolls its
+// pseudo-elements away with everything else.
+.slide-thumbs-wrap {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 12px;
+    width: 40px;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, var(--bg), transparent);
+  }
+
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, var(--bg), transparent);
+  }
+
+  &[data-more-start]::before,
+  &[data-more-end]::after {
+    opacity: 1;
+  }
+}
+
 .slide-thumbs {
   display: flex;
   gap: 12px;
   margin: 0;
-  padding: 0;
+  // Room under the row for the scrollbar, so it does not sit on the outlines.
+  padding: 0 0 12px;
   list-style: none;
   overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text) 30%, transparent) transparent;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--text) 30%, transparent);
+  }
 }
 
 .slide-thumb {

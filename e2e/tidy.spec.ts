@@ -203,6 +203,15 @@ test('the slide count opens the deck, and a thumbnail goes to its slide', async 
   const current = page.getByRole('button', { name: /7.*Ink follows the text/ })
   await expect(current).toHaveAttribute('aria-current', 'true')
 
+  // Nine thumbnails overflow this width: a shadow at the end says so, and
+  // goes once the row is scrolled there; one appears at the start instead.
+  const wrap = page.locator('.slide-thumbs-wrap')
+  await expect(wrap).toHaveAttribute('data-more-end', 'true')
+  await expect(wrap).not.toHaveAttribute('data-more-start', 'true')
+  await page.locator('.slide-thumbs').evaluate((row) => row.scrollTo({ left: row.scrollWidth }))
+  await expect(wrap).toHaveAttribute('data-more-start', 'true')
+  await expect(wrap).not.toHaveAttribute('data-more-end', 'true')
+
   await page.getByRole('button', { name: /9.*De waterkringloop/ }).click()
   await expect(page).toHaveURL(/\/boardbook\/waterkringloop$/)
   await expect(page.getByRole('dialog', { name: 'Slides' })).toHaveCount(0)
