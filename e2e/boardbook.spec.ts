@@ -414,3 +414,14 @@ test('the focus areas can be hidden from the bar, and the walkthrough still fram
   await toggle.click()
   await expect(page.locator('.boardbook-area')).toHaveCount(3)
 })
+
+test('the minimap is off until switched on from the bar', async ({ page }) => {
+  const minimap = page.locator('.navigator')
+  await expect(minimap).toBeHidden()
+  const toggle = page.getByRole('button', { name: 'Show minimap' })
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await expect(minimap).toBeVisible()
+  await toggle.click()
+  await expect(minimap).toBeHidden()
+})

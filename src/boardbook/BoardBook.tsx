@@ -82,6 +82,7 @@ export function BoardBook({ id, boardbook, text }: Props) {
   const [currentId, setCurrentId] = useState<string | null>(null)
   // Off, the areas are neither drawn nor pressable; the walkthrough still frames them.
   const [areasShown, setAreasShown] = useState(true)
+  const [minimapShown, setMinimapShown] = useState(false)
   const [openItem, setOpenItem] = useState<BoardBookItemEntity | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
   const { active } = useWhiteboardMode()
@@ -100,7 +101,9 @@ export function BoardBook({ id, boardbook, text }: Props) {
       element,
       tileSources: tileSource(boardbook.images.background),
       showNavigationControl: false,
-      showNavigator: false,
+      // Built hidden and shown on request: OSD only makes a navigator at construction.
+      showNavigator: true,
+      navigatorPosition: 'BOTTOM_RIGHT',
       maxZoomPixelRatio: 2,
       // The page never leaves its box: it covers the view at every zoom and a
       // drag stops at its edge rather than bouncing back. `keepInBox` has the
@@ -227,6 +230,11 @@ export function BoardBook({ id, boardbook, text }: Props) {
     }
   }, [boardbook])
 
+  useEffect(() => {
+    const element = viewer?.navigator?.element
+    if (element) element.style.display = minimapShown ? '' : 'none'
+  }, [viewer, minimapShown])
+
   // Armed, every press is the surface's; OSD's own pan and zoom would fight
   // the pen for it. Navigation goes through the chrome meanwhile.
   useEffect(() => {
@@ -292,6 +300,8 @@ export function BoardBook({ id, boardbook, text }: Props) {
         onFullscreen={toggleFullscreen}
         areasShown={areasShown}
         onToggleAreas={() => setAreasShown((shown) => !shown)}
+        minimapShown={minimapShown}
+        onToggleMinimap={() => setMinimapShown((shown) => !shown)}
       />
       <div className="boardbook-viewer">
         {/* OSD sizes itself at 100% of its element, which is indefinite on a
