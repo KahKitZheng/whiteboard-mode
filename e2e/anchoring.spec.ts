@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './test'
 
-const SURFACE = '[data-surface-id="lesson-one"]'
+const SURFACE = '[data-surface-id="lesson-reflow"]'
 const WIDE = { width: 1280, height: 900 }
 const NARROW = { width: 720, height: 1400 }
 
@@ -68,7 +68,7 @@ async function circle(page: Page, box: Rect) {
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize(WIDE)
-  await page.goto('/lesson/one')
+  await page.goto('/lesson/reflow')
   await expect(page.locator(`${SURFACE} > svg`)).toBeVisible()
 })
 
@@ -128,7 +128,7 @@ test('shapes from before anchoring are adopted where they sit, and follow from t
   await expect
     .poll(async () =>
       page.evaluate(() => {
-        const raw = sessionStorage.getItem('wb:lesson-one')
+        const raw = sessionStorage.getItem('wb:lesson-reflow')
         return raw ? (JSON.parse(raw) as { shapes: { anchor?: unknown }[] }).shapes.every((shape) => shape.anchor) : null
       }),
     )

@@ -58,11 +58,13 @@ function LessonRoute() {
         </article>
         <aside className="lesson-aside">
           {/* A picture: a shape over it follows its box, and scales with it. */}
-          <svg className="lesson-figure" viewBox="0 0 320 180" aria-hidden="true">
-            <circle cx="110" cy="90" r="58" />
-            <circle cx="210" cy="90" r="58" />
-            <path d="M40 150 Q 160 120 280 150" />
-          </svg>
+          {lesson.aside.figure && (
+            <svg className="lesson-figure" viewBox="0 0 320 180" aria-hidden="true">
+              <circle cx="110" cy="90" r="58" />
+              <circle cx="210" cy="90" r="58" />
+              <path d="M40 150 Q 160 120 280 150" />
+            </svg>
+          )}
           <h2>{lesson.aside.title}</h2>
           {lesson.aside.body.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
@@ -70,7 +72,7 @@ function LessonRoute() {
         </aside>
       </div>
 
-      <LessonExtras slug={lesson.slug} />
+      {lesson.extras && <LessonExtras slug={lesson.slug} />}
       </AnnotationSurface>
     </section>
   )

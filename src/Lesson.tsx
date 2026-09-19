@@ -1,5 +1,5 @@
 import type { Point } from './annotation/coords'
-import { DEFAULT_STYLE } from './annotation/style'
+import { COLORS, DEFAULT_STYLE } from './annotation/style'
 import type { Shape } from './annotation/types'
 
 // Generated rather than thirty hand-typed points: a seeded circle around the title.
@@ -18,51 +18,196 @@ export type Lesson = {
   title: string
   body: Paragraph[]
   /** The second column — the thing that moves when the columns stack. */
-  aside: { title: string; body: string[] }
+  aside: {
+    title: string
+    body: string[]
+    /** A picture above the text: something a shape can anchor to and scale with. */
+    figure?: boolean
+  }
+  /** The popup and the fullscreen stage below the columns, each a surface of its own. */
+  extras?: boolean
   /** Seeded, so a page can open with marks already on it. */
   shapes: Shape[]
 }
 
+const ink = { color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 }
+
+/*
+  One slide per thing the board does, in the order a demo would show them,
+  each with content made for it. The tools' own names are used as they appear
+  on the bar.
+*/
 export const LESSONS: Lesson[] = [
   {
-    slug: 'one',
-    title: 'Try the board',
+    slug: 'highlight',
+    title: 'Highlight words',
     body: [
-      'This page is a tour of the whiteboard. Press any tool on the bar below to arm it; press the switch to put the pen down and hand the page back.',
       {
-        lead: 'Highlight words.',
-        text: 'Pick the highlighter and, in the bubble above it, turn Snap to words on. Drag across a sentence: the mark takes the words, not the pixels. Make the window narrower and it re-wraps with them. With Snap off, the highlighter is plain ink.',
+        lead: 'Try it.',
+        text: 'Pick the highlighter. In the bubble above it, turn Snap to words on. Then drag across a few words of the text below.',
+      },
+      'Honeybees do not see red. Their eyes are tuned to blue, green and ultraviolet, and many flowers that look plain to us carry ultraviolet patterns that point straight at the nectar. A bee reads a flower the way we read a sign.',
+      'A single hive visits millions of flowers in a summer. Each worker bee makes about a twelfth of a teaspoon of honey in her whole life, and lives for around six weeks.',
+      'When a bee finds a good patch of flowers she flies home and dances. The angle of the dance says which way to fly, and how long it lasts says how far.',
+    ],
+    aside: {
+      title: 'What to notice',
+      body: [
+        'The mark takes the words, not the pixels. Make the window narrower: the text re-wraps, and the highlight wraps with it.',
+        'Turn Snap off and the highlighter is ink again — broad, see-through, and stays exactly where it was drawn.',
+      ],
+    },
+    shapes: [],
+  },
+  {
+    slug: 'underline',
+    title: 'Underline and strike through',
+    body: [
+      {
+        lead: 'Try it.',
+        text: 'Pick the pen. Under Words in its bubble, choose Strikethrough, and cross out the statements below that are false. Then choose Underline and underline the true ones.',
+      },
+      'Sound travels faster through water than through air.',
+      'Lightning never strikes the same place twice.',
+      'A day on Venus is longer than a year on Venus.',
+      'Humans use only ten percent of their brains.',
+      'The Great Wall of China is visible from the Moon with the naked eye.',
+      'Octopuses have three hearts.',
+    ],
+    aside: {
+      title: 'What to notice',
+      body: [
+        'A strikethrough sits through the middle of the words and an underline just under them, whatever the size of the text.',
+        'Both follow their words: resize the window and they move with the line.',
+        'Three of the six are false.',
+      ],
+    },
+    shapes: [],
+  },
+  {
+    slug: 'shapes',
+    title: 'Draw a shape',
+    body: [
+      {
+        lead: 'Try it.',
+        text: 'Pick the pen and, under Shapes in its bubble, turn Tidy shapes on. Draw a rough circle in the space below. Lift, and it is a circle.',
       },
       {
-        lead: 'Underline and strike through.',
-        text: 'The pen has the same option under Words. An underline drawn over a phrase follows that phrase wherever the text goes.',
+        lead: 'Or hold still.',
+        text: 'Turn Tidy off again. Draw a box, and at the last corner hold the pen still for a moment. The clean box appears while you hold; let go to keep it, move to get your ink back.',
       },
       {
-        lead: 'Draw a shape.',
-        text: 'With the pen, turn Tidy shapes on and draw a rough circle or a box; it becomes a clean one when you lift. Or leave it off and hold the pen still at the end of a stroke: the shape is previewed while you hold, and drawn when you let go.',
-      },
-      {
-        lead: 'Point at things.',
-        text: 'The line tool draws straight, or with an arrowhead from its Heads setting. Draw a curve and it bends; select a line and drag the handle at its middle to bend it by hand.',
-      },
-      {
-        lead: 'Select, restyle, delete.',
-        text: 'With the select tool, tap a shape. Its colour and weight appear in the bubble, and so do bring to front, send to back and delete. Drag it to move it, or a corner to resize it.',
-      },
-      {
-        lead: 'Every layer keeps its own marks.',
-        text: 'Open the diagram below, or go fullscreen, and draw there. Those marks belong to the popup or the stage, and the page underneath is untouched.',
+        lead: 'What it knows.',
+        text: 'Circles, boxes, straight lines, single curves and arrows drawn in one stroke. Anything else stays as you drew it.',
       },
     ],
     aside: {
+      title: 'What to notice',
+      body: [
+        'A near-square becomes a square and a near-circle a circle, centred where you drew them.',
+        'The shape keeps your colour and weight. Select it afterwards to change its border or give it a fill.',
+      ],
+    },
+    shapes: [],
+  },
+  {
+    slug: 'lines',
+    title: 'Point at things',
+    body: [
+      {
+        lead: 'Try it.',
+        text: 'Pick the line tool. Under Heads in its bubble, choose Arrow at end. Draw from the word "overlap" to where the two circles meet in the picture.',
+      },
+      {
+        lead: 'Bend it.',
+        text: 'Draw a line, then pick the select tool and tap it. Drag the round handle at its middle and the line curves. Drag it back onto the line to straighten it.',
+      },
+      'Two sets can overlap. Everything in the middle belongs to both.',
+    ],
+    aside: {
+      title: 'What to notice',
+      figure: true,
+      body: [
+        'Each end of a line remembers what it points at. Resize the window: the text end follows the word and the picture end follows the picture.',
+      ],
+    },
+    shapes: [],
+  },
+  {
+    slug: 'select',
+    title: 'Select and restyle',
+    body: [
+      {
+        lead: 'Try it.',
+        text: 'Pick the select tool and tap one of the shapes below. Its colour and weight show in the bubble; change them. Drag the shape to move it, or a corner handle to resize it.',
+      },
+      {
+        lead: 'Stack them.',
+        text: 'Drag the box over the circle, then use Bring to front and Send to back in the bubble to choose which is on top.',
+      },
+      {
+        lead: 'Undo.',
+        text: 'Every step is one undo. Delete a shape from the bubble, then undo from the bar.',
+      },
+    ],
+    aside: {
+      title: 'What to notice',
+      body: ['A change to a selected shape also becomes the setting for the next one you draw, so you never pick a colour twice.'],
+    },
+    // Three shapes to find, in three colours, below the text.
+    shapes: [
+      { id: 'select-circle', type: 'ellipse', from: { x: 70, y: 540 }, to: { x: 250, y: 690 }, ...ink, color: COLORS[6].value, border: 'solid', fill: 'none' },
+      { id: 'select-box', type: 'rect', from: { x: 320, y: 550 }, to: { x: 540, y: 680 }, ...ink, color: COLORS[3].value, border: 'dashed', fill: 'tinted' },
+      { id: 'select-arrow', type: 'line', from: { x: 600, y: 670 }, to: { x: 780, y: 560 }, ...ink, color: COLORS[1].value, border: 'solid', heads: 'end' },
+    ],
+  },
+  {
+    slug: 'layers',
+    title: 'Layers',
+    extras: true,
+    body: [
+      {
+        lead: 'Try it.',
+        text: 'Draw something here on the page. Then open the diagram below and draw on it. Close it and open it again: the diagram has its marks, the page has yours, and neither has the other’s.',
+      },
+      {
+        lead: 'Fullscreen too.',
+        text: 'The stage at the bottom is a surface of its own. Go fullscreen, draw, come back — the marks stay with the stage.',
+      },
+      {
+        lead: 'Why.',
+        text: 'Marks belong to the thing they were drawn on: the page, a popup, a fullscreen view. A popup that opens over a lesson in a different place still shows its own marks.',
+      },
+    ],
+    aside: {
+      title: 'What to notice',
+      body: ['With the whiteboard armed, a tap on Close still closes the popup — a tap is the page’s, a drag is the pen’s.'],
+    },
+    shapes: [],
+  },
+  {
+    slug: 'reflow',
+    title: 'Ink follows the text',
+    body: [
+      {
+        lead: 'Try it.',
+        text: 'Circle a word, underline a phrase, box the picture. Then make the window narrower until the right column drops under this one. Everything you drew goes with what it was drawn on.',
+      },
+      {
+        lead: 'Why it matters.',
+        text: 'A digital board is not the size of a laptop, and a lesson reflows between them. Marks stored as a place on the screen end up on the wrong words; these are stored against the words.',
+      },
+      'The circle around the title was drawn before this page was ever laid out. It found the title on its own.',
+    ],
+    aside: {
       title: 'Annotations follow the content',
+      figure: true,
       body: [
         'Circle a word here, then make the window narrower until this column drops below the other one. The circle drops with it.',
         'A shape remembers what was under it — the words, or the picture — and is placed against wherever that is now, not against a fraction of the page.',
       ],
     },
-    // One mark already on the page, so it opens looking used: a circle around the title.
-    shapes: [{ id: 'one-title', type: 'stroke', points: ellipse(255, 120, 245, 58), color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 }],
+    shapes: [{ id: 'reflow-title', type: 'stroke', points: ellipse(300, 120, 300, 62), ...ink }],
   },
   {
     slug: 'romeinen',

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './test'
 
-const SURFACE = '[data-surface-id="lesson-one"]'
+const SURFACE = '[data-surface-id="lesson-reflow"]'
 const WIDE = { width: 1280, height: 900 }
 const NARROW = { width: 720, height: 1400 }
 
@@ -40,7 +40,7 @@ async function lastShapePaths(page: Page): Promise<Rect[]> {
 
 async function stored(page: Page) {
   return page.evaluate(() => {
-    const raw = sessionStorage.getItem('wb:lesson-one')
+    const raw = sessionStorage.getItem('wb:lesson-reflow')
     type Stored = { type: string; kind?: string; anchor?: { target: { quote?: { exact: string } } } }
     return raw ? (JSON.parse(raw) as { shapes: Stored[] }).shapes : []
   })
@@ -62,7 +62,7 @@ async function dragWords(page: Page, from: Rect, to: Rect) {
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize(WIDE)
-  await page.goto('/lesson/one')
+  await page.goto('/lesson/reflow')
   await expect(page.locator(`${SURFACE} > svg`)).toBeVisible()
 })
 

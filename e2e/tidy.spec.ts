@@ -1,13 +1,13 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './test'
 
-const SURFACE = '[data-surface-id="lesson-one"]'
+const SURFACE = '[data-surface-id="lesson-reflow"]'
 /** Empty space in the right column, clear of the toolbar and of the bubble above it. */
 const AT = { x: 1060, y: 700 }
 
 async function stored(page: Page) {
   return page.evaluate(() => {
-    const raw = sessionStorage.getItem('wb:lesson-one')
+    const raw = sessionStorage.getItem('wb:lesson-reflow')
     type Stored = { type: string; from?: { x: number; y: number }; to?: { x: number; y: number } }
     return raw ? (JSON.parse(raw) as { shapes: Stored[] }).shapes : []
   })
@@ -51,7 +51,7 @@ async function roughBox(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/lesson/one')
+  await page.goto('/lesson/reflow')
   await expect(page.locator(`${SURFACE} > svg`)).toBeVisible()
 })
 
@@ -196,15 +196,15 @@ test('off, every tool is on the bar with none in hand, and pressing one arms the
 })
 
 test('the slide count opens the deck, and a thumbnail goes to its slide', async ({ page }) => {
-  const count = page.getByRole('button', { name: /Slide 1 of 3/ })
-  await expect(count).toHaveText('1/3')
+  const count = page.getByRole('button', { name: /Slide 7 of 9/ })
+  await expect(count).toHaveText('7/9')
   await count.click()
   await expect(page.getByRole('dialog', { name: 'Slides' })).toBeVisible()
-  const current = page.getByRole('button', { name: /1.*Try the board/ })
+  const current = page.getByRole('button', { name: /7.*Ink follows the text/ })
   await expect(current).toHaveAttribute('aria-current', 'true')
 
-  await page.getByRole('button', { name: /3.*De waterkringloop/ }).click()
+  await page.getByRole('button', { name: /9.*De waterkringloop/ }).click()
   await expect(page).toHaveURL(/\/boardbook\/waterkringloop$/)
   await expect(page.getByRole('dialog', { name: 'Slides' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /Slide 3 of 3/ })).toHaveText('3/3')
+  await expect(page.getByRole('button', { name: /Slide 9 of 9/ })).toHaveText('9/9')
 })
