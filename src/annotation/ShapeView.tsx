@@ -1,4 +1,5 @@
 import { scaleFor, type Point } from './coords'
+import { TEXT_LINE, textLines } from './geometry'
 import { TINT_OPACITY } from './style'
 import { strokePath } from './stroke'
 import { Note } from './Note'
@@ -141,16 +142,16 @@ export function ShapeView({ shape, width, onNoteText }: Props) {
 
     case 'text': {
       const at_ = at(shape.at)
+      const size = shape.size * scale
       return (
-        <text
-          x={at_.x}
-          y={at_.y}
-          fontSize={shape.size * scale}
-          fill={shape.color}
-          opacity={shape.opacity}
-          xmlSpace="preserve"
-        >
-          {shape.text}
+        <text x={at_.x} y={at_.y} fontSize={size} fill={shape.color} opacity={shape.opacity} xmlSpace="preserve">
+          {/* One tspan per line, each a line's height under the last. An empty
+              line keeps a space, or it would collapse and the next would ride up. */}
+          {textLines(shape.text).map((line, index) => (
+            <tspan key={index} x={at_.x} dy={index === 0 ? 0 : size * TEXT_LINE}>
+              {line || ' '}
+            </tspan>
+          ))}
         </text>
       )
     }

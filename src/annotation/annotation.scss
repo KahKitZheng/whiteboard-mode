@@ -107,12 +107,17 @@
     // ...but the editor itself is text, and selecting it is the point.
     user-select: text;
     -webkit-user-select: text;
+    display: block;
     width: 100%;
     padding: 0;
     border: 0;
     outline: none;
     background: transparent;
     font-family: var(--sans);
+    // Lines stack as the rendered label's do; nothing wraps or scrolls.
+    white-space: pre;
+    overflow: hidden;
+    resize: none;
     // The caret, selection, word deletion and clipboard all come with it.
   }
 

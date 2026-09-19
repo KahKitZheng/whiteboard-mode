@@ -21,6 +21,13 @@ const TEXT_PADDING = 0.12
 
 /** Must match what `.annotation-layer text` actually renders with. */
 const TEXT_FONT = "system-ui, 'Segoe UI', Roboto, sans-serif"
+/** Baseline to baseline, as a multiple of the size: a label's lines stack at this. */
+export const TEXT_LINE = 1.25
+
+/** A label's lines. One at least, so an empty label still has a box. */
+export function textLines(text: string): string[] {
+  return text.split('\n')
+}
 
 export const TEXT_SIZE = 28
 
@@ -67,20 +74,26 @@ export function textMetrics(
       typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
   }
 
+  // The widest line is the label's width; `descent` is the last line's, so
+  // the lines between add a line's height each.
+  const lines = textLines(text)
+  const extra = (lines.length - 1) * size * TEXT_LINE
+
   if (!measurer) {
     // No DOM (tests, SSR). Proportional to size, so everything stays coherent.
     return {
-      width: text.length * size * CHARACTER_WIDTH,
+      width: Math.max(...lines.map((line) => line.length)) * size * CHARACTER_WIDTH,
       ascent: size * ESTIMATED_ASCENT,
-      descent: size * ESTIMATED_DESCENT,
+      descent: size * ESTIMATED_DESCENT + extra,
     }
   }
 
   measurer.font = `${size}px ${TEXT_FONT}`
-  const metrics = measurer.measureText(text)
+  const metrics = measurer.measureText(lines[0])
+  const width = Math.max(...lines.map((line) => measurer!.measureText(line).width))
 
   return {
-    width: metrics.width,
+    width,
     /*
       The font's line box, not the ink of this particular string. Measuring the
       ink made the height depend on what had been typed — "T" gave 22px and "o"
@@ -88,7 +101,7 @@ export function textMetrics(
       the selection box jumped between "test" and "TEST".
     */
     ascent: metrics.fontBoundingBoxAscent || size * ESTIMATED_ASCENT,
-    descent: metrics.fontBoundingBoxDescent || size * ESTIMATED_DESCENT,
+    descent: (metrics.fontBoundingBoxDescent || size * ESTIMATED_DESCENT) + extra,
   }
 }
 

@@ -262,3 +262,23 @@ test('a tap puts down a timer of a useful size', async ({ page }) => {
   expect(box.width).toBeGreaterThan(100)
   expect(box.width / box.height).toBeCloseTo(1.5, 1)
 })
+
+test('a label can have more than one line: Shift+Enter breaks, Enter finishes', async ({ page }) => {
+  await page.getByRole('button', { name: 'Whiteboard' }).click()
+  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  await page.keyboard.press('Escape')
+  await page.mouse.click(AT.x - 200, AT.y)
+  const editor = page.getByRole('textbox', { name: 'Annotation text' })
+  await editor.click()
+  await page.keyboard.type('First line')
+  await page.keyboard.press('Shift+Enter')
+  await page.keyboard.type('Second line')
+  await page.keyboard.press('Enter')
+
+  await expect.poll(async () => ((await stored(page)).at(-1) as { text?: string }).text).toBe('First line\nSecond line')
+  const spans = page.locator('[data-surface-id="lesson-reflow"] > svg text tspan')
+  await expect(spans).toHaveCount(2)
+  const [first, second] = await Promise.all([spans.nth(0).boundingBox(), spans.nth(1).boundingBox()])
+  expect(second!.y).toBeGreaterThan(first!.y + first!.height * 0.8)
+  expect(Math.abs(second!.x - first!.x)).toBeLessThan(1)
+})
