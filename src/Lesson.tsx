@@ -1,13 +1,43 @@
 import type { Point } from './annotation/coords'
 import { COLORS, DEFAULT_STYLE } from './annotation/style'
-import type { Shape } from './annotation/types'
+import type { Mark, Shape } from './annotation/types'
 
-// Generated rather than thirty hand-typed points: a seeded circle around the title.
-function ellipse(cx: number, cy: number, rx: number, ry: number): Point[] {
+// Generated rather than thirty hand-typed points. `wobble` makes it a hand's
+// circle rather than a compass's.
+function ellipse(cx: number, cy: number, rx: number, ry: number, wobble = 0): Point[] {
   return Array.from({ length: 33 }, (_, step) => {
     const angle = (step / 32) * Math.PI * 2
-    return { x: cx + Math.cos(angle) * rx, y: cy + Math.sin(angle) * ry }
+    const r = 1 + Math.sin(step * 2.3) * wobble
+    return { x: cx + Math.cos(angle) * rx * r, y: cy + Math.sin(angle) * ry * r }
   })
+}
+
+/**
+ * A highlight, underline or strikethrough already on the page's words. Named
+ * the way the surface names them itself — the nth paragraph of the article,
+ * the words quoted — so it is found and drawn at first layout like one a
+ * teacher made (ADR 0008). `boxes` is empty on purpose: placement fills it.
+ */
+function mark(id: string, kind: Mark['kind'], paragraph: number, exact: string, color: string): Mark {
+  return {
+    id,
+    type: 'mark',
+    kind,
+    anchor: {
+      target: {
+        path: `:scope > div:nth-of-type(1) > article:nth-of-type(1) > p:nth-of-type(${paragraph})`,
+        snippet: '',
+        quote: { exact, prefix: '', suffix: '' },
+      },
+      origin: { x: 0, y: 0 },
+      basis: { kind: 'font', value: 18 },
+      surfaceWidth: 1280,
+    },
+    boxes: [],
+    color,
+    weight: DEFAULT_STYLE.weight,
+    opacity: kind === 'highlight' ? 0.35 : 1,
+  }
 }
 
 /** A paragraph, or one that opens with a lead-in the eye can find from across the room. */
@@ -57,7 +87,8 @@ export const LESSONS: Lesson[] = [
         'Turn Snap off and the highlighter is ink again — broad, see-through, and stays exactly where it was drawn.',
       ],
     },
-    shapes: [],
+    // One already there, across a line break at most widths.
+    shapes: [mark('highlight-example', 'highlight', 2, 'ultraviolet patterns that point straight at the nectar', COLORS[2].value)],
   },
   {
     slug: 'underline',
@@ -82,7 +113,11 @@ export const LESSONS: Lesson[] = [
         'Three of the six are false.',
       ],
     },
-    shapes: [],
+    // One of each, so the rest can be done by hand.
+    shapes: [
+      mark('underline-example', 'underline', 2, 'Sound travels faster through water than through air.', COLORS[3].value),
+      mark('strike-example', 'strikethrough', 3, 'Lightning never strikes the same place twice.', COLORS[0].value),
+    ],
   },
   {
     slug: 'shapes',
@@ -108,7 +143,13 @@ export const LESSONS: Lesson[] = [
         'The shape keeps your colour and weight. Select it afterwards to change its border or give it a fill.',
       ],
     },
-    shapes: [],
+    // Before and after: a hand's circle, and what Tidy makes of one.
+    shapes: [
+      { id: 'shapes-rough', type: 'stroke', points: ellipse(170, 640, 75, 68, 0.06), ...ink },
+      { id: 'shapes-tidy', type: 'ellipse', from: { x: 330, y: 572 }, to: { x: 480, y: 708 }, ...ink, border: 'solid', fill: 'none' },
+      { id: 'shapes-label-rough', type: 'text', at: { x: 130, y: 745 }, text: 'drawn', size: 14, color: DEFAULT_STYLE.color, opacity: 1 },
+      { id: 'shapes-label-tidy', type: 'text', at: { x: 365, y: 745 }, text: 'tidied', size: 14, color: DEFAULT_STYLE.color, opacity: 1 },
+    ],
   },
   {
     slug: 'lines',
@@ -131,7 +172,11 @@ export const LESSONS: Lesson[] = [
         'Each end of a line remembers what it points at. Resize the window: the text end follows the word and the picture end follows the picture.',
       ],
     },
-    shapes: [],
+    // Already pointing from the word to the picture, bent under the text on
+    // its way; each end anchors at first layout.
+    shapes: [
+      { id: 'lines-example', type: 'line', from: { x: 268, y: 466 }, to: { x: 790, y: 212 }, bend: { x: 760, y: 700 }, ...ink, color: COLORS[6].value, border: 'solid', heads: 'end' },
+    ],
   },
   {
     slug: 'select',
