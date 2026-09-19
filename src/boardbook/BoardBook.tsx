@@ -80,6 +80,8 @@ export function BoardBook({ id, boardbook, text }: Props) {
   const [layer, setLayer] = useState<HTMLDivElement | null>(null)
   const [homeWidth, setHomeWidth] = useState(0)
   const [currentId, setCurrentId] = useState<string | null>(null)
+  // Off, the areas are neither drawn nor pressable; the walkthrough still frames them.
+  const [areasShown, setAreasShown] = useState(true)
   const [openItem, setOpenItem] = useState<BoardBookItemEntity | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
   const { active } = useWhiteboardMode()
@@ -288,6 +290,8 @@ export function BoardBook({ id, boardbook, text }: Props) {
         onOverview={overview}
         onZoom={zoom}
         onFullscreen={toggleFullscreen}
+        areasShown={areasShown}
+        onToggleAreas={() => setAreasShown((shown) => !shown)}
       />
       <div className="boardbook-viewer">
         {/* OSD sizes itself at 100% of its element, which is indefinite on a
@@ -305,7 +309,8 @@ export function BoardBook({ id, boardbook, text }: Props) {
           */
           <AnnotationSurface id={id} className="boardbook-layer" viewBox={image} inkScale={inkScale}>
             {text && <TextLayer lines={text} />}
-            {ordered.map((area) => (
+            {areasShown &&
+              ordered.map((area) => (
               <FocusArea
                 key={area.id}
                 area={area}

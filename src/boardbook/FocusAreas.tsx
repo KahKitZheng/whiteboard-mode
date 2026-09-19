@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react'
 import type { BoardBookFocusAreaEntity } from './types'
 import { areaLabel } from './walkthrough'
 
@@ -41,6 +41,9 @@ type WalkthroughProps = {
   onOverview: () => void
   onZoom: (direction: 'in' | 'out') => void
   onFullscreen: () => void
+  /** Whether the areas are drawn on the image, to be pressed. Off, the walkthrough still frames them. */
+  areasShown: boolean
+  onToggleAreas: () => void
 }
 
 /**
@@ -48,7 +51,7 @@ type WalkthroughProps = {
  * image itself takes every press: step through the focus areas in order, zoom,
  * and fill the screen.
  */
-export function Walkthrough({ ordered, current, canStep, fullscreen, onStep, onOverview, onZoom, onFullscreen }: WalkthroughProps) {
+export function Walkthrough({ ordered, current, canStep, fullscreen, onStep, onOverview, onZoom, onFullscreen, areasShown, onToggleAreas }: WalkthroughProps) {
   return (
     <div className="boardbook-bar">
       <div className="boardbook-bar-group" role="group" aria-label="Focus areas">
@@ -73,6 +76,9 @@ export function Walkthrough({ ordered, current, canStep, fullscreen, onStep, onO
       <div className="boardbook-bar-group" role="group" aria-label="View">
         <button type="button" onClick={onOverview} disabled={current === null}>
           Overview
+        </button>
+        <button type="button" onClick={onToggleAreas} aria-pressed={areasShown} aria-label="Show focus areas" title="Show focus areas">
+          {areasShown ? <Eye size={20} aria-hidden="true" /> : <EyeOff size={20} aria-hidden="true" />}
         </button>
         <button type="button" onClick={() => onZoom('out')} aria-label="Zoom out">
           <ZoomOut size={20} aria-hidden="true" />

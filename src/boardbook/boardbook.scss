@@ -150,6 +150,11 @@
       background: #2e303a;
     }
 
+    // A toggle that is on reads as lit, not as a tool in hand.
+    &[aria-pressed='true'] {
+      color: var(--accent);
+    }
+
     &:disabled {
       opacity: 0.35;
       cursor: default;

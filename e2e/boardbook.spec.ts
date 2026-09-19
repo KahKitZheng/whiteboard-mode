@@ -399,3 +399,18 @@ test('a press OSD did not capture still counts as a drag, and its click is swall
   })
   await expect(page.locator('.boardbook-bar-name')).toHaveText('1/3 · De kringloop')
 })
+
+test('the focus areas can be hidden from the bar, and the walkthrough still frames them', async ({ page }) => {
+  const toggle = page.getByRole('button', { name: 'Show focus areas' })
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.boardbook-area')).toHaveCount(3)
+
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.locator('.boardbook-area')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.locator('.boardbook-bar-name')).toHaveText('1/3 · De kringloop')
+
+  await toggle.click()
+  await expect(page.locator('.boardbook-area')).toHaveCount(3)
+})
