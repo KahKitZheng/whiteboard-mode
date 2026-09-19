@@ -61,6 +61,13 @@ export function WhiteboardToolbar() {
   const showing = active && (open || hasSelection) && (hasSettings || hasSelection)
 
   function pick(next: Tool) {
+    // Off, no tool is in hand; picking one arms the whiteboard with it.
+    if (!active) {
+      setActive(true)
+      setTool(next)
+      setOpen(true)
+      return
+    }
     // Picking a tool shows its settings; pressing it again puts them away.
     if (next === tool) setOpen((was) => !was)
     else {
@@ -88,75 +95,72 @@ export function WhiteboardToolbar() {
         <span className="switch-label">Whiteboard</span>
       </Toolbar.Button>
 
-      {active && (
-        <>
-          <ToggleGroup value={[tool]} onValueChange={([next]) => next && pick(next as Tool)} className="tools">
-            {TOOLS.map(({ name, label, Icon }) => (
-              <Toolbar.Button
-                key={name}
-                className="icon-button"
-                aria-label={label}
-                title={label}
-                ref={(element) => {
-                  buttons.current[name] = element
-                }}
-                // The group only reports a change; a press on the tool in
-                // hand has to reach here too, to toggle its settings.
-                onClick={() => name === tool && pick(name)}
-                render={<Toggle value={name} />}
-              >
-                <Icon size={ICON_SIZE} />
-              </Toolbar.Button>
-            ))}
-          </ToggleGroup>
+      {/* Every tool, always: off, none is in hand, and a press on one arms the whiteboard. */}
+      <ToggleGroup value={active ? [tool] : []} onValueChange={([next]) => next && pick(next as Tool)} className="tools">
+        {TOOLS.map(({ name, label, Icon }) => (
+          <Toolbar.Button
+            key={name}
+            className="icon-button"
+            aria-label={label}
+            title={label}
+            ref={(element) => {
+              buttons.current[name] = element
+            }}
+            // The group only reports a change; a press on the tool in hand
+            // has to reach here too, to toggle its settings.
+            onClick={() => active && name === tool && pick(name)}
+            render={<Toggle value={name} />}
+          >
+            <Icon size={ICON_SIZE} />
+          </Toolbar.Button>
+        ))}
+      </ToggleGroup>
 
-          {/* They undo work rather than make it, so they keep apart from the tools. */}
-          <div className="history" role="group" aria-label="History">
-            <Toolbar.Button className="icon-button" aria-label="Undo" title="Undo" disabled={!actions?.canUndo} onClick={() => actions?.undo()}>
-              <Undo2 size={ICON_SIZE} />
-            </Toolbar.Button>
-            <Toolbar.Button className="icon-button" aria-label="Redo" title="Redo" disabled={!actions?.canRedo} onClick={() => actions?.redo()}>
-              <Redo2 size={ICON_SIZE} />
-            </Toolbar.Button>
-            <Toolbar.Button className="icon-button clear-button" aria-label="Clear all" title="Clear all" onClick={() => actions?.clear()}>
-              <Trash2 size={ICON_SIZE} />
-            </Toolbar.Button>
-          </div>
+      {/* They undo work rather than make it, so they keep apart from the tools. */}
+      <div className="history" role="group" aria-label="History">
+        <Toolbar.Button className="icon-button" aria-label="Undo" title="Undo" disabled={!actions?.canUndo} onClick={() => actions?.undo()}>
+          <Undo2 size={ICON_SIZE} />
+        </Toolbar.Button>
+        <Toolbar.Button className="icon-button" aria-label="Redo" title="Redo" disabled={!actions?.canRedo} onClick={() => actions?.redo()}>
+          <Redo2 size={ICON_SIZE} />
+        </Toolbar.Button>
+        <Toolbar.Button className="icon-button clear-button" aria-label="Clear all" title="Clear all" disabled={!actions} onClick={() => actions?.clear()}>
+          <Trash2 size={ICON_SIZE} />
+        </Toolbar.Button>
+      </div>
 
-          <Popover.Root open={showing} onOpenChange={(next) => !next && setOpen(false)}>
-            <Popover.Portal>
-              <Popover.Positioner anchor={buttons.current[tool] ?? null} side="top" sideOffset={12} collisionPadding={16}>
-                <Popover.Popup className="tool-bubble" initialFocus={false}>
-                  <Popover.Arrow className="tool-bubble-arrow">
-                    <svg width="20" height="10" viewBox="0 0 20 10" aria-hidden="true">
-                      <path d="M0 0 L10 10 L20 0" />
-                    </svg>
-                  </Popover.Arrow>
-                  <Toolbar.Root className="bubble-controls">
-                    <ToolSettings />
-                    {hasSelection && actions && (
-                      <div className="setting" role="group" aria-label="Shape">
-                        <span className="setting-label">Shape</span>
-                        <div className="choices">
-                          <Toolbar.Button className="icon-button" aria-label="Bring to front" title="Bring to front" onClick={() => actions.bringToFront()}>
-                            <BringToFront size={ICON_SIZE} />
-                          </Toolbar.Button>
-                          <Toolbar.Button className="icon-button" aria-label="Send to back" title="Send to back" onClick={() => actions.sendToBack()}>
-                            <SendToBack size={ICON_SIZE} />
-                          </Toolbar.Button>
-                          <Toolbar.Button className="icon-button clear-button" aria-label="Delete shape" title="Delete shape" onClick={() => actions.removeSelected()}>
-                            <Trash2 size={ICON_SIZE} />
-                          </Toolbar.Button>
-                        </div>
-                      </div>
-                    )}
-                  </Toolbar.Root>
-                </Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </Popover.Root>
-        </>
-      )}
+      <Popover.Root open={showing} onOpenChange={(next) => !next && setOpen(false)}>
+        <Popover.Portal>
+          <Popover.Positioner anchor={buttons.current[tool] ?? null} side="top" sideOffset={12} collisionPadding={16}>
+            <Popover.Popup className="tool-bubble" initialFocus={false}>
+              <Popover.Arrow className="tool-bubble-arrow">
+                <svg width="20" height="10" viewBox="0 0 20 10" aria-hidden="true">
+                  <path d="M0 0 L10 10 L20 0" />
+                </svg>
+              </Popover.Arrow>
+              <Toolbar.Root className="bubble-controls">
+                <ToolSettings />
+                {hasSelection && actions && (
+                  <div className="setting" role="group" aria-label="Shape">
+                    <span className="setting-label">Shape</span>
+                    <div className="choices">
+                      <Toolbar.Button className="icon-button" aria-label="Bring to front" title="Bring to front" onClick={() => actions.bringToFront()}>
+                        <BringToFront size={ICON_SIZE} />
+                      </Toolbar.Button>
+                      <Toolbar.Button className="icon-button" aria-label="Send to back" title="Send to back" onClick={() => actions.sendToBack()}>
+                        <SendToBack size={ICON_SIZE} />
+                      </Toolbar.Button>
+                      <Toolbar.Button className="icon-button clear-button" aria-label="Delete shape" title="Delete shape" onClick={() => actions.removeSelected()}>
+                        <Trash2 size={ICON_SIZE} />
+                      </Toolbar.Button>
+                    </div>
+                  </div>
+                )}
+              </Toolbar.Root>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
     </Toolbar.Root>
   )
 }

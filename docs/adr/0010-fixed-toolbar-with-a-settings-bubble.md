@@ -1,6 +1,6 @@
 # The toolbar is one fixed pill; a tool's settings are a bubble above it
 
-The whiteboard toolbar is a single pill fixed along the bottom of the screen, centred: the switch, the tools, undo, redo and clear. It does not move and it does not change size with what is going on. Whatever only matters for the tool in hand — its colour and weight, the pen's Words and Tidy options, a line's heads, and what can be done to a selected shape — is a bubble that opens above that tool's button. Picking a tool opens its bubble; pressing the tool again toggles it; a press anywhere else, the lesson most of all, puts it away; Escape too. While a shape is selected the bubble stays up, since it is the only way to restyle or delete the shape from the toolbar.
+The whiteboard toolbar is a single pill fixed along the bottom of the screen, centred: the switch, every tool, undo, redo and clear. It does not move and it does not change size with what is going on — off, the tools are all there with none in hand, and pressing one arms the whiteboard with it. Whatever only matters for the tool in hand — its colour and weight, the pen's Words and Tidy options, a line's heads, and what can be done to a selected shape — is a bubble that opens above that tool's button. Picking a tool opens its bubble; pressing the tool again toggles it; a press anywhere else, the lesson most of all, puts it away; Escape too. While a shape is selected the bubble stays up, since it is the only way to restyle or delete the shape from the toolbar.
 
 ## Considered Options
 

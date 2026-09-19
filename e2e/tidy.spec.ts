@@ -181,3 +181,16 @@ test('the line tool draws an arrow when asked for heads', async ({ page }) => {
   await expect.poll(async () => (await stored(page)).at(-1)?.type).toBe('line')
   expect(((await stored(page)).at(-1) as { heads?: string }).heads).toBe('end')
 })
+
+test('off, every tool is on the bar with none in hand, and pressing one arms the whiteboard', async ({ page }) => {
+  const pen = page.getByRole('button', { name: 'Pen', exact: true })
+  await expect(pen).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Timer', exact: true })).toBeVisible()
+  await expect(pen).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.locator('.tool-bubble')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Line', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Whiteboard' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Line', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('group', { name: 'Heads' })).toBeVisible()
+})
