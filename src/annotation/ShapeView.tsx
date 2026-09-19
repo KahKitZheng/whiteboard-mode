@@ -208,6 +208,8 @@ export function ShapeView({ shape, width, onNoteText }: Props) {
           width={boxWidth}
           height={Math.abs(to.y - from.y)}
           opacity={shape.opacity}
+          // A foreignObject clips to its box; the paper's shadow falls outside it.
+          overflow="visible"
         >
           <Note text={shape.text} color={shape.color} fontSize={Math.max(9, boxWidth * 0.08)} onText={(text) => onNoteText?.(shape.id, text)} />
         </foreignObject>

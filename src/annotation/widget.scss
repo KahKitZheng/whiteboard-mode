@@ -9,48 +9,62 @@
 
 /*
   A square of pastel paper: the chosen colour mixed well towards white, the
-  way the real thing is dyed, a slightly deeper strip along the top where the
-  glue is, a curl at the bottom corner, and a shadow that lifts it off the
-  page. Ink is dark whatever the theme — it is paper, not a panel.
+  way the real thing is dyed. The top fifth is a shade deeper where the glue
+  is, blending into the sheet rather than ruled off it, and the shadow pools
+  under the bottom edge the way a lifted sheet's does. Ink is dark whatever
+  the theme — it is paper, not a panel.
 */
 .note {
   position: relative;
+  // The sheet and the shadow under it are both pseudo-elements: a child with a
+  // negative z-index still paints over its parent's own background, so the
+  // paper has to be a layer of its own for anything to go beneath it.
+  isolation: isolate;
   display: flex;
   flex-direction: column;
-  border-radius: 0.1em;
-  background: color-mix(in srgb, var(--note) 42%, #fffdf6);
   font-family: var(--sans);
   color: #262626;
-  box-shadow:
-    0 0.1em 0.2em rgb(0 0 0 / 10%),
-    0 0.6em 1.1em -0.2em rgb(0 0 0 / 22%);
 
-  // The bottom corner lifts: cut away to what is behind, folded face darker.
   &::after {
     content: '';
     position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 1.6em;
-    height: 1.6em;
-    pointer-events: none;
+    inset: 0;
+    z-index: 0;
     background: linear-gradient(
-      225deg,
-      transparent 50%,
-      color-mix(in srgb, var(--note) 30%, #fff) 51%,
-      color-mix(in srgb, var(--note) 55%, #b8b8b8) 100%
+      180deg,
+      color-mix(in srgb, var(--note) 50%, #f4efe0) 0%,
+      color-mix(in srgb, var(--note) 45%, #fbf7ea) 20%,
+      color-mix(in srgb, var(--note) 40%, #fffdf6) 100%
     );
+    box-shadow: 0 0.05em 0.15em rgb(0 0 0 / 10%);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 6%;
+    right: 6%;
+    bottom: 3%;
+    height: 40%;
+    box-shadow: 0 0.9em 1.1em rgb(0 0 0 / 30%);
+    transform: skewX(-3deg) rotate(1.4deg);
+    pointer-events: none;
   }
 }
 
+// Where the select tool takes hold: the glue strip, drawn by the gradient.
 .note-bar {
+  position: relative;
+  z-index: 1;
   flex: none;
   height: 1.4em;
-  background: color-mix(in srgb, var(--note) 58%, #fff);
   cursor: grab;
 }
 
 .note-text {
+  position: relative;
+  z-index: 1;
   flex: 1;
   width: 100%;
   min-height: 0;
