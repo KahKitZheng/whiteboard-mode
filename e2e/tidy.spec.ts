@@ -203,14 +203,16 @@ test('the slide count opens the deck, and a thumbnail goes to its slide', async 
   const current = page.getByRole('button', { name: /7.*Ink follows the text/ })
   await expect(current).toHaveAttribute('aria-current', 'true')
 
-  // Nine thumbnails overflow this width: a shadow at the end says so, and
-  // goes once the row is scrolled there; one appears at the start instead.
+  // Nine thumbnails overflow this width. The row opens scrolled to the
+  // current one — seventh of nine, which puts the row at its end, so only the
+  // start has more. Scrolled back to the start, only the end does.
   const wrap = page.locator('.slide-thumbs-wrap')
-  await expect(wrap).toHaveAttribute('data-more-end', 'true')
-  await expect(wrap).not.toHaveAttribute('data-more-start', 'true')
-  await page.locator('.slide-thumbs').evaluate((row) => row.scrollTo({ left: row.scrollWidth }))
+  await expect(current).toBeInViewport({ ratio: 1 })
   await expect(wrap).toHaveAttribute('data-more-start', 'true')
   await expect(wrap).not.toHaveAttribute('data-more-end', 'true')
+  await page.locator('.slide-thumbs').evaluate((row) => row.scrollTo({ left: 0 }))
+  await expect(wrap).toHaveAttribute('data-more-end', 'true')
+  await expect(wrap).not.toHaveAttribute('data-more-start', 'true')
 
   await page.getByRole('button', { name: /9.*De waterkringloop/ }).click()
   await expect(page).toHaveURL(/\/boardbook\/waterkringloop$/)

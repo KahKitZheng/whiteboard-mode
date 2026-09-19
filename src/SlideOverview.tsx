@@ -1,6 +1,6 @@
 import { Dialog } from '@base-ui-components/react/dialog'
 import { BookOpen, ChevronDown, ChevronUp, FileText } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import { SLIDES, type Slide } from './slides'
 
@@ -96,6 +96,13 @@ function Thumbs({ children }: { children: ReactNode }) {
       element.removeEventListener('scroll', measure)
       observer.disconnect()
     }
+  }, [])
+
+  // Opened, the row starts on the current slide rather than the first. A layout
+  // effect, so the first paint is already there. `instant` because a drawer
+  // that opens and then slides its row is two motions for one act.
+  useLayoutEffect(() => {
+    scroller.current?.querySelector('[aria-current]')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' })
   }, [])
 
   return (
