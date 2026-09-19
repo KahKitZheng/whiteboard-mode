@@ -501,8 +501,18 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
     // Whatever this press turns out to be, the toolbar now acts on this surface.
     claim(id)
 
-    // A drawing tool waits on every press; a tap tool only on a control.
-    if (!TAP_TOOLS.has(tool) || interactiveAncestor(event.target as Element)) {
+    // A drawing tool waits on every press; a tap tool only on a control — and
+    // not even then when a shape lies under the tap and the control is the
+    // host's: the shape is visibly on top, so the tap is the shape's. A
+    // widget's own buttons are a different matter; a tap on Start is a tap on
+    // Start, not a way to pick the timer.
+    const control = interactiveAncestor(event.target as Element)
+    const hostControl = control !== null && !control.closest('.annotation-layer')
+    const overShape =
+      hostControl &&
+      (tool === 'select' || tool === 'eraser') &&
+      shapeNear(placed, pointFrom(event, event.currentTarget.getBoundingClientRect())) !== null
+    if (!TAP_TOOLS.has(tool) || (control && !overShape)) {
       pending.current = {
         pointerId: event.pointerId,
         pointerType: event.pointerType,

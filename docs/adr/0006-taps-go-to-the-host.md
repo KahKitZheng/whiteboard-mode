@@ -32,4 +32,6 @@ With a drawing tool this holds for *every* press: a tap draws nothing with a pen
 
 **This is a quality-of-life layer, not a replacement for the whiteboard toggle.** Tap-through settles what a *tap* means; the toggle still settles what a *drag* means — pan or stroke on the boardbook, scroll or stroke on touch, text selection or stroke, a host drag handle or stroke. Nothing here forces those through the pen, and removing the toggle because "everything works while armed now" would break every one of them. Whether the toggle stays a button or becomes implicit in tool selection is open.
 
-**Known cost:** a stroke can no longer start with a *dot* on a control, and `select` cannot pick a shape that lies over a control by tapping it. Both were judged acceptable for now; see whether they bite.
+**Known cost:** a stroke can no longer start with a *dot* on a control. Judged acceptable for now; see whether it bites.
+
+*Amended:* `select` and the eraser could not pick a shape lying over a control by tapping it, and on a boardbook the focus areas are controls covering most of the page. A tap that lands on a shape now takes the shape even over a host control — the shape is visibly on top, so the tap is the shape's. A widget's own buttons are not host controls: a tap on a timer's Start is still Start's, not a way to pick the timer.

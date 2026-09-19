@@ -425,3 +425,20 @@ test('the minimap is off until switched on from the bar', async ({ page }) => {
   await toggle.click()
   await expect(minimap).toBeHidden()
 })
+
+test('armed, the select tool picks a stroke lying over a focus area rather than framing the area', async ({ page }) => {
+  await arm(page)
+  // A stroke over "Opdracht 3", whose area covers it.
+  const area = (await page.getByRole('button', { name: /Opdracht 3/ }).boundingBox())!
+  const from = { x: area.x + area.width * 0.6, y: area.y + area.height * 0.6 }
+  await page.mouse.move(from.x, from.y)
+  await page.mouse.down()
+  await page.mouse.move(from.x + 80, from.y + 20, { steps: 6 })
+  await page.mouse.up()
+  await expect(strokes(page)).toHaveCount(1)
+
+  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  await page.mouse.click(from.x + 40, from.y + 10)
+  await expect(page.getByRole('button', { name: 'Delete shape' })).toBeVisible()
+  await expect(page.locator('.boardbook-bar-name')).toHaveCount(0)
+})
