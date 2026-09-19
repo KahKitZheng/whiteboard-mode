@@ -244,6 +244,10 @@ test('a sticky note is put down with a tap, keeps its words, and takes a colour'
   await page.getByRole('group', { name: 'Colour' }).getByRole('button', { name: 'Blue' }).click()
   await expect.poll(async () => ((await stored(page)).at(-1) as { color?: string }).color).toBe('#3e63dd')
 
+  // Reloaded, the whiteboard is off: the words are there, but not for editing.
   await page.reload()
+  await expect(page.getByRole('textbox', { name: 'Sticky note' })).toHaveCount(0)
+  await expect(page.locator('.note-text')).toHaveText('Homework: page 42')
+  await page.getByRole('button', { name: 'Whiteboard' }).click()
   await expect(page.getByRole('textbox', { name: 'Sticky note' })).toHaveValue('Homework: page 42')
 })

@@ -54,13 +54,35 @@
 }
 
 // Where the select tool takes hold: a strip over the sheet's top edge, laid
-// over the text's own top padding so the words start at the top.
+// over the text's own top padding so the words start at the top. Shown when
+// it can be used — under the pointer, or with the select tool in hand — as a
+// deeper band with a grip mark, and invisible otherwise.
 .note-bar {
   position: absolute;
   inset: 0 0 auto;
   z-index: 2;
-  height: 0.8em;
+  height: 0.9em;
   cursor: grab;
+  opacity: 0;
+  background: rgb(0 0 0 / 7%);
+  transition: opacity 120ms ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.6em;
+    height: 0.2em;
+    translate: -50% -50%;
+    border-radius: 0.1em;
+    background: rgb(0 0 0 / 22%);
+  }
+
+  .note:hover &,
+  [data-tool='select'] & {
+    opacity: 1;
+  }
 }
 
 .note-text {
@@ -71,6 +93,7 @@
   min-height: 0;
   padding: 0.7em 0.7em 1em;
   border: 0;
+  box-sizing: border-box;
   background: transparent;
   color: inherit;
   caret-color: #262626;
@@ -78,6 +101,10 @@
   line-height: 1.3;
   resize: none;
   outline: none;
+  // The plain-text form, while off: laid out like the textarea's own words.
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow: hidden;
 
   &::placeholder {
     color: rgb(0 0 0 / 35%);
