@@ -1,5 +1,14 @@
 .annotation-surface {
   position: relative;
+  /*
+    Bounds a nested surface's z-index (below) to this box: without it,
+    `position: relative` alone does not open a stacking context, so a nested
+    surface's z-index:1 has no ancestor to be scoped by and rises straight to
+    the document root, where it can outrank unrelated fixed UI that never
+    thought to compete with it — a dialog with no z-index of its own, most of
+    all (docs/adr/0001-host-declared-surfaces.md).
+  */
+  isolation: isolate;
 
   /*
     Armed, the surface takes every press and decides per press whether it is a
