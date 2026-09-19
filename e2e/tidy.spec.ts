@@ -200,7 +200,7 @@ test('the slide count opens the deck, and a thumbnail goes to its slide', async 
   await expect(count).toHaveText('1/3')
   await count.click()
   await expect(page.getByRole('dialog', { name: 'Slides' })).toBeVisible()
-  const current = page.getByRole('button', { name: /1.*Lesson one/ })
+  const current = page.getByRole('button', { name: /1.*Try the board/ })
   await expect(current).toHaveAttribute('aria-current', 'true')
 
   await page.getByRole('button', { name: /3.*De waterkringloop/ }).click()

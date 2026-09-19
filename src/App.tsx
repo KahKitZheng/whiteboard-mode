@@ -46,9 +46,15 @@ function LessonRoute() {
       <div className="lesson-columns">
         <article className="lesson">
           <h1>{lesson.title}</h1>
-          {lesson.body.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
+          {lesson.body.map((paragraph) =>
+            typeof paragraph === 'string' ? (
+              <p key={paragraph}>{paragraph}</p>
+            ) : (
+              <p key={paragraph.lead}>
+                <strong>{paragraph.lead}</strong> {paragraph.text}
+              </p>
+            ),
+          )}
         </article>
         <aside className="lesson-aside">
           {/* A picture: a shape over it follows its box, and scales with it. */}

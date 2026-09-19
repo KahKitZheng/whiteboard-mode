@@ -77,7 +77,7 @@ test('a circle around a word stays around it when the columns stack', async ({ p
   await arm(page)
   await circle(page, word)
   const strokes = page.locator(`${SURFACE} > svg path`)
-  await expect(strokes).toHaveCount(3)
+  await expect(strokes).toHaveCount(2)
 
   const before = await lastStrokeRect(page)
   const offset = { x: before.x - word.x, y: before.y - word.y }
