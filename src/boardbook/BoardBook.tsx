@@ -275,7 +275,7 @@ export function BoardBook({ id, boardbook, text }: Props) {
 
   return (
     <div className="boardbook" ref={stage} data-armed={active ? '' : undefined}>
-      {/* Above the image, clear of the whiteboard bars that float along the bottom. */}
+      {/* Above the image, clear of the whiteboard toolbar along the bottom. */}
       <Walkthrough
         ordered={ordered}
         current={current}

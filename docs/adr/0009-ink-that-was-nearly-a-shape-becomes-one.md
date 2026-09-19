@@ -4,7 +4,7 @@ A pen stroke that was nearly a circle, a box, a line, a curve or an arrow can be
 
 ## Considered Options
 
-**A tray of shape tools** is what exists, and stays for the prototype. Most teachers use the pen and the highlighter; placing a rectangle is a nice-to-have that a whole tool is a lot to pay for, and picking a tool, drawing, and picking the pen again is three steps for one box.
+**A tray of shape tools** is what existed, and went with the fixed toolbar (ADR 0010). Most teachers use the pen and the highlighter; placing a rectangle is a nice-to-have that a whole tool is a lot to pay for, and picking a tool, drawing, and picking the pen again is three steps for one box.
 
 **A library** (`$1` and its family, or a model) was rejected. There are four shapes and they differ in ways a handful of measurements catches: is the stroke closed; how much of its own box does it fill (a circle ~0.79, a box ~1); how many sharp turns does it make (a box four, a circle none); how far does it stray from the line between its ends. Roughly a hundred lines, no dependency, and every threshold is a named number a teacher's complaint can be traced to.
 
@@ -18,13 +18,13 @@ A pen stroke that was nearly a circle, a box, a line, a curve or an arrow can be
 
 *Tidy* and the pen's *Words* option (ADR 0008) exclude each other: turning one on turns the other off. A stroke cannot both become a rectangle and underline the words it crossed, and a teacher should not have to remember which of two switches wins.
 
-The recognised shape takes the stroke's colour, weight and opacity, and the tray's current border and fill — so the result is what the shape tool would have drawn. It is anchored like any other shape (ADR 0007).
+The recognised shape takes the stroke's colour, weight and opacity, and the current border and fill settings; once selected, a shape offers those to restyle. It is anchored like any other shape (ADR 0007).
 
 For hold-to-snap, every pen move outside a 3px jitter restarts a 600ms clock and takes back any preview; the clock running out recognises what has been drawn so far and previews it as the draft. Release with a preview showing commits the preview; release without one goes through the *Tidy* setting, then falls back to ink.
 
 ## Consequences
 
-The shape tray can go in the final version without the data changing: a recognised circle is an `ellipse` like one from the tray, and everything downstream — anchoring, selection, restyling, storage — already handles it.
+The shape tray went without the data changing: a recognised circle is an `ellipse` like one the tray drew, and everything downstream — anchoring, selection, restyling, storage — handles it as before. The `rect` and `ellipse` tools stay in the type; nothing offers them.
 
 The thresholds are guesses tuned on synthetic strokes and one hand. They will need a pass with real teachers on a real board, where a "circle" is much rougher than a mouse's. Arrows are the weakest: the head must be drawn as part of the same stroke.
 

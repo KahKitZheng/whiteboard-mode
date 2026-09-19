@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from './test'
 
 const SURFACE = '[data-surface-id="lesson-one"]'
-/** Empty space in the right column, clear of the floating bars along the bottom. */
+/** Empty space in the right column, clear of the toolbar and of the bubble above it. */
 const AT = { x: 1060, y: 700 }
 
 async function stored(page: Page) {
