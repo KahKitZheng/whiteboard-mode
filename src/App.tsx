@@ -33,16 +33,12 @@ function LessonRoute() {
 
   if (!lesson) return <Redirect to={`/lesson/${LESSONS[0].slug}`} />
 
-  // The lesson's surface is the whole card, so anything on it can be
-  // annotated — not just the article's box. The stage inside it declares its
-  // own surface and paints above this one's layer.
+  // The lesson's surface is the whole slide — the card and the page around
+  // it — so a mark can go anywhere on screen, not only over the article. The
+  // stage inside it declares its own surface and paints above this one's layer.
   return (
-    <section className="slide">
-      <AnnotationSurface
-        id={`lesson-${lesson.slug}`}
-        className="page-surface slide-card"
-        initialShapes={lesson.shapes}
-      >
+    <AnnotationSurface id={`lesson-${lesson.slug}`} className="slide page-surface" initialShapes={lesson.shapes}>
+      <div className="slide-card">
       <div className="lesson-columns">
         <article className="lesson">
           <h1>{lesson.title}</h1>
@@ -73,14 +69,16 @@ function LessonRoute() {
       </div>
 
       {lesson.extras && <LessonExtras slug={lesson.slug} />}
-      </AnnotationSurface>
-    </section>
+      </div>
+    </AnnotationSurface>
   )
 }
 
 /**
  * A second host context over the same annotation module: the surface here is
- * an image being zoomed rather than a page being scrolled.
+ * an image being zoomed rather than a page being scrolled. The slide around
+ * it is a surface too, so the page beside the image takes ink like any other;
+ * the image's own surface, nested, wins over its box (ADR 0001).
  */
 function BoardBookRoute() {
   const { slug } = useParams<{ slug: string }>()
@@ -89,10 +87,10 @@ function BoardBookRoute() {
   if (!page) return <Redirect to={`/lesson/${LESSONS[0].slug}`} />
 
   return (
-    <section className="slide">
+    <AnnotationSurface id={`page-${page.slug}`} className="slide page-surface">
       <div className="slide-card">
         <BoardBook id={`boardbook-${page.slug}`} boardbook={page.boardbook} text={page.text} />
       </div>
-    </section>
+    </AnnotationSurface>
   )
 }

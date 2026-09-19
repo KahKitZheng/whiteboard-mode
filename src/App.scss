@@ -263,11 +263,9 @@
 }
 
 .page-surface {
-  // The surface's box is what gets annotated, so it fills the page rather than
-  // hugging the article.
+  // The surface's box is what gets annotated, so it fills the screen rather
+  // than hugging the card.
   flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 // Two columns that stack below a tablet width — the reflow that moves content

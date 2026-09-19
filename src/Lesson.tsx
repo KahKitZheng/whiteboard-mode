@@ -1,5 +1,6 @@
 import type { Point } from './annotation/coords'
 import { COLORS, DEFAULT_STYLE } from './annotation/style'
+import { mapPoints } from './annotation/geometry'
 import type { Mark, Shape } from './annotation/types'
 
 // Generated rather than thirty hand-typed points. `wobble` makes it a hand's
@@ -63,6 +64,24 @@ export type Lesson = {
 const ink = { color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity: 1 }
 
 /*
+  The seeds below are authored against the card — 1280 units across it — and
+  the surface is the whole slide, so they are mapped once here: the card is
+  three quarters of the screen, centred, 32px down. Exact at the reference
+  width; elsewhere a seed lands a few pixels off and anchoring takes it from
+  there.
+*/
+const CARD = { left: 160, top: 32, scale: 0.75 }
+
+function onCard(shapes: Shape[]): Shape[] {
+  return shapes.map((shape) => {
+    const moved = mapPoints(shape, (point) => ({ x: CARD.left + point.x * CARD.scale, y: CARD.top + point.y * CARD.scale }))
+    if (moved.type === 'text') return { ...moved, size: moved.size * CARD.scale }
+    if ('weight' in moved) return { ...moved, weight: moved.weight * CARD.scale }
+    return moved
+  })
+}
+
+/*
   One slide per thing the board does, in the order a demo would show them,
   each with content made for it. The tools' own names are used as they appear
   on the bar.
@@ -88,7 +107,7 @@ export const LESSONS: Lesson[] = [
       ],
     },
     // One already there, across a line break at most widths.
-    shapes: [mark('highlight-example', 'highlight', 2, 'ultraviolet patterns that point straight at the nectar', COLORS[2].value)],
+    shapes: onCard([mark('highlight-example', 'highlight', 2, 'ultraviolet patterns that point straight at the nectar', COLORS[2].value)]),
   },
   {
     slug: 'underline',
@@ -114,10 +133,10 @@ export const LESSONS: Lesson[] = [
       ],
     },
     // One of each, so the rest can be done by hand.
-    shapes: [
+    shapes: onCard([
       mark('underline-example', 'underline', 2, 'Sound travels faster through water than through air.', COLORS[3].value),
       mark('strike-example', 'strikethrough', 3, 'Lightning never strikes the same place twice.', COLORS[0].value),
-    ],
+    ]),
   },
   {
     slug: 'shapes',
@@ -144,12 +163,12 @@ export const LESSONS: Lesson[] = [
       ],
     },
     // Before and after: a hand's circle, and what Tidy makes of one.
-    shapes: [
+    shapes: onCard([
       { id: 'shapes-rough', type: 'stroke', points: ellipse(170, 640, 75, 68, 0.06), ...ink },
       { id: 'shapes-tidy', type: 'ellipse', from: { x: 330, y: 572 }, to: { x: 480, y: 708 }, ...ink, border: 'solid', fill: 'none' },
       { id: 'shapes-label-rough', type: 'text', at: { x: 130, y: 745 }, text: 'drawn', size: 14, color: DEFAULT_STYLE.color, opacity: 1 },
       { id: 'shapes-label-tidy', type: 'text', at: { x: 365, y: 745 }, text: 'tidied', size: 14, color: DEFAULT_STYLE.color, opacity: 1 },
-    ],
+    ]),
   },
   {
     slug: 'lines',
@@ -174,9 +193,9 @@ export const LESSONS: Lesson[] = [
     },
     // Already pointing from the word to the picture, bent under the text on
     // its way; each end anchors at first layout.
-    shapes: [
+    shapes: onCard([
       { id: 'lines-example', type: 'line', from: { x: 268, y: 466 }, to: { x: 790, y: 212 }, bend: { x: 760, y: 700 }, ...ink, color: COLORS[6].value, border: 'solid', heads: 'end' },
-    ],
+    ]),
   },
   {
     slug: 'select',
@@ -200,11 +219,11 @@ export const LESSONS: Lesson[] = [
       body: ['A change to a selected shape also becomes the setting for the next one you draw, so you never pick a colour twice.'],
     },
     // Three shapes to find, in three colours, below the text.
-    shapes: [
+    shapes: onCard([
       { id: 'select-circle', type: 'ellipse', from: { x: 70, y: 540 }, to: { x: 250, y: 690 }, ...ink, color: COLORS[6].value, border: 'solid', fill: 'none' },
       { id: 'select-box', type: 'rect', from: { x: 320, y: 550 }, to: { x: 540, y: 680 }, ...ink, color: COLORS[3].value, border: 'dashed', fill: 'tinted' },
       { id: 'select-arrow', type: 'line', from: { x: 600, y: 670 }, to: { x: 780, y: 560 }, ...ink, color: COLORS[1].value, border: 'solid', heads: 'end' },
-    ],
+    ]),
   },
   {
     slug: 'layers',
@@ -252,7 +271,7 @@ export const LESSONS: Lesson[] = [
         'A shape remembers what was under it — the words, or the picture — and is placed against wherever that is now, not against a fraction of the page.',
       ],
     },
-    shapes: [{ id: 'reflow-title', type: 'stroke', points: ellipse(300, 120, 300, 62), ...ink }],
+    shapes: onCard([{ id: 'reflow-title', type: 'stroke', points: ellipse(300, 120, 300, 62), ...ink }]),
   },
   {
     slug: 'romeinen',
