@@ -63,7 +63,6 @@
   inset: 0 0 auto;
   z-index: 2;
   height: 0.9em;
-  cursor: grab;
   opacity: 0;
   background: rgb(0 0 0 / 7%);
   transition: opacity 120ms ease;
@@ -83,6 +82,11 @@
   [data-active] .note:hover &,
   [data-tool='select'] & {
     opacity: 1;
+  }
+
+  // Only the select tool moves a shape; the hand says so only then.
+  [data-tool='select'] & {
+    cursor: grab;
   }
 }
 
