@@ -1,31 +1,30 @@
 import getStroke from 'perfect-freehand'
 import { scaleFor, type Point } from './coords'
 
+/*
+  One width from end to end. Thinning — width following the pen's speed — is
+  what makes ink look like ink, but on a board it read as ragged: a stroke
+  thinned wherever the hand moved fast and tapered away at both ends, so the
+  first and last words under a highlight came out barely covered. A felt tip,
+  not a nib. Smoothing rounds the corners a hand cannot; streamlining steadies
+  the live line by dragging each point a little toward the one before.
+*/
 const OPTIONS = {
-  thinning: 0.6,
-  smoothing: 0.5,
+  thinning: 0,
+  smoothing: 0.65,
   streamline: 0.5,
 }
 
 /**
- * A highlighter is a chisel tip, not a nib: it lays down the same width however
- * fast it is moved. Thinned like a pen, a highlight tapered away at both ends
- * and the first and last words of the phrase came out barely covered.
- */
-const HIGHLIGHT_OPTIONS = { ...OPTIONS, thinning: 0 }
-
-/**
  * A mark's line is computed, not drawn: its ends are exactly where the words
- * end. Streamlining — which drags each point toward the one before it, and
- * makes a live pen feel steady — would pull those ends a word short.
+ * end. Streamlining would pull those ends a word short.
  */
-const MARK_OPTIONS = { ...HIGHLIGHT_OPTIONS, streamline: 0 }
+const MARK_OPTIONS = { ...OPTIONS, streamline: 0 }
 
 export type Nib = 'pen' | 'highlighter' | 'mark'
 
 function optionsFor(nib: Nib) {
-  if (nib === 'mark') return MARK_OPTIONS
-  return nib === 'highlighter' ? HIGHLIGHT_OPTIONS : OPTIONS
+  return nib === 'mark' ? MARK_OPTIONS : OPTIONS
 }
 
 /**
