@@ -3,7 +3,8 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  background: #1c1d24;
+  // The letterbox around a fitted page: a shade off the card, not a stage.
+  background: var(--page);
 
   &:fullscreen {
     min-height: 100%;
@@ -127,9 +128,9 @@
   align-items: center;
   gap: 16px;
   padding: 8px 12px;
-  background: #16171d;
-  color: #e5e4e7;
-  border-bottom: 1px solid #2e303a;
+  background: var(--bg);
+  color: var(--text-h);
+  border-bottom: 1px solid var(--border);
 
   button {
     display: inline-flex;
@@ -147,7 +148,7 @@
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      background: #2e303a;
+      background: color-mix(in srgb, var(--text) 12%, transparent);
     }
 
     // A toggle that is on reads as lit, not as a tool in hand.
