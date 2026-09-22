@@ -129,9 +129,9 @@ export const PEN_MARKS: { name: string; value: PenMark }[] = [
 
 export const DEFAULT_STYLE: Style = {
   color: COLORS[0].value,
-  weight: WEIGHTS[1].value,
-  // A shade over a line of body text, so a highlight reads as a highlight.
-  highlightWeight: HIGHLIGHT_WEIGHTS[2].value,
+  // Thin, both: a board is big and a fine line reads fine from the back.
+  weight: WEIGHTS[0].value,
+  highlightWeight: HIGHLIGHT_WEIGHTS[0].value,
   textSize: TEXT_SIZES[1].value,
   border: 'solid',
   fill: 'none',
