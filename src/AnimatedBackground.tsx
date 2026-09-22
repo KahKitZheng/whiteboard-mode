@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom'
-import { DEFAULT_PALETTE } from './palettes'
+import type { Palette } from './palettes'
 import { SLIDES } from './slides'
 import './animated-background.scss'
 
@@ -13,7 +13,7 @@ import './animated-background.scss'
  * which is what the digibord does; app-react's student pages slide the band
  * off the screen instead, and end with the ground alone.
  */
-export function AnimatedBackground() {
+export function AnimatedBackground({ palette }: { palette: Palette }) {
   const { pathname } = useLocation()
   const index = SLIDES.findIndex((slide) => slide.path === pathname)
   if (index < 0) return null
@@ -24,8 +24,8 @@ export function AnimatedBackground() {
       className="animated-background"
       style={
         {
-          '--ab-ground': swapped ? DEFAULT_PALETTE.secondary : DEFAULT_PALETTE.tertiary,
-          '--ab-band': swapped ? DEFAULT_PALETTE.tertiary : DEFAULT_PALETTE.secondary,
+          '--ab-ground': swapped ? palette.secondary : palette.tertiary,
+          '--ab-band': swapped ? palette.tertiary : palette.secondary,
         } as React.CSSProperties
       }
     />

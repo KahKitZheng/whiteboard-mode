@@ -2,6 +2,7 @@ import { Dialog } from '@base-ui-components/react/dialog'
 import { BookOpen, ChevronDown, ChevronUp, FileText } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
+import { PALETTES, type Palette } from './palettes'
 import { SLIDES, type Slide } from './slides'
 
 /**
@@ -10,7 +11,13 @@ import { SLIDES, type Slide } from './slides'
  * Pressing one goes there. Thumbnails are schematic — a header and a glyph
  * for the kind of page — not renders of the slides.
  */
-export function SlideOverview() {
+type Props = {
+  /** The deck's channel, and the way to change it — for showing the thing off, not a teacher's setting. */
+  palette: Palette
+  onPalette: (palette: Palette) => void
+}
+
+export function SlideOverview({ palette, onPalette }: Props) {
   const history = useHistory()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -38,6 +45,20 @@ export function SlideOverview() {
         <Dialog.Popup className="slide-drawer">
           <div className="slide-drawer-head">
             <Dialog.Title className="slide-drawer-title">Slides</Dialog.Title>
+            <div className="channel-swatches" role="group" aria-label="Channel">
+              {PALETTES.map((choice, at) => (
+                <button
+                  key={choice.primary}
+                  type="button"
+                  className="channel-swatch"
+                  style={{ '--channel': choice.primary } as React.CSSProperties}
+                  aria-label={`Channel ${at + 1}`}
+                  title={`Channel ${at + 1}`}
+                  aria-pressed={choice === palette}
+                  onClick={() => onPalette(choice)}
+                />
+              ))}
+            </div>
             <Dialog.Close className="slide-drawer-close" aria-label="Close slides">
               <ChevronDown size={22} aria-hidden="true" />
             </Dialog.Close>

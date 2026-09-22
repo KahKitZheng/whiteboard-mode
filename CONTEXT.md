@@ -62,6 +62,10 @@ _Avoid_: Mode, instrument
 The application the annotation layer sits over. It declares surfaces; it does not know how they are drawn on.
 _Avoid_: Parent app, consumer, client
 
+**Channel**:
+A Faqta subject, whose two lighter colours the background behind a slide is drawn in. One per deck; a row of swatches in the slide drawer switches it, for showing the thing off.
+_Avoid_: Theme, palette (the palette is the colours; the channel is what has them), subject
+
 ### Boardbook
 
 **Boardbook**:

@@ -1,4 +1,5 @@
 import { BrowserRouter, Redirect, Route, Switch, useParams } from 'react-router-dom'
+import { useState } from 'react'
 import { AnimatedBackground } from './AnimatedBackground'
 import { AnnotationSurface } from './annotation/AnnotationSurface'
 import { WhiteboardModeProvider } from './annotation/WhiteboardMode'
@@ -8,15 +9,20 @@ import { BOARDBOOKS } from './boardbook/fixtures'
 import { LESSONS } from './Lesson'
 import { LessonExtras } from './LessonExtras'
 import { SlideNav } from './SlideNav'
+import { DEFAULT_PALETTE } from './palettes'
 import { SlideOverview } from './SlideOverview'
 import './App.scss'
 
 export default function App() {
+  // Which channel's colours the background wears. Not persisted: it is a
+  // demo control, and a fresh load should look like a fresh lesson.
+  const [palette, setPalette] = useState(DEFAULT_PALETTE)
+
   return (
     <WhiteboardModeProvider>
       <BrowserRouter>
         {/* Behind the slides: first in the DOM, and nothing here is positioned above it. */}
-        <AnimatedBackground />
+        <AnimatedBackground palette={palette} />
 
         <Switch>
           <Route path="/lesson/:slug" component={LessonRoute} />
@@ -25,7 +31,7 @@ export default function App() {
         </Switch>
 
         <SlideNav />
-        <WhiteboardToolbar trailing={<SlideOverview />} />
+        <WhiteboardToolbar trailing={<SlideOverview palette={palette} onPalette={setPalette} />} />
       </BrowserRouter>
     </WhiteboardModeProvider>
   )
