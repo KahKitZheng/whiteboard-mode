@@ -118,6 +118,11 @@ const TAP_SIZES: Record<'note' | 'timer', { width: number; height: number }> = {
   timer: { width: 180, height: 120 },
 }
 
+/** Highlighter ink, drawn or snapped to words: what composites as one layer. */
+function isHighlight(shape: Shape): boolean {
+  return (shape.type === 'stroke' && shape.highlight === true) || (shape.type === 'mark' && shape.kind === 'highlight')
+}
+
 function worthKeeping(shape: Shape): boolean {
   if (shape.type === 'stroke') return shape.points.length >= 2
   if (shape.type === 'text') return shape.text.length > 0
@@ -960,8 +965,24 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
           // shifting every shape by half a pixel.
           preserveAspectRatio={viewBox ? 'none' : undefined}
         >
+          {/*
+            Highlights are one translucent layer, under the ink: each is drawn
+            solid and the group is made see-through, so where two cross — or a
+            second pass goes over the first — the words are as readable as
+            under one. Compounding is what a real marker does, and on a board
+            it is a smear. The order is the price: a highlight never sits
+            above ink, which is where a highlighter's ink goes anyway.
+          */}
+          <g className="highlight-layer" opacity={HIGHLIGHT_OPACITY}>
+            {placed.filter(isHighlight).map((shape) => (
+              <g key={shape.id} data-marked={marked.includes(shape.id) ? '' : undefined}>
+                <ShapeView shape={{ ...shape, opacity: 1 }} width={renderWidth} />
+              </g>
+            ))}
+            {draft && isHighlight(draft) && <ShapeView shape={{ ...draft, opacity: 1 }} width={renderWidth} />}
+          </g>
           {placed
-            .filter((shape) => shape.id !== editing?.id)
+            .filter((shape) => shape.id !== editing?.id && !isHighlight(shape))
             .map((shape) => (
             /* Marked shapes fade rather than vanish, so a sweep can be seen
                before the pointer lifts and can still be cancelled. */
@@ -969,7 +990,7 @@ function Surface({ id, className, initialShapes = [], viewBox, inkScale, childre
                 <ShapeView shape={shape} width={renderWidth} onNoteText={setNoteText} />
               </g>
             ))}
-          {draft && <ShapeView shape={draft} width={renderWidth} />}
+          {draft && !isHighlight(draft) && <ShapeView shape={draft} width={renderWidth} />}
           {editing && (
             <TextEditor
               shape={editing}

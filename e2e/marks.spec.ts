@@ -38,6 +38,16 @@ async function lastShapePaths(page: Page): Promise<Rect[]> {
   }, SURFACE)
 }
 
+/** The highlighter's paths: they composite as one layer of their own, under the ink. */
+async function highlightPaths(page: Page): Promise<Rect[]> {
+  return page.evaluate((surface) => {
+    return Array.from(document.querySelectorAll(`${surface} > svg > .highlight-layer path`)).map((path) => {
+      const r = path.getBoundingClientRect()
+      return { x: r.x, y: r.y, width: r.width, height: r.height }
+    })
+  }, SURFACE)
+}
+
 async function stored(page: Page) {
   return page.evaluate(() => {
     const raw = sessionStorage.getItem('wb:lesson-reflow')
@@ -81,15 +91,15 @@ test('a highlight over words is stored as the words, and re-wraps with them', as
   expect(shape.anchor?.target.quote?.exact).toBe('then make the window narrower until')
 
   // Two lines here, so two strokes, the first starting at "then".
-  const wide = await lastShapePaths(page)
+  const wide = await highlightPaths(page)
   expect(wide).toHaveLength(2)
   expect(Math.abs(wide[0].x - start.x)).toBeLessThan(6)
 
   // Stacked, the column is wider and the phrase fits on one line: one stroke.
   await page.setViewportSize(NARROW)
-  await expect.poll(async () => (await lastShapePaths(page)).length).toBe(1)
+  await expect.poll(async () => (await highlightPaths(page)).length).toBe(1)
   const moved = await wordRect(page, 'then')
-  const narrow = await lastShapePaths(page)
+  const narrow = await highlightPaths(page)
   expect(Math.abs(narrow[0].x - moved.x)).toBeLessThan(6)
   expect(Math.abs(narrow[0].y + narrow[0].height / 2 - (moved.y + moved.height / 2))).toBeLessThan(4)
 })
