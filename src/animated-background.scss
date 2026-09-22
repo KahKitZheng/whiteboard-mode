@@ -1,0 +1,37 @@
+/*
+  The ground, and the band leaning across it. app-react builds these from
+  three panels — ground, band, ground — with corner triangles bridging the
+  gaps between them, held so that the band is centred and a wedge of ground
+  shows at the top left and the foot right. That is the whole shape, so this
+  draws it directly: the ground, and one parallelogram over it.
+
+  The band leans 10vw over the screen's height, as app-react's triangles do.
+*/
+.animated-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--ab-ground);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ab-band);
+    clip-path: polygon(10vw 0, 100% 0, 90vw 100%, 0 100%);
+  }
+
+  /*
+    The two colours trade places from slide to slide, and crossing between
+    them is the whole animation — as on the digibord, where the band holds
+    still and only its colour turns over.
+  */
+  &,
+  &::after {
+    @media (prefers-reduced-motion: no-preference) {
+      transition: background-color 0.4s ease-in-out;
+    }
+  }
+}

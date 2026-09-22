@@ -1,4 +1,5 @@
 import { BrowserRouter, Redirect, Route, Switch, useParams } from 'react-router-dom'
+import { AnimatedBackground } from './AnimatedBackground'
 import { AnnotationSurface } from './annotation/AnnotationSurface'
 import { WhiteboardModeProvider } from './annotation/WhiteboardMode'
 import { WhiteboardToolbar } from './annotation/WhiteboardToolbar'
@@ -14,6 +15,9 @@ export default function App() {
   return (
     <WhiteboardModeProvider>
       <BrowserRouter>
+        {/* Behind the slides: first in the DOM, and nothing here is positioned above it. */}
+        <AnimatedBackground />
+
         <Switch>
           <Route path="/lesson/:slug" component={LessonRoute} />
           <Route path="/boardbook/:slug" component={BoardBookRoute} />
