@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeQuote, elementAt, findQuote, follow, mergeLines, pathTo, unanchored, wordsBetween, type Anchor } from './anchor'
+import { describeQuote, elementAt, findQuote, follow, mergeLines, pathTo, resolveRange, unanchored, wordsBetween, type Anchor } from './anchor'
 import type { Shape } from './types'
 
 function html(markup: string): HTMLElement {
@@ -77,6 +77,49 @@ describe('describeQuote / findQuote', () => {
   it('ignores text inside the annotation layer', () => {
     const root = html('<p>host</p><svg class="annotation-layer"><text>ink</text></svg>')
     expect(findQuote(root, { exact: 'ink', prefix: '', suffix: '' })).toBeNull()
+  })
+})
+
+describe('resolveRange', () => {
+  function anchorTo(surface: HTMLElement, exact: string): Anchor {
+    const p = surface.querySelector('p')!
+    return {
+      target: { path: pathTo(surface, p)!, snippet: p.textContent!.slice(0, 40), quote: { exact, prefix: 'The quick ', suffix: ' jumps' } },
+      origin: { x: 0, y: 0 },
+      basis: { kind: 'font', value: 16 },
+      surfaceWidth: 1280,
+    }
+  }
+
+  it('finds the words by their block', () => {
+    const surface = html('<article><p>The quick brown fox jumps over the lazy dog.</p></article>')
+    surface.className = 'annotation-surface'
+    const range = resolveRange(anchorTo(surface, 'brown fox'), { surface, width: 1280 })
+    expect(range?.toString()).toBe('brown fox')
+  })
+
+  it('still finds them when the host has wrapped the block and the path is off by a level', () => {
+    const surface = html('<article><p>The quick brown fox jumps over the lazy dog.</p></article>')
+    surface.className = 'annotation-surface'
+    const anchor = anchorTo(surface, 'brown fox')
+
+    // A deploy: every nth-of-type step from the surface is now one level short.
+    const article = surface.querySelector('article')!
+    const wrapper = document.createElement('div')
+    surface.insertBefore(wrapper, article)
+    wrapper.appendChild(article)
+    expect(elementAt(surface, anchor.target.path)).toBeNull()
+
+    const range = resolveRange(anchor, { surface, width: 1280 })
+    expect(range?.toString()).toBe('brown fox')
+  })
+
+  it('gives up when the words themselves are gone', () => {
+    const surface = html('<article><p>The quick brown fox jumps over the lazy dog.</p></article>')
+    surface.className = 'annotation-surface'
+    const anchor = anchorTo(surface, 'brown fox')
+    surface.querySelector('p')!.textContent = 'The quick red fox jumps over the lazy dog.'
+    expect(resolveRange(anchor, { surface, width: 1280 })).toBeNull()
   })
 })
 

@@ -166,3 +166,25 @@ test('without the option, the highlighter over words is plain ink', async ({ pag
 
   await expect.poll(async () => (await stored(page)).at(-1)?.type).toBe('stroke')
 })
+
+test('a highlight outlives the host wrapping its markup, and still follows its words', async ({ page }) => {
+  const start = await wordRect(page, 'then')
+  const end = await wordRect(page, 'until')
+  await pick(page, 'Highlighter', 'Snap to words')
+  await dragWords(page, start, end)
+  await expect.poll(async () => (await stored(page)).at(-1)?.type).toBe('mark')
+
+  // A deploy adds a wrapper: every path from the surface is now a level short.
+  await page.evaluate(() => {
+    const columns = document.querySelector('.lesson-columns')!
+    const wrapper = document.createElement('div')
+    columns.parentElement!.insertBefore(wrapper, columns)
+    wrapper.appendChild(columns)
+  })
+
+  // Reflow, so the words move: a mark left on its last boxes would stay behind.
+  await page.setViewportSize(NARROW)
+  const moved = await wordRect(page, 'then')
+  await expect.poll(async () => Math.abs((await highlightPaths(page))[0].x - moved.x)).toBeLessThan(6)
+  await expect.poll(async () => Math.abs((await highlightPaths(page))[0].y + (await highlightPaths(page))[0].height / 2 - (moved.y + moved.height / 2))).toBeLessThan(4)
+})

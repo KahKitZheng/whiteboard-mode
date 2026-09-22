@@ -388,11 +388,17 @@ function resolveElement(anchor: Anchor, frame: Frame): Element | null {
   return element
 }
 
-/** The words an anchor names, where they are now. */
+/**
+ * The words an anchor names, where they are now. Looked for in their block
+ * first; when the block cannot be found — the host wrapped its markup, and
+ * every path from the surface is off by a level — anywhere on the surface,
+ * where the prefix and suffix tell the phrase from a twin. The words are the
+ * anchor; the path is only the quick way to them.
+ */
 export function resolveRange(anchor: Anchor, frame: Frame): Range | null {
   if (!anchor.target.quote) return null
   const element = resolveElement(anchor, frame)
-  return element && findQuote(element, anchor.target.quote)
+  return findQuote(element ?? frame.surface, anchor.target.quote)
 }
 
 /**
@@ -401,18 +407,19 @@ export function resolveRange(anchor: Anchor, frame: Frame): Range | null {
  * surface's own scaling taken back out.
  */
 export function resolveAnchor(anchor: Anchor, frame: Frame): Resolved | null {
-  const element = resolveElement(anchor, frame)
-  if (!element) return null
-
   const grew = (now: number) => (anchor.basis.value > 0 ? now / anchor.basis.value : 1)
   const scale = (now: number) => grew(now) * (frame.width > 0 ? anchor.surfaceWidth / frame.width : 1)
 
+  // Words are found by their text, so they can outlive their block's path.
   if (anchor.target.quote) {
-    const range = findQuote(element, anchor.target.quote)
+    const range = resolveRange(anchor, frame)
     if (!range) return null
     const rect = firstRect(range)
-    return { origin: toRef(frame, rect.left, rect.top), scale: scale(fontSizeOf(element)) }
+    return { origin: toRef(frame, rect.left, rect.top), scale: scale(fontSizeOf(range.startContainer.parentElement ?? frame.surface)) }
   }
+
+  const element = resolveElement(anchor, frame)
+  if (!element) return null
 
   const rect = element.getBoundingClientRect()
   return {
