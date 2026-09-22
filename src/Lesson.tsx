@@ -66,11 +66,11 @@ const ink = { color: DEFAULT_STYLE.color, weight: DEFAULT_STYLE.weight, opacity:
 /*
   The seeds below are authored against the card — 1280 units across it — and
   the surface is the whole slide, so they are mapped once here: the card is
-  three quarters of the screen, centred, 32px down. Exact at the reference
-  width; elsewhere a seed lands a few pixels off and anchoring takes it from
+  68% of the screen, centred, 32px down. Exact up to the width where the
+  card's pixel cap takes over; elsewhere a seed lands a few pixels off and anchoring takes it from
   there.
 */
-const CARD = { left: 160, top: 32, scale: 0.75 }
+const CARD = { left: 205, top: 32, scale: 0.68 }
 
 function onCard(shapes: Shape[]): Shape[] {
   return shapes.map((shape) => {
@@ -157,6 +157,7 @@ export const LESSONS: Lesson[] = [
     ],
     aside: {
       title: 'What to notice',
+      figure: true,
       body: [
         'A near-square becomes a square and a near-circle a circle, centred where you drew them.',
         'The shape keeps your colour and weight. Select it afterwards to change its border or give it a fill.',
@@ -164,10 +165,10 @@ export const LESSONS: Lesson[] = [
     },
     // Before and after: a hand's circle, and what Tidy makes of one.
     shapes: onCard([
-      { id: 'shapes-rough', type: 'stroke', points: ellipse(170, 640, 75, 68, 0.06), ...ink },
-      { id: 'shapes-tidy', type: 'ellipse', from: { x: 330, y: 572 }, to: { x: 480, y: 708 }, ...ink, border: 'solid', fill: 'none' },
-      { id: 'shapes-label-rough', type: 'text', at: { x: 130, y: 745 }, text: 'drawn', size: 14, color: DEFAULT_STYLE.color, opacity: 1 },
-      { id: 'shapes-label-tidy', type: 'text', at: { x: 365, y: 745 }, text: 'tidied', size: 14, color: DEFAULT_STYLE.color, opacity: 1 },
+      { id: 'shapes-rough', type: 'stroke', points: ellipse(210, 760, 110, 92, 0.06), ...ink },
+      { id: 'shapes-tidy', type: 'ellipse', from: { x: 440, y: 668 }, to: { x: 660, y: 852 }, ...ink, border: 'solid', fill: 'none' },
+      { id: 'shapes-label-rough', type: 'text', at: { x: 170, y: 895 }, text: 'drawn', size: 18, color: DEFAULT_STYLE.color, opacity: 1 },
+      { id: 'shapes-label-tidy', type: 'text', at: { x: 510, y: 895 }, text: 'tidied', size: 18, color: DEFAULT_STYLE.color, opacity: 1 },
     ]),
   },
   {
