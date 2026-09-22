@@ -13,7 +13,9 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  // The board's app is light, and a dark card on a channel's colour is the
+  // one thing that reads as a mistake. No dark theme.
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -22,17 +24,6 @@
 
   @media (max-width: 1024px) {
     font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --page: #0f1014;
-    --border: #2e303a;
-    --accent: #c084fc;
   }
 }
 

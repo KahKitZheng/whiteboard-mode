@@ -1,12 +1,8 @@
 /*
-  One surface for everything that floats over the lesson: the pill along the
+  One surface for everything that floats over the lesson: the bar along the
   bottom and the bubble above it. Solid rather than frosted, the way the live
   board's panels are — a blurred panel over a photograph turns into a smear,
   and these sit over video as often as text.
-
-  The hairline is an inset shadow rather than a border so it costs no layout,
-  and it only appears in the dark theme: a drop shadow has nothing to land on
-  there, and a dark panel on a dark page would dissolve without it.
 */
 @mixin surface {
   border-radius: 16px;
@@ -14,13 +10,6 @@
   box-shadow:
     0 2px 6px rgb(0 0 0 / 6%),
     0 12px 32px -8px rgb(0 0 0 / 18%);
-
-  @media (prefers-color-scheme: dark) {
-    box-shadow:
-      inset 0 0 0 1px var(--border),
-      0 2px 6px rgb(0 0 0 / 45%),
-      0 12px 32px -8px rgb(0 0 0 / 60%);
-  }
 }
 
 /*
@@ -348,10 +337,5 @@
   svg {
     display: block;
     fill: var(--bg);
-    // The panel's hairline continues along the tail in the dark theme.
-    @media (prefers-color-scheme: dark) {
-      stroke: var(--border);
-      stroke-width: 1;
-    }
   }
 }
