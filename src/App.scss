@@ -9,7 +9,9 @@
 }
 
 .slide-card {
-  width: 75vw;
+  // Capped in pixels as well as screen: 75vw of a board is more text across
+  // than anyone reads, and the room it gives back is the channel's colour.
+  width: min(68vw, 1120px);
   margin: 0 auto;
   flex: 1;
   display: flex;

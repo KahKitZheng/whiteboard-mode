@@ -3,7 +3,7 @@ import { expect, test } from './test'
 
 const SURFACE = '[data-surface-id="lesson-reflow"]'
 const WIDE = { width: 1280, height: 900 }
-const NARROW = { width: 720, height: 1400 }
+const NARROW = { width: 860, height: 1400 }
 
 type Rect = { x: number; y: number; width: number; height: number }
 
