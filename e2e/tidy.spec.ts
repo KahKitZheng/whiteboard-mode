@@ -196,18 +196,18 @@ test('off, every tool is on the bar with none in hand, and pressing one arms the
 })
 
 test('the slide count opens the deck, and a thumbnail goes to its slide', async ({ page }) => {
-  const count = page.getByRole('button', { name: /Slide 7 of 9/ })
-  await expect(count).toHaveText('7/9')
+  const count = page.getByRole('button', { name: /Slide 7 of 10/ })
+  await expect(count).toHaveText('7/10')
   await count.click()
   await expect(page.getByRole('dialog', { name: 'Slides' })).toBeVisible()
   const current = page.getByRole('button', { name: /7.*Ink follows the text/ })
   await expect(current).toHaveAttribute('aria-current', 'true')
 
-  // Nine thumbnails overflow this width. The row opens scrolled to the
-  // current one — seventh of nine, which puts the row at its end, so only the
-  // start has more. Scrolled back to the start, only the end does.
+  // Ten thumbnails overflow this width. The row opens scrolled to the current
+  // one; scrolled to either end, only the other end has more.
   const wrap = page.locator('.slide-thumbs-wrap')
   await expect(current).toBeInViewport({ ratio: 1 })
+  await page.locator('.slide-thumbs').evaluate((row) => row.scrollTo({ left: row.scrollWidth }))
   await expect(wrap).toHaveAttribute('data-more-start', 'true')
   await expect(wrap).not.toHaveAttribute('data-more-end', 'true')
   await page.locator('.slide-thumbs').evaluate((row) => row.scrollTo({ left: 0 }))
@@ -217,7 +217,7 @@ test('the slide count opens the deck, and a thumbnail goes to its slide', async 
   await page.getByRole('button', { name: /9.*De waterkringloop/ }).click()
   await expect(page).toHaveURL(/\/boardbook\/waterkringloop$/)
   await expect(page.getByRole('dialog', { name: 'Slides' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /Slide 9 of 9/ })).toHaveText('9/9')
+  await expect(page.getByRole('button', { name: /Slide 9 of 10/ })).toHaveText('9/10')
 })
 
 test('a sticky note is put down with a tap, keeps its words, and takes a colour', async ({ page }) => {

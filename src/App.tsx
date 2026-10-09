@@ -6,6 +6,8 @@ import { WhiteboardModeProvider } from './annotation/WhiteboardMode'
 import { WhiteboardToolbar } from './annotation/WhiteboardToolbar'
 import { BoardBook } from './boardbook/BoardBook'
 import { BOARDBOOKS } from './boardbook/fixtures'
+import { INTERACTIVE } from './interactive/fixtures'
+import { InteractivePage } from './interactive/InteractivePage'
 import { LESSONS } from './Lesson'
 import { LessonExtras } from './LessonExtras'
 import { SlideNav } from './SlideNav'
@@ -27,6 +29,7 @@ export default function App() {
         <Switch>
           <Route path="/lesson/:slug" component={LessonRoute} />
           <Route path="/boardbook/:slug" component={BoardBookRoute} />
+          <Route path="/interactive/:slug" component={InteractiveRoute} />
           <Redirect to={`/lesson/${LESSONS[0].slug}`} />
         </Switch>
 
@@ -103,4 +106,15 @@ function BoardBookRoute() {
       </div>
     </AnnotationSurface>
   )
+}
+
+/** A boardbook read at its size, with pop-ups — and the editor that makes them. */
+function InteractiveRoute() {
+  const { slug } = useParams<{ slug: string }>()
+  const page = INTERACTIVE.find((candidate) => candidate.slug === slug)
+
+  if (!page) return <Redirect to={`/lesson/${LESSONS[0].slug}`} />
+
+  // Keyed, so one page's draft never carries over to the next.
+  return <InteractivePage key={page.slug} page={page} />
 }

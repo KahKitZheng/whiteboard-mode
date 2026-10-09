@@ -91,3 +91,17 @@ _Avoid_: Slideshow, tour
 **Home Zoom**:
 The zoom at which the whole boardbook image fits its container — where it opens, and what a marker's authored size and a stroke's stored weight are relative to.
 _Avoid_: Default zoom, fit zoom, base zoom
+
+### Interactive image
+
+**Interactive Image**:
+A boardbook read at the width it is given, with pop-ups and no focus areas — the kind the editor here makes. Same data as a boardbook (`AssignmentBoardBookEntity`), no zoom: a page of pop-ups is read at its size, where a scanned spread is not.
+_Avoid_: Interactieve afbeelding (in code), hotspot image, image with markers
+
+**Pop-up**:
+A marker and the content it opens, as one thing — what the editor adds, selects, drags and fills in. In the data it is a boardbook item.
+_Avoid_: Hotspot, item (in the editor's language), marker (for the whole thing; the marker is the part on the image)
+
+**Draft**:
+The interactive image as it is being edited, apart from the one being read. The page's save makes it the page; the page's cancel drops it. A pop-up's own save and cancel are within the draft.
+_Avoid_: Edit state, working copy
