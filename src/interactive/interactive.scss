@@ -1,0 +1,661 @@
+// The interactive image: read as a slide, edited as the lesson editor's
+// element. The design's greys and blues become the page's variables; what
+// it has no word for (a field's grey, the danger red) is named here.
+.interactive-page {
+  --field: color-mix(in srgb, var(--text) 10%, var(--bg));
+  --field-hover: color-mix(in srgb, var(--text) 16%, var(--bg));
+  --danger: #f4344a;
+  padding: 24px 32px 32px;
+  gap: 24px;
+}
+
+// The editing slide is no surface, but it stacks like one.
+.interactive-editing {
+  position: relative;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// The title and, at its right, the page's own edit, save and cancel.
+.interactive-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  h1 {
+    margin: 0;
+    font-size: 34px;
+    letter-spacing: -0.02em;
+  }
+}
+
+.interactive-head-actions {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+// Buttons, three kinds: outlined on the page, filled in the editor, and a
+// square tool with an icon.
+.interactive-outline,
+.interactive-primary,
+.interactive-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.interactive-outline {
+  gap: 10px;
+  padding: 10px 20px;
+  border: 1px solid var(--text-h);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 17px;
+  font-weight: 400;
+
+  &:hover {
+    background: var(--page);
+  }
+}
+
+.interactive-primary {
+  background: var(--accent);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 85%, black);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+  }
+
+  &[data-tone='dark'] {
+    background: var(--text-h);
+
+    &:disabled {
+      opacity: 0.3;
+    }
+  }
+}
+
+.interactive-secondary {
+  background: var(--field);
+  color: var(--text-h);
+
+  &:hover {
+    background: var(--field-hover);
+  }
+}
+
+.interactive-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  &[data-danger]:hover {
+    background: var(--danger);
+  }
+
+  &[data-grey] {
+    background: var(--field);
+  }
+
+  &[data-plain] {
+    min-width: 28px;
+    height: 28px;
+    background: transparent;
+
+    &:hover {
+      background: var(--field);
+      color: var(--text-h);
+    }
+  }
+}
+
+// ---------- reading ----------
+
+.interactive-stage {
+  position: relative;
+  // A drag on a pop-up must not scroll the page or select the image.
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  > img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+
+  .boardbook-marker {
+    z-index: 2;
+
+    &[data-selected] {
+      z-index: 3;
+      cursor: move;
+    }
+  }
+}
+
+// Beside the marker under the mouse: a glimpse of what the press opens.
+.interactive-card {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: 320px;
+  padding: 8px 12px 8px 8px;
+  border-radius: 10px;
+  background: var(--text-h);
+  color: #fff;
+  box-shadow: 0 6px 18px rgb(20 25 30 / 30%);
+  cursor: pointer;
+  // From the marker's centre: past its edge, and a little air.
+  transform: translate(calc(var(--marker-half) + 10px), -50%);
+
+  &[data-side='left'] {
+    transform: translate(calc(-100% - var(--marker-half) - 10px), -50%);
+  }
+
+  > img {
+    display: block;
+    flex: none;
+    width: 72px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  > svg {
+    flex: none;
+  }
+}
+
+.interactive-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.interactive-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.interactive-card-excerpt {
+  max-width: 200px;
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+// ---------- editing ----------
+
+.interactive-editor {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 10px;
+  background: var(--page);
+}
+
+.interactive-editor-grip {
+  flex: none;
+  color: var(--text-h);
+  cursor: grab;
+}
+
+.interactive-editor-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.interactive-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-h);
+  }
+}
+
+.interactive-editor-columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.interactive-editor-stage {
+  flex: 1 1 480px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.interactive-editor-add {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.interactive-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 460px;
+  border: 2px dashed var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+  }
+
+  strong {
+    font-size: 18px;
+  }
+
+  span {
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  &[data-small] {
+    gap: 6px;
+    height: 150px;
+
+    strong {
+      font-size: 15px;
+    }
+  }
+}
+
+// Around the selected pop-up, a little outside its marker; a handle at each
+// corner, a little outside that. Both are the marker's children, so they
+// follow a text pill's real width.
+.interactive-stage .boardbook-marker[data-selected]::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.interactive-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+  background: var(--bg);
+
+  &[data-corner='nw'] { left: -12px; top: -12px; cursor: nwse-resize; }
+  &[data-corner='ne'] { right: -12px; top: -12px; cursor: nesw-resize; }
+  &[data-corner='sw'] { left: -12px; bottom: -12px; cursor: nesw-resize; }
+  &[data-corner='se'] { right: -12px; bottom: -12px; cursor: nwse-resize; }
+}
+
+.interactive-panel {
+  flex: 0 1 340px;
+  min-width: min(100%, 300px);
+  min-height: 460px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  background: var(--bg);
+
+  &[data-empty] {
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px;
+    text-align: center;
+    color: var(--text);
+
+    > svg {
+      color: var(--accent);
+    }
+
+    p {
+      max-width: 240px;
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.45;
+      text-wrap: pretty;
+    }
+  }
+}
+
+.interactive-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+
+  h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-h);
+  }
+
+  .interactive-tool {
+    background: var(--field);
+  }
+}
+
+.interactive-panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.interactive-panel-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.interactive-panel-image {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--field);
+
+  > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.interactive-panel-image-tools {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+
+  .interactive-tool {
+    min-width: 32px;
+    height: 32px;
+  }
+}
+
+.interactive-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.interactive-field-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.interactive-input {
+  font: inherit;
+  font-size: 15px;
+  color: var(--text-h);
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--field);
+  outline: none;
+
+  &::placeholder {
+    color: var(--accent);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  &[data-size='title'] {
+    font-size: 18px;
+  }
+}
+
+// The marker as it will look, its name, and the picker that drops below.
+.interactive-picker-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px 6px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--field);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+
+  > span:nth-child(2) {
+    flex: 1;
+  }
+}
+
+.interactive-picker-preview {
+  // A marker is positioned absolutely in a stage; here it sits in a row.
+  position: static;
+  transform: none;
+  flex: none;
+  height: 30px;
+  font-size: 13px;
+  cursor: inherit;
+
+  &[data-kind='icon'] {
+    width: 30px;
+  }
+}
+
+.interactive-picker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+}
+
+.interactive-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 6px;
+  background: var(--field);
+
+  button {
+    padding: 5px 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-h);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &[aria-pressed='true'] {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+  }
+}
+
+.interactive-glyphs {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+
+  button {
+    display: grid;
+    place-items: center;
+    height: 36px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-h);
+    font: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--field);
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+}
+
+.interactive-audio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.interactive-audio-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+// TipTap: a short toolbar over the words, the words in a field.
+.rich-text {
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+  background: var(--field);
+}
+
+.rich-text-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-h);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--field-hover);
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+}
+
+.rich-text-body {
+  .tiptap {
+    min-height: 120px;
+    padding: 8px 14px 10px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-h);
+    outline: none;
+
+    p {
+      margin: 0;
+    }
+  }
+}

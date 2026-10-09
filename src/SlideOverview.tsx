@@ -1,5 +1,5 @@
 import { Dialog } from '@base-ui-components/react/dialog'
-import { BookOpen, ChevronDown, ChevronUp, FileText } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, FileText, Image } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import { PALETTES, type Palette } from './palettes'
@@ -74,7 +74,13 @@ export function SlideOverview({ palette, onPalette }: Props) {
                 >
                   <span className="slide-thumb-name">
                     <span className="slide-thumb-number">{at + 1}</span>
-                    {slide.kind === 'boardbook' ? <BookOpen size={16} aria-hidden="true" /> : <FileText size={16} aria-hidden="true" />}
+                    {slide.kind === 'boardbook' ? (
+                      <BookOpen size={16} aria-hidden="true" />
+                    ) : slide.kind === 'interactive' ? (
+                      <Image size={16} aria-hidden="true" />
+                    ) : (
+                      <FileText size={16} aria-hidden="true" />
+                    )}
                     {slide.title}
                   </span>
                   <Thumbnail kind={slide.kind} />
@@ -135,13 +141,19 @@ function Thumbs({ children }: { children: ReactNode }) {
   )
 }
 
-/** A schematic of the page: a header bar, then columns of text or a picture beside text. */
+/** A schematic of the page: a header bar, then columns of text, a picture beside text, or a picture with pop-ups on it. */
 function Thumbnail({ kind }: { kind: Slide['kind'] }) {
   return (
     <svg className="slide-thumb-art" viewBox="0 0 160 100" aria-hidden="true">
       <rect x="0" y="0" width="160" height="100" rx="6" className="thumb-page" />
       <rect x="16" y="10" width="40" height="6" rx="2" className="thumb-accent" />
-      {kind === 'boardbook' ? (
+      {kind === 'interactive' ? (
+        <>
+          <rect x="16" y="26" width="128" height="58" rx="3" className="thumb-picture" />
+          <circle cx="48" cy="48" r="6" className="thumb-accent" />
+          <circle cx="104" cy="64" r="6" className="thumb-accent" />
+        </>
+      ) : kind === 'boardbook' ? (
         <>
           <rect x="16" y="26" width="64" height="58" rx="3" className="thumb-picture" />
           <rect x="90" y="30" width="54" height="5" rx="2" className="thumb-line" />
