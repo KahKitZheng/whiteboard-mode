@@ -1,18 +1,26 @@
 import { Dialog } from '@base-ui-components/react/dialog'
 import { ChevronRight } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, type PointerEvent, type ReactNode } from 'react'
 import { AnnotationSurface } from '../annotation/AnnotationSurface'
-import { percentToImage, type Size } from './coords'
+import type { Size } from './coords'
 import { itemIcon } from './icons'
+import { markerKind, markerLabel, markerStyle } from './marker'
 import { RichText } from './richText'
 import type { BoardBookItemEntity } from './types'
 
-/**
- * The real viewer draws an icon marker at 80% of its authored box, round, and
- * a text marker filling the box. Same here, so a page authored there lands
- * here with its markers the same size.
- */
-const ICON_FRACTION = 0.8
+/** What is drawn on the marker: a lucide glyph, a typeset character, or the label with a chevron. */
+export function MarkerFace({ item }: { item: BoardBookItemEntity }) {
+  const icon = itemIcon(item.itemIcon)
+  if (markerKind(item) === 'text') {
+    return (
+      <>
+        <span className="boardbook-marker-text">{item.itemText}</span>
+        <ChevronRight size="1em" aria-hidden="true" />
+      </>
+    )
+  }
+  return 'glyph' in icon ? <icon.glyph size="1em" aria-hidden="true" /> : <span aria-hidden="true">{icon.character}</span>
+}
 
 type MarkerProps = {
   item: BoardBookItemEntity
@@ -20,45 +28,37 @@ type MarkerProps = {
   /** How wide the image is on screen at rest — what the authored size is relative to. */
   homeWidth: number
   onOpen: () => void
+  /** For a hover card beside it; the marker itself has nothing to show. */
+  onHover?: (hovering: boolean) => void
+  /** An editor dragging it; a press on it is then the drag's start, not a tap. */
+  onPointerDown?: (event: PointerEvent<HTMLButtonElement>) => void
+  selected?: boolean
+  /** Drawn on the marker after its face — an editor's resize handles. */
+  children?: ReactNode
 }
 
 /**
- * Placed by percentage of the image's box, like the data says; sized in pixels
- * from that percentage at home zoom. The box scales with the zoom and the
- * marker does not, so it keeps its screen size — the real viewer gets the same
- * result by counter-scaling every frame.
+ * The box scales with the zoom and the marker does not, so it keeps its screen
+ * size — the real viewer gets the same result by counter-scaling every frame.
  */
-export function Marker({ item, image, homeWidth, onOpen }: MarkerProps) {
-  const box = percentToImage(item, image)
-  const scale = homeWidth / image.width
-  const kind = item.itemText ? 'text' : 'icon'
-  const icon = itemIcon(item.itemIcon)
-
-  const size =
-    kind === 'icon'
-      ? { width: Math.min(box.width, box.height) * scale * ICON_FRACTION, height: Math.min(box.width, box.height) * scale * ICON_FRACTION }
-      : { width: box.width * scale, height: box.height * scale }
-
+export function Marker({ item, image, homeWidth, onOpen, onHover, onPointerDown, selected, children }: MarkerProps) {
   return (
     <button
       type="button"
       className="boardbook-marker"
-      data-kind={kind}
+      data-kind={markerKind(item)}
       data-theme={item.theme}
-      style={{ ...size, fontSize: size.height * 0.5, left: `${item.x + item.width / 2}%`, top: `${item.y + item.height / 2}%` }}
-      aria-label={item.title ?? item.itemText ?? `Item ${item.itemIcon}`}
+      data-selected={selected ? '' : undefined}
+      style={markerStyle(item, image, homeWidth)}
+      aria-label={markerLabel(item)}
+      aria-pressed={selected}
       onClick={onOpen}
+      onPointerDown={onPointerDown}
+      onMouseEnter={onHover && (() => onHover(true))}
+      onMouseLeave={onHover && (() => onHover(false))}
     >
-      {kind === 'text' ? (
-        <>
-          <span className="boardbook-marker-text">{item.itemText}</span>
-          <ChevronRight size="1em" aria-hidden="true" />
-        </>
-      ) : 'glyph' in icon ? (
-        <icon.glyph size="1em" aria-hidden="true" />
-      ) : (
-        <span aria-hidden="true">{icon.character}</span>
-      )}
+      <MarkerFace item={item} />
+      {children}
     </button>
   )
 }
