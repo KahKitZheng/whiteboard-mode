@@ -64,7 +64,7 @@ prs:
 
 ### Page shape
 
-1. A list of changes, grouped by `area`. One bullet per change a reader notices, not per PR: a PR can give several bullets, and related PRs (also across repos) share one. Each line describes the effect, with a badge: new / improved / fixed, in that order. No commit prefixes, no jargon, no feature flags.
+1. A list of changes, grouped by `area`. Everything a reader can notice gets in, since support searches the page. One bullet per topic, not per PR: related PRs (also across repos) share one, and a topic with several effects gets its details nested under one headline. Each line describes the effect, with a badge: new / improved / fixed, in that order. Positive or neutral; no caveats, no triggers, no jargon. Infrastructure, measurement and feature-flag plumbing are skipped.
 2. Deep dives below the list, as cards. `feature` PRs get one by default, and their bullet links to it. A dev can promote any other item in the release PR.
 
 ### Media
@@ -120,3 +120,5 @@ Per run:
 - A Slack announcement step.
 - A dev-side override label for the audience classification, if the skill's classification turns out unreliable.
 - Links to support articles from bullets and deep dives, once support articles exist for the features.
+- Announcements: a project going live (or a feature flag switched on for everyone) is a release too, but it happens outside the code, so the skill never sees it. It'd be an announcement with an introduction to how the thing works. Whether it's written once or grows with the releases behind it is still open.
+- Emoji reactions per release, to see what lands. Low priority, but useful, especially once releases go public to customers. Needs somewhere to store the counts, since the site is static.
