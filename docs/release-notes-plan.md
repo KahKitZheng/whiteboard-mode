@@ -18,8 +18,8 @@ development ─> staging ──────────────────�
                                                    -> drafts / updates the release PR
                                                    -> Vercel preview, dev adds media
                                                    -> Dutch proofread
-staging ─> main/master, tag + GitHub Release ──>  dev merges the release PR = publication
-                                                   -> workflow: learn glossary terms, stamp, live
+staging ─> main/master, tag + GitHub Release ──>  dev comments /publish = publication
+                                                   -> workflow: learn, stamp, merge, live
 ```
 
 Git (tags, GitHub Releases) is the dev-facing changelog. The release-notes app is the non-dev-facing one. Runs are manual: releases are infrequent, so a schedule would mostly run for nothing.
@@ -77,7 +77,7 @@ prs:
 Lives in the release-notes repo (`.claude/skills/`), because it changes together with the content schema. Three modes:
 
 - `/release-notes <product>`: draft the upcoming release, after a drop on staging.
-- `/release-notes <product> learn <folder> <pr>`: turn the names reviewers replaced into glossary rows. The publish workflow runs it on merge.
+- `/release-notes <product> learn <folder> <pr>`: turn the names reviewers replaced into glossary rows. The publish workflow runs it on `/publish`.
 - `/release-notes <product> <YYYY-MM-DD>`: backfill a past release, together with the user, straight on `main`.
 
 Config (`sources.json`): a product has a name, a closed list of `areas` (anything unclear goes to `Overig`) and one or more repos, each with its branches and optional locales.
@@ -104,8 +104,8 @@ Per run:
 - One PR per release. Later staging drops push to the same PR.
 - The Vercel preview shows the draft. Devs edit `en.md` and add media there.
 - PR checklist: a Dutch speaker proofreads `nl.md` for language and readability before merging (required).
-- Merging publishes the notes, done by hand once prod is out, so last-minute changes stay possible. There's no draft/live status field.
-- On merge, a workflow learns from the review (renamed names become glossary rows, the one step that needs Claude), then `scripts/publish.mjs` stamps versions and the date and renames the folder.
+- A `/publish` comment publishes the notes, done by hand once prod is out, so last-minute changes stay possible. There's no draft/live status field.
+- The workflow then learns from the review (renamed names become glossary rows, the one step that needs Claude), `scripts/publish.mjs` stamps versions and the date and renames the folder, and it merges. The release lands on `main` complete. A PR merged by hand gets stamped afterwards, without learning.
 - Announcing in Slack stays manual.
 
 ## Later, not now
