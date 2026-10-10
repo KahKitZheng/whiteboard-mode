@@ -1,0 +1,53 @@
+name: Release
+# On every merge into `main`, tag the merge commit with the next semver version and create a
+# GitHub Release. Any PR labelled `feature` since the last tag bumps the minor version;
+# otherwise the patch. Major bumps are manual. The first release is 0.1.0.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(git describe --tags --abbrev=0 --match '[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || true)
+          if [ -z "$last" ]; then
+            next=0.1.0
+          else
+            # PR numbers from merge commits (`Merge pull request #12`) and squash commits (`Title (#12)`)
+            numbers=$(git log --format=%s "$last..HEAD" \
+              | grep -oE '^Merge pull request #[0-9]+|\(#[0-9]+\)$' \
+              | grep -oE '[0-9]+' | sort -u)
+            bump=patch
+            for n in $numbers; do
+              if gh pr view "$n" --json labels -q '.labels[].name' | grep -qx feature; then
+                bump=minor
+                break
+              fi
+            done
+            IFS=. read -r major minor patch <<< "$last"
+            if [ "$bump" = minor ]; then
+              next="$major.$((minor + 1)).0"
+            else
+              next="$major.$minor.$((patch + 1))"
+            fi
+          fi
+          gh release create "$next" --target "$GITHUB_SHA" --title "$next" --generate-notes
