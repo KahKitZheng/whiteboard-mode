@@ -51,7 +51,7 @@ Frontmatter:
 
 ```yaml
 product: whiteboard
-version: 1.4.0          # filled in from the GitHub Release tag
+version: 1.4.0          # the source's release tag, for devs; not shown to readers
 publishedAt: 2026-10-20 # set on merge
 prs:
   - { number: 12, audience: internal, area: Annotaties }
@@ -62,7 +62,6 @@ prs:
 
 1. A list of changes, grouped by `area`. One bullet per change a reader notices, not per PR: a PR can give several bullets, and related PRs can share one. Each line describes the effect, not the code change, with a badge: new / fixed / improved. No commit prefixes (`Fix:`, `Chore:`), no jargon, no internal abbreviations, no feature flags.
 2. Deep dives below the list. `feature` PRs get one by default, and their bullet links to it. A dev can promote any other item in the release PR.
-3. When published, a link to the source's GitHub Release for that version.
 
 ### Media
 
@@ -117,4 +116,3 @@ Per run:
 - A Slack announcement step.
 - A dev-side override label for the audience classification, if the skill's classification turns out unreliable.
 - Links to support articles from bullets and deep dives, once support articles exist for the features.
-- A colour per badge type. Astro 7 needs `@astrojs/markdown-remark` for a markdown plugin, so for now badges share one style.
