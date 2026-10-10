@@ -112,7 +112,7 @@ Per run:
 
 - Three views from the same releases:
   - Company view of Faqta: a "Begrippen" page from the terms file, and a badge on bullets customers can see, so sales reads one page.
-  - Customer view: a separate deployment, Faqta only, teacher tone (benefit first, grouped by teacher task), maybe monthly. Support owns the tone.
+  - Customer view: a separate deployment, Faqta only, teacher tone (benefit first, grouped by teacher task), maybe monthly. Support owns the tone. Unlike the internal page, it selects: only what a teacher would miss gets in.
   - Dev view: only if devs miss it. Its value is grouping FE and BE PRs per ticket plus a "let op" section, not a copy of the PR list.
 - api adopting the `What changes for users` PR format (to propose to the team).
 - A post-edit layer for demo videos (captions, spotlights, trims).
