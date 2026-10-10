@@ -12,11 +12,11 @@ Releases are announced in Slack today. That's the bare minimum: quality depends 
 whiteboard-mode                                   release-notes (Astro, Vercel)
 ──────────────────────────────────────────────    ─────────────────────────────────────
 feature branch ─PR─> development
-development ─(Action: promotion PR)─> staging ──> dev runs the skill
+development ─(Action: promotion PR)─> staging ──> Action runs the skill
                                                     -> drafts / updates the release PR
                                                     -> Vercel preview, dev adds media
 staging ─(Action: promotion PR)─> main             -> Dutch proofread
-main merge ─(Action)─> semver tag + GitHub Release -> merge PR = publish
+main merge ─(Action)─> semver tag + GitHub Release -> Action runs publish, merge PR = live
 ```
 
 Git (tags, GitHub Releases) is the dev-facing changelog. The release-notes app is the non-dev-facing one.
@@ -70,7 +70,11 @@ prs:
 
 ## The skill
 
-Lives in the release-notes repo (`.claude/skills/`), because it changes together with the content schema. It is run manually by whoever drops something on staging.
+Lives in the release-notes repo (`.claude/skills/`), because it changes together with the content schema.
+
+It runs automatically. A push to a source's `staging` sends a `repository_dispatch` to release-notes, whose workflow runs the skill headless (`claude-code-action`); the tag Action on a `main` merge does the same with `publish`. The proofread gate on the release PR covers the output, so there's no need to start manually. `/release-notes <product> [publish]` stays as the manual fallback, and for tuning the skill locally.
+
+Runs for one product queue up (`concurrency: release-notes-<product>`, no cancelling), so app-react and api merging close together don't clash: each run reads every source of the product and skips PRs already in `prs`. A run pulls the release branch first and retries once if its push is rejected by a dev's edit.
 
 Config:
 
