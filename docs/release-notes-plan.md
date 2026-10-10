@@ -60,8 +60,9 @@ prs:
 
 ### Page shape
 
-1. A list of changes, grouped by `area`. Each line describes the effect, not the code change, with a badge: new / fixed / improved. No commit prefixes (`Fix:`, `Chore:`), no jargon, no internal abbreviations.
-2. Deep dives below the list. `feature` PRs get one by default. A dev can promote any other item in the release PR.
+1. A list of changes, grouped by `area`. One bullet per change a reader notices, not per PR: a PR can give several bullets, and related PRs can share one. Each line describes the effect, not the code change, with a badge: new / fixed / improved. No commit prefixes (`Fix:`, `Chore:`), no jargon, no internal abbreviations, no feature flags.
+2. Deep dives below the list. `feature` PRs get one by default, and their bullet links to it. A dev can promote any other item in the release PR.
+3. When published, a link to the source's GitHub Release for that version.
 
 ### Media
 
@@ -96,7 +97,7 @@ Per run:
    - Security fixes: never `customer` automatically.
    - Everything else: `customer`. The levels are nested, so the internal page shows internal + customer.
 4. Pick an `area` from the source's closed list.
-5. Write `en.md`, then derive `nl.md` using the source's glossary and translations.
+5. Write `en.md`, then derive `nl.md`. Terms come from, in order: `terms/<product>.md` in release-notes (how readers know things, kept by devs), the source's `glossary.json` locale, its glossary, then its locales. Terms none of these confirm are listed in the PR for the proofreader.
 6. Open the release PR, or push to it if it exists. The PR body lists every skipped PR with a one-line reason, so the reviewer can catch a wrong classification.
 
 ## Release PR
@@ -115,3 +116,5 @@ Per run:
 - GCS for media.
 - A Slack announcement step.
 - A dev-side override label for the audience classification, if the skill's classification turns out unreliable.
+- Links to support articles from bullets and deep dives, once support articles exist for the features.
+- A colour per badge type. Astro 7 needs `@astrojs/markdown-remark` for a markdown plugin, so for now badges share one style.
