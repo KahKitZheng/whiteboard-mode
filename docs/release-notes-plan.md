@@ -31,7 +31,6 @@ Git (tags, GitHub Releases) is the dev-facing changelog. The release-notes app i
 - Labels: only `feature` and `bug`.
 - On a merge into `main`, an Action tags the merge commit and creates a GitHub Release (`gh release create --generate-notes`). Any `feature` PR since the last tag → minor bump, otherwise patch. Major bumps are manual. The first release is `0.1.0`.
 - No promotion PR workflow: the skill reads commit ranges, so it isn't needed.
-- To do: a glossary and Dutch translations, so the skill can use the real UI terms.
 
 ## release-notes app
 
@@ -81,7 +80,9 @@ Lives in the release-notes repo (`.claude/skills/`), because it changes together
 - `/release-notes <product> publish`: fill in `versions` and `publishedAt` and rename the folder, once prod is out.
 - `/release-notes <product> <YYYY-MM-DD>`: backfill a past release, together with the user, straight on `main`.
 
-Config (`sources.json`): a product has a name, a closed list of `areas` (anything unclear goes to `Overig`) and one or more repos, each with its branches and optional glossary and locales.
+Config (`sources.json`): a product has a name, a closed list of `areas` (anything unclear goes to `Overig`) and one or more repos, each with its branches and optional locales.
+
+There is one glossary: `glossary.md` in release-notes, with per concept the English and Dutch name and the words that are wrong (a **Never** column, enforced by `scripts/check-terms.mjs`). The source repos' own glossaries describe code, not what readers call things, so they aren't read; their locales stay the source for literal UI labels.
 
 Per run:
 
@@ -94,8 +95,9 @@ Per run:
    - Security fixes: never `customer` automatically.
    - Everything else: `customer`. The levels are nested, so the internal page shows internal + customer.
 4. Pick an `area` from the product's list.
-5. Write `en.md`, then derive `nl.md`. Terms come from, in order: `terms/<product>.md` in release-notes (how readers know things, kept by devs), the app's `glossary.json` locale, its glossary, then its locales. Pages go by their navigation label in sentence case. Terms none of these confirm are listed for the proofreader.
-6. Open the release PR, or push to it if it exists. The PR body lists every skipped PR with a one-line reason, so the reviewer can catch a wrong classification.
+5. Write `en.md`, then derive `nl.md`. Pages go by their navigation label in sentence case.
+6. Trace every name and claim. Names come from, in order: `glossary.md`, the team's own words (release text, PR titles), the locales, then the code. The skill never coins a name: without a source it describes what the reader sees, and lists the term for the proofreader. Claims about scope and history need a source too, or go on a "Claims to check" list. Then the term check runs.
+7. Open the release PR, or push to it if it exists. The PR body lists every skipped PR with a one-line reason, so the reviewer can catch a wrong classification.
 
 ## Release PR
 
@@ -103,6 +105,7 @@ Per run:
 - The Vercel preview shows the draft. Devs edit `en.md` and add media there.
 - PR checklist: a Dutch speaker proofreads `nl.md` for language and readability before merging (required).
 - Merging when prod goes out publishes the notes. There's no draft/live status field.
+- Publishing first turns every name a reviewer replaced into a glossary row, so the skill learns from each review.
 - Announcing in Slack stays manual.
 
 ## Later, not now
