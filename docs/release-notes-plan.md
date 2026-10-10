@@ -39,13 +39,13 @@ Git (tags, GitHub Releases) is the dev-facing changelog. The release-notes app i
 ### Content layout
 
 ```
-<product>/<draft-start-date>/
+<product>/<date>/
   en.md        # source of truth, edited by devs
   nl.md        # derived from en.md by the skill
   media/       # screenshots, demo videos
 ```
 
-The folder is named after the date the draft started, so media paths don't break on publish.
+The folder is named after the date the draft started. Publishing renames it to the publish date, so the URL carries that date; media paths are relative, so they move along.
 
 Frontmatter:
 
