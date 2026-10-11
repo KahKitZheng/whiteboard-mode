@@ -14,9 +14,9 @@ async function stored(page: Page) {
 }
 
 async function pickPen(page: Page, tidy: boolean) {
-  await page.getByRole('button', { name: 'Whiteboard' }).click()
+  await page.getByRole('button', { name: 'Digibord' }).click()
   await page.getByRole('button', { name: 'Pen', exact: true }).click()
-  if (tidy) await page.getByRole('group', { name: 'Shapes' }).getByRole('button', { name: 'Tidy shapes' }).click()
+  if (tidy) await page.getByRole('group', { name: 'Vormen' }).getByRole('button', { name: 'Vormen rechttrekken' }).click()
 }
 
 /** A hand-drawn circle: a little uneven, not quite closed. `up` decides how it ends. */
@@ -123,17 +123,17 @@ test('moving on after the preview takes the ink back', async ({ page }) => {
 
 test('turning Tidy shapes on turns the pen back to free ink over words', async ({ page }) => {
   await pickPen(page, false)
-  const words = page.getByRole('group', { name: 'Words' })
-  await words.getByRole('button', { name: 'Underline' }).click()
-  await expect(words.getByRole('button', { name: 'Underline' })).toHaveAttribute('aria-pressed', 'true')
+  const words = page.getByRole('group', { name: 'Woorden' })
+  await words.getByRole('button', { name: 'Onderstrepen' }).click()
+  await expect(words.getByRole('button', { name: 'Onderstrepen' })).toHaveAttribute('aria-pressed', 'true')
 
-  await page.getByRole('group', { name: 'Shapes' }).getByRole('button', { name: 'Tidy shapes' }).click()
-  await expect(words.getByRole('button', { name: 'Free' })).toHaveAttribute('aria-pressed', 'true')
-  await expect(words.getByRole('button', { name: 'Underline' })).toHaveAttribute('aria-pressed', 'false')
+  await page.getByRole('group', { name: 'Vormen' }).getByRole('button', { name: 'Vormen rechttrekken' }).click()
+  await expect(words.getByRole('button', { name: 'Vrij' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(words.getByRole('button', { name: 'Onderstrepen' })).toHaveAttribute('aria-pressed', 'false')
 
   // And back: asking for underlines gives up tidy shapes.
-  await words.getByRole('button', { name: 'Underline' }).click()
-  await expect(page.getByRole('group', { name: 'Shapes' }).getByRole('button', { name: 'Free' })).toHaveAttribute('aria-pressed', 'true')
+  await words.getByRole('button', { name: 'Onderstrepen' }).click()
+  await expect(page.getByRole('group', { name: 'Vormen' }).getByRole('button', { name: 'Vrij' })).toHaveAttribute('aria-pressed', 'true')
 })
 
 test('with Tidy shapes on, an arc becomes a bent line, and its bend can be dragged', async ({ page }) => {
@@ -155,10 +155,10 @@ test('with Tidy shapes on, an arc becomes a bent line, and its bend can be dragg
   expect(line.bend!.y).toBeLessThan(Math.min(line.from.y, line.to.y))
 
   // Select it and pull its middle handle down: the bow flips.
-  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  await page.getByRole('button', { name: 'Selecteren', exact: true }).click()
   const middle = point(12)
   await page.mouse.click(middle.x, middle.y)
-  await expect(page.getByRole('button', { name: 'Delete shape' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Vorm verwijderen' })).toBeVisible()
   await page.mouse.move(middle.x, middle.y)
   await page.mouse.down()
   await page.mouse.move(middle.x, middle.y + 90, { steps: 6 })
@@ -170,9 +170,9 @@ test('with Tidy shapes on, an arc becomes a bent line, and its bend can be dragg
 })
 
 test('the line tool draws an arrow when asked for heads', async ({ page }) => {
-  await page.getByRole('button', { name: 'Whiteboard' }).click()
-  await page.getByRole('button', { name: 'Line', exact: true }).click()
-  await page.getByRole('group', { name: 'Heads' }).getByRole('button', { name: 'Arrow at end' }).click()
+  await page.getByRole('button', { name: 'Digibord' }).click()
+  await page.getByRole('button', { name: 'Lijn', exact: true }).click()
+  await page.getByRole('group', { name: 'Pijlpunten' }).getByRole('button', { name: 'Pijlpunt aan het eind' }).click()
   await page.mouse.move(AT.x - 80, AT.y)
   await page.mouse.down()
   await page.mouse.move(AT.x + 80, AT.y, { steps: 6 })
@@ -185,21 +185,21 @@ test('the line tool draws an arrow when asked for heads', async ({ page }) => {
 test('off, every tool is on the bar with none in hand, and pressing one arms the whiteboard', async ({ page }) => {
   const pen = page.getByRole('button', { name: 'Pen', exact: true })
   await expect(pen).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Widgets', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Hulpmiddelen', exact: true })).toBeVisible()
   await expect(pen).toHaveAttribute('aria-pressed', 'false')
   await expect(page.locator('.tool-bubble')).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Line', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Whiteboard' })).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByRole('button', { name: 'Line', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByRole('group', { name: 'Heads' })).toBeVisible()
+  await page.getByRole('button', { name: 'Lijn', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Digibord' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Lijn', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('group', { name: 'Pijlpunten' })).toBeVisible()
 })
 
 test('the slide count opens the deck, and a thumbnail goes to its slide', async ({ page }) => {
-  const count = page.getByRole('button', { name: /Slide 7 of 10/ })
+  const count = page.getByRole('button', { name: /Dia 7 van 10/ })
   await expect(count).toHaveText('7/10')
   await count.click()
-  await expect(page.getByRole('dialog', { name: 'Slides' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: "Dia's" })).toBeVisible()
   const current = page.getByRole('button', { name: /7.*Ink follows the text/ })
   await expect(current).toHaveAttribute('aria-current', 'true')
 
@@ -216,17 +216,17 @@ test('the slide count opens the deck, and a thumbnail goes to its slide', async 
 
   await page.getByRole('button', { name: /9.*De waterkringloop/ }).click()
   await expect(page).toHaveURL(/\/boardbook\/waterkringloop$/)
-  await expect(page.getByRole('dialog', { name: 'Slides' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /Slide 9 of 10/ })).toHaveText('9/10')
+  await expect(page.getByRole('dialog', { name: "Dia's" })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Dia 9 van 10/ })).toHaveText('9/10')
 })
 
 test('a sticky note is put down with a tap, keeps its words, and takes a colour', async ({ page }) => {
-  await page.getByRole('button', { name: 'Whiteboard' }).click()
-  await page.getByRole('button', { name: 'Widgets', exact: true }).click()
-  await page.getByRole('button', { name: 'Sticky note', exact: true }).click()
+  await page.getByRole('button', { name: 'Digibord' }).click()
+  await page.getByRole('button', { name: 'Hulpmiddelen', exact: true }).click()
+  await page.getByRole('button', { name: 'Plakbriefje', exact: true }).click()
   await page.mouse.click(AT.x, AT.y)
 
-  const note = page.getByRole('textbox', { name: 'Sticky note' })
+  const note = page.getByRole('textbox', { name: 'Plakbriefje' })
   await expect(note).toBeVisible()
   await note.click()
   await page.keyboard.type('Homework: page 42')
@@ -238,23 +238,23 @@ test('a sticky note is put down with a tap, keeps its words, and takes a colour'
   await expect.poll(async () => ((await stored(page)).at(-1) as { text?: string }).text).toBe('Homework: page 42')
 
   // Selected by its strip, not its paper, and recoloured from the bubble.
-  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  await page.getByRole('button', { name: 'Selecteren', exact: true }).click()
   const bar = (await page.locator('.note-bar').boundingBox())!
   await page.mouse.click(bar.x + bar.width / 2, bar.y + bar.height / 2)
-  await page.getByRole('group', { name: 'Colour' }).getByRole('button', { name: 'Blue' }).click()
+  await page.getByRole('group', { name: 'Kleur' }).getByRole('button', { name: 'Blauw', exact: true }).click()
   await expect.poll(async () => ((await stored(page)).at(-1) as { color?: string }).color).toBe('#3e63dd')
 
   // Reloaded, the whiteboard is off: the words are there, but not for editing.
   await page.reload()
-  await expect(page.getByRole('textbox', { name: 'Sticky note' })).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Plakbriefje' })).toHaveCount(0)
   await expect(page.locator('.note-text')).toHaveText('Homework: page 42')
-  await page.getByRole('button', { name: 'Whiteboard' }).click()
-  await expect(page.getByRole('textbox', { name: 'Sticky note' })).toHaveValue('Homework: page 42')
+  await page.getByRole('button', { name: 'Digibord' }).click()
+  await expect(page.getByRole('textbox', { name: 'Plakbriefje' })).toHaveValue('Homework: page 42')
 })
 
 test('a tap puts down a timer of a useful size', async ({ page }) => {
-  await page.getByRole('button', { name: 'Whiteboard' }).click()
-  await page.getByRole('button', { name: 'Widgets', exact: true }).click()
+  await page.getByRole('button', { name: 'Digibord' }).click()
+  await page.getByRole('button', { name: 'Hulpmiddelen', exact: true }).click()
   await page.getByRole('button', { name: 'Timer', exact: true }).click()
   await page.mouse.click(AT.x - 200, AT.y)
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
@@ -264,11 +264,11 @@ test('a tap puts down a timer of a useful size', async ({ page }) => {
 })
 
 test('a label can have more than one line: Shift+Enter breaks, Enter finishes', async ({ page }) => {
-  await page.getByRole('button', { name: 'Whiteboard' }).click()
-  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  await page.getByRole('button', { name: 'Digibord' }).click()
+  await page.getByRole('button', { name: 'Tekst', exact: true }).click()
   await page.keyboard.press('Escape')
   await page.mouse.click(AT.x - 200, AT.y)
-  const editor = page.getByRole('textbox', { name: 'Annotation text' })
+  const editor = page.getByRole('textbox', { name: 'Tekst van de aantekening' })
   await editor.click()
   await page.keyboard.type('First line')
   await page.keyboard.press('Shift+Enter')
