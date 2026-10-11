@@ -1,3 +1,4 @@
+import i18next from 'i18next'
 import type { CSSProperties } from 'react'
 import { percentToImage, type Size } from './coords'
 import type { BoardBookItemEntity } from './types'
@@ -28,5 +29,5 @@ export function markerStyle(item: BoardBookItemEntity, image: Size, homeWidth: n
 }
 
 export function markerLabel(item: BoardBookItemEntity): string {
-  return item.title ?? item.itemText ?? `Item ${item.itemIcon}`
+  return item.title ?? item.itemText ?? i18next.t('boardbook.marker', { icon: item.itemIcon })
 }

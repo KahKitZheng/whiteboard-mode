@@ -13,13 +13,13 @@ function strokes(page: Page, surfaceId = SURFACE): Locator {
 }
 
 async function arm(page: Page) {
-  const toggle = page.getByRole('button', { name: 'Whiteboard' })
+  const toggle = page.getByRole('button', { name: 'Digibord' })
   if ((await toggle.getAttribute('aria-pressed')) !== 'true') await toggle.click()
   await expect(toggle).toHaveAttribute('aria-pressed', 'true')
 }
 
 async function disarm(page: Page) {
-  const toggle = page.getByRole('button', { name: 'Whiteboard' })
+  const toggle = page.getByRole('button', { name: 'Digibord' })
   if ((await toggle.getAttribute('aria-pressed')) === 'true') await toggle.click()
   await expect(toggle).toHaveAttribute('aria-pressed', 'false')
 }
@@ -107,7 +107,7 @@ test("an item dialog's marks belong to the dialog and come back with it", async 
   await expect(strokes(page)).toHaveCount(0)
 
   await disarm(page)
-  await dialog.getByRole('button', { name: 'Close' }).click()
+  await dialog.getByRole('button', { name: 'Sluiten' }).click()
   await expect(dialog).toBeHidden()
 
   await page.getByRole('button', { name: 'Verdamping', exact: true }).click()
@@ -166,7 +166,7 @@ test('armed, the item dialog closes from its own button, even with an unsteady h
   await expect(dialog).toBeVisible()
 
   // A real press drifts a few pixels between down and up. Still a tap.
-  const close = (await dialog.getByRole('button', { name: 'Close' }).boundingBox())!
+  const close = (await dialog.getByRole('button', { name: 'Sluiten' }).boundingBox())!
   const at = { x: close.x + close.width / 2, y: close.y + close.height / 2 }
   await page.mouse.move(at.x, at.y)
   await page.mouse.down()
@@ -180,8 +180,8 @@ test('armed, the item dialog closes from its own button, even with an unsteady h
 test('the walkthrough steps through focus areas by their order, not their stored order', async ({ page }) => {
   const name = page.locator('.boardbook-bar-name')
   const start = page.getByRole('button', { name: 'Start' })
-  const previous = page.getByRole('button', { name: 'Previous focus area' })
-  const next = page.getByRole('button', { name: 'Next focus area' })
+  const previous = page.getByRole('button', { name: 'Vorig focusgebied' })
+  const next = page.getByRole('button', { name: 'Volgend focusgebied' })
 
   await expect(start).toBeVisible()
   await expect(name).toHaveCount(0)
@@ -199,7 +199,7 @@ test('the walkthrough steps through focus areas by their order, not their stored
   await expect(name).toHaveText('3/3 · Opdracht 3')
   await expect(next).toBeDisabled()
 
-  await page.getByRole('button', { name: 'Overview' }).click()
+  await page.getByRole('button', { name: 'Overzicht', exact: true }).click()
   await expect(start).toBeVisible()
 })
 
@@ -219,8 +219,8 @@ test('pressing a focus area frames it, and pressing it again zooms back out', as
 
 test('armed, the highlighter snapping to words marks the words the picture shows', async ({ page }) => {
   await arm(page)
-  await page.getByRole('button', { name: 'Highlighter', exact: true }).click()
-  await page.getByRole('group', { name: 'Words' }).getByRole('button', { name: 'Snap to words' }).click()
+  await page.getByRole('button', { name: 'Markeerstift', exact: true }).click()
+  await page.getByRole('group', { name: 'Woorden' }).getByRole('button', { name: 'Woorden markeren' }).click()
 
   const from = await wordRect(page, 'Water')
   const to = await wordRect(page, 'altijd')
@@ -253,15 +253,15 @@ test('the words end where the picture draws them, at rest and zoomed in', async 
   expect(await overshoot()).toBeLessThan(0.01)
 
   // A zoom changes the font's rendered size, and with it the system font's tracking.
-  await page.getByRole('button', { name: 'Zoom in' }).click()
-  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
   await expect.poll(overshoot).toBeLessThan(0.01)
 })
 
 test('the highlighter snaps to words that lie under a focus area', async ({ page }) => {
   await arm(page)
-  await page.getByRole('button', { name: 'Highlighter', exact: true }).click()
-  await page.getByRole('group', { name: 'Words' }).getByRole('button', { name: 'Snap to words' }).click()
+  await page.getByRole('button', { name: 'Markeerstift', exact: true }).click()
+  await page.getByRole('group', { name: 'Woorden' }).getByRole('button', { name: 'Woorden markeren' }).click()
 
   // "Opdracht 3" is a focus area; its questions are under the area's button.
   const from = await wordRect(page, 'Waardoor')
@@ -277,8 +277,8 @@ test('the highlighter snaps to words that lie under a focus area', async ({ page
 
 test('the highlighter over the diagram is still a highlighter, words or not', async ({ page }) => {
   await arm(page)
-  await page.getByRole('button', { name: 'Highlighter', exact: true }).click()
-  await page.getByRole('group', { name: 'Words' }).getByRole('button', { name: 'Snap to words' }).click()
+  await page.getByRole('button', { name: 'Markeerstift', exact: true }).click()
+  await page.getByRole('group', { name: 'Woorden' }).getByRole('button', { name: 'Woorden markeren' }).click()
 
   // The right half of the page is the picture of the cycle; its labels are single words far apart.
   await draw(page, page.locator('.boardbook-viewer'), { x: 0.62, y: 0.45 })
@@ -296,13 +296,13 @@ test('the page never leaves its box: no drag when fitted, and the view stays on 
   await page.mouse.move(from.x + 120, from.y + 80, { steps: 8 })
   await page.mouse.up()
   await page.mouse.wheel(0, 600)
-  await page.getByRole('button', { name: 'Zoom out' }).click()
+  await page.getByRole('button', { name: 'Uitzoomen' }).click()
   await page.waitForTimeout(400)
   expect(await layer(page).boundingBox()).toEqual(rest)
 
   // Zoomed in, a drag pans — but the page's edge never comes inside the box.
-  await page.getByRole('button', { name: 'Zoom in' }).click()
-  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
   await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeGreaterThan(rest.width * 1.9)
   const zoomed = (await layer(page).boundingBox())!
   const centre = { x: viewer.x + viewer.width / 2, y: viewer.y + viewer.height / 2 }
@@ -321,8 +321,8 @@ test('the page never leaves its box: no drag when fitted, and the view stays on 
 
 test('off, a drag that starts on a focus area pans, and a tap on it still frames it', async ({ page }) => {
   await disarm(page)
-  await page.getByRole('button', { name: 'Zoom in' }).click()
-  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
   const rest = (await layer(page).boundingBox())!
   await expect.poll(async () => (await layer(page).boundingBox())!.width).toBeGreaterThan(rest.width * 0.99)
 
@@ -344,8 +344,8 @@ test('off, a drag that starts on a focus area pans, and a tap on it still frames
 })
 
 test('zoomed in, two fingers on a trackpad pan the page and a pinch zooms it', async ({ page }) => {
-  await page.getByRole('button', { name: 'Zoom in' }).click()
-  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
   const viewer = (await page.locator('.boardbook-viewer').boundingBox())!
   await page.mouse.move(viewer.x + viewer.width / 2, viewer.y + viewer.height / 2)
   // Settled, not mid-animation: two reads a frame apart agree.
@@ -372,7 +372,7 @@ test('zoomed in, two fingers on a trackpad pan the page and a pinch zooms it', a
 })
 
 test('a press OSD did not capture still counts as a drag, and its click is swallowed', async ({ page }) => {
-  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('button', { name: 'Inzoomen' }).click()
   const area = page.getByRole('button', { name: /De kringloop/ })
   await expect.poll(async () => (await area.boundingBox())!.width).toBeGreaterThan(300)
 
@@ -401,7 +401,7 @@ test('a press OSD did not capture still counts as a drag, and its click is swall
 })
 
 test('the focus areas can be hidden from the bar, and the walkthrough still frames them', async ({ page }) => {
-  const toggle = page.getByRole('button', { name: 'Show focus areas' })
+  const toggle = page.getByRole('button', { name: 'Focusgebieden tonen' })
   await expect(toggle).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.boardbook-area')).toHaveCount(3)
 
@@ -418,7 +418,7 @@ test('the focus areas can be hidden from the bar, and the walkthrough still fram
 test('the minimap is off until switched on from the bar', async ({ page }) => {
   const minimap = page.locator('.navigator')
   await expect(minimap).toBeHidden()
-  const toggle = page.getByRole('button', { name: 'Show minimap' })
+  const toggle = page.getByRole('button', { name: 'Overzichtskaartje tonen' })
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-pressed', 'true')
   await expect(minimap).toBeVisible()
@@ -437,15 +437,15 @@ test('armed, the select tool picks a stroke lying over a focus area rather than 
   await page.mouse.up()
   await expect(strokes(page)).toHaveCount(1)
 
-  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  await page.getByRole('button', { name: 'Selecteren', exact: true }).click()
   await page.mouse.click(from.x + 40, from.y + 10)
-  await expect(page.getByRole('button', { name: 'Delete shape' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Vorm verwijderen' })).toBeVisible()
   await expect(page.locator('.boardbook-bar-name')).toHaveCount(0)
 })
 
 test('armed, the text tool places a label over a focus area rather than framing it', async ({ page }) => {
   await arm(page)
-  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  await page.getByRole('button', { name: 'Tekst', exact: true }).click()
   // The tool's bubble sits over the bottom of the page; put it away first.
   await page.keyboard.press('Escape')
   await expect(page.locator('.tool-bubble')).toHaveCount(0)

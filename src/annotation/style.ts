@@ -35,25 +35,26 @@ export type Style = {
   tidy: boolean
 }
 
-export type Swatch = { name: string; value: string }
+/** `labelKey` is a key in the whiteboard locale files, translated where the option is shown. */
+export type Swatch = { labelKey: string; value: string }
 
 /**
  * Chosen to stay legible on a projector and on both light and dark board
  * themes, which rules out anything approaching either end of the range.
  */
 export const COLORS: Swatch[] = [
-  { name: 'Red', value: '#e5484d' },
-  { name: 'Orange', value: '#f76808' },
-  { name: 'Amber', value: '#ffb224' },
-  { name: 'Green', value: '#30a46c' },
-  { name: 'Teal', value: '#12a594' },
-  { name: 'Cyan', value: '#00a2c7' },
-  { name: 'Blue', value: '#3e63dd' },
-  { name: 'Indigo', value: '#5b5bd6' },
-  { name: 'Violet', value: '#8e4ec6' },
-  { name: 'Pink', value: '#e93d82' },
-  { name: 'Brown', value: '#ad7f58' },
-  { name: 'Slate', value: '#8b8d98' },
+  { labelKey: 'style.colour.red', value: '#e5484d' },
+  { labelKey: 'style.colour.orange', value: '#f76808' },
+  { labelKey: 'style.colour.amber', value: '#ffb224' },
+  { labelKey: 'style.colour.green', value: '#30a46c' },
+  { labelKey: 'style.colour.teal', value: '#12a594' },
+  { labelKey: 'style.colour.cyan', value: '#00a2c7' },
+  { labelKey: 'style.colour.blue', value: '#3e63dd' },
+  { labelKey: 'style.colour.indigo', value: '#5b5bd6' },
+  { labelKey: 'style.colour.violet', value: '#8e4ec6' },
+  { labelKey: 'style.colour.pink', value: '#e93d82' },
+  { labelKey: 'style.colour.brown', value: '#ad7f58' },
+  { labelKey: 'style.colour.slate', value: '#8b8d98' },
 ]
 
 /*
@@ -61,11 +62,11 @@ export const COLORS: Swatch[] = [
   row a different width from the twelve swatches, and a panel of rows that each
   stop somewhere else reads as unfinished.
 */
-export const WEIGHTS: { name: string; value: number }[] = [
-  { name: 'Thin', value: 4 },
-  { name: 'Medium', value: 9 },
-  { name: 'Thick', value: 15 },
-  { name: 'Extra thick', value: 22 },
+export const WEIGHTS: { labelKey: string; value: number }[] = [
+  { labelKey: 'style.weight.thin', value: 4 },
+  { labelKey: 'style.weight.medium', value: 9 },
+  { labelKey: 'style.weight.thick', value: 15 },
+  { labelKey: 'style.weight.extraThick', value: 22 },
 ]
 
 /**
@@ -73,36 +74,36 @@ export const WEIGHTS: { name: string; value: number }[] = [
  * 26 tall, so the second covers a line, the third a heading's, and the top is
  * a fat marker without being a paint roller.
  */
-export const HIGHLIGHT_WEIGHTS: { name: string; value: number }[] = [
-  { name: 'Thin', value: 16 },
-  { name: 'Medium', value: 26 },
-  { name: 'Thick', value: 38 },
-  { name: 'Extra thick', value: 52 },
+export const HIGHLIGHT_WEIGHTS: { labelKey: string; value: number }[] = [
+  { labelKey: 'style.weight.thin', value: 16 },
+  { labelKey: 'style.weight.medium', value: 26 },
+  { labelKey: 'style.weight.thick', value: 38 },
+  { labelKey: 'style.weight.extraThick', value: 52 },
 ]
 
-export const TEXT_SIZES: { name: string; value: number }[] = [
-  { name: 'Small', value: 20 },
-  { name: 'Medium', value: 30 },
-  { name: 'Large', value: 46 },
-  { name: 'Extra large', value: 64 },
+export const TEXT_SIZES: { labelKey: string; value: number }[] = [
+  { labelKey: 'style.textSize.small', value: 20 },
+  { labelKey: 'style.textSize.medium', value: 30 },
+  { labelKey: 'style.textSize.large', value: 46 },
+  { labelKey: 'style.textSize.extraLarge', value: 64 },
 ]
 
-export const BORDERS: { name: string; value: BorderStyle }[] = [
-  { name: 'Solid', value: 'solid' },
-  { name: 'Dashed', value: 'dashed' },
-  { name: 'Dotted', value: 'dotted' },
+export const BORDERS: { labelKey: string; value: BorderStyle }[] = [
+  { labelKey: 'style.border.solid', value: 'solid' },
+  { labelKey: 'style.border.dashed', value: 'dashed' },
+  { labelKey: 'style.border.dotted', value: 'dotted' },
 ]
 
-export const HEADS: { name: string; value: Heads }[] = [
-  { name: 'No heads', value: 'none' },
-  { name: 'Arrow at end', value: 'end' },
-  { name: 'Arrows at both ends', value: 'both' },
+export const HEADS: { labelKey: string; value: Heads }[] = [
+  { labelKey: 'style.heads.none', value: 'none' },
+  { labelKey: 'style.heads.end', value: 'end' },
+  { labelKey: 'style.heads.both', value: 'both' },
 ]
 
-export const FILLS: { name: string; value: FillStyle }[] = [
-  { name: 'No fill', value: 'none' },
-  { name: 'Tinted', value: 'tinted' },
-  { name: 'Solid fill', value: 'solid' },
+export const FILLS: { labelKey: string; value: FillStyle }[] = [
+  { labelKey: 'style.fill.none', value: 'none' },
+  { labelKey: 'style.fill.tinted', value: 'tinted' },
+  { labelKey: 'style.fill.solid', value: 'solid' },
 ]
 
 /**
@@ -111,20 +112,20 @@ export const FILLS: { name: string; value: FillStyle }[] = [
  */
 export const TINT_OPACITY = 0.18
 
-export const SNAP_MODES: { name: string; value: boolean }[] = [
-  { name: 'Free', value: false },
-  { name: 'Snap to words', value: true },
+export const SNAP_MODES: { labelKey: string; value: boolean }[] = [
+  { labelKey: 'style.free', value: false },
+  { labelKey: 'style.snapToWords', value: true },
 ]
 
-export const SHAPE_MODES: { name: string; value: boolean }[] = [
-  { name: 'Free', value: false },
-  { name: 'Tidy shapes', value: true },
+export const SHAPE_MODES: { labelKey: string; value: boolean }[] = [
+  { labelKey: 'style.free', value: false },
+  { labelKey: 'style.tidyShapes', value: true },
 ]
 
-export const PEN_MARKS: { name: string; value: PenMark }[] = [
-  { name: 'Free', value: 'none' },
-  { name: 'Underline', value: 'underline' },
-  { name: 'Strikethrough', value: 'strikethrough' },
+export const PEN_MARKS: { labelKey: string; value: PenMark }[] = [
+  { labelKey: 'style.free', value: 'none' },
+  { labelKey: 'style.underline', value: 'underline' },
+  { labelKey: 'style.strikethrough', value: 'strikethrough' },
 ]
 
 export const DEFAULT_STYLE: Style = {

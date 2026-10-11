@@ -57,10 +57,10 @@ async function stored(page: Page) {
 }
 
 /** Arm, pick a tool, and set its "Words" option. */
-async function pick(page: Page, tool: 'Pen' | 'Highlighter', words: 'Snap to words' | 'Underline' | 'Strikethrough' | null) {
-  await page.getByRole('button', { name: 'Whiteboard' }).click()
+async function pick(page: Page, tool: 'Pen' | 'Markeerstift', words: 'Woorden markeren' | 'Onderstrepen' | 'Doorstrepen' | null) {
+  await page.getByRole('button', { name: 'Digibord' }).click()
   await page.getByRole('button', { name: tool, exact: true }).click()
-  if (words) await page.getByRole('group', { name: 'Words' }).getByRole('button', { name: words }).click()
+  if (words) await page.getByRole('group', { name: 'Woorden' }).getByRole('button', { name: words }).click()
 }
 
 async function dragWords(page: Page, from: Rect, to: Rect) {
@@ -82,7 +82,7 @@ test('a highlight over words is stored as the words, and re-wraps with them', as
   const end = await wordRect(page, 'until')
   expect(end.y).toBeGreaterThan(start.y)
 
-  await pick(page, 'Highlighter', 'Snap to words')
+  await pick(page, 'Markeerstift', 'Woorden markeren')
   await dragWords(page, start, end)
 
   await expect.poll(async () => (await stored(page)).at(-1)?.type).toBe('mark')
@@ -106,7 +106,7 @@ test('a highlight over words is stored as the words, and re-wraps with them', as
 
 test('an underline sits under its word and follows it', async ({ page }) => {
   const word = await wordRect(page, 'remembers')
-  await pick(page, 'Pen', 'Underline')
+  await pick(page, 'Pen', 'Onderstrepen')
   await dragWords(page, word, word)
 
   await expect.poll(async () => (await stored(page)).at(-1)?.kind).toBe('underline')
@@ -126,7 +126,7 @@ test('an underline sits under its word and follows it', async ({ page }) => {
 
 test('the highlighter over a picture is still a highlighter, snapping or not', async ({ page }) => {
   const figure = await page.locator('.lesson-figure').boundingBox()
-  await pick(page, 'Highlighter', 'Snap to words')
+  await pick(page, 'Markeerstift', 'Woorden markeren')
   await page.mouse.move(figure!.x + 40, figure!.y + 40)
   await page.mouse.down()
   await page.mouse.move(figure!.x + 140, figure!.y + 60, { steps: 6 })
@@ -137,14 +137,14 @@ test('the highlighter over a picture is still a highlighter, snapping or not', a
 
 test('a mark can be restyled and deleted but not dragged', async ({ page }) => {
   const word = await wordRect(page, 'picture')
-  await pick(page, 'Pen', 'Strikethrough')
+  await pick(page, 'Pen', 'Doorstrepen')
   await dragWords(page, word, word)
   await expect.poll(async () => (await stored(page)).at(-1)?.type).toBe('mark')
   const before = (await lastShapePaths(page))[0]
 
-  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  await page.getByRole('button', { name: 'Selecteren', exact: true }).click()
   await page.mouse.click(before.x + before.width / 2, before.y + before.height / 2)
-  await expect(page.getByRole('button', { name: 'Delete shape' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Vorm verwijderen' })).toBeVisible()
 
   // Dragging it goes nowhere.
   await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2)
@@ -154,14 +154,14 @@ test('a mark can be restyled and deleted but not dragged', async ({ page }) => {
   const after = (await lastShapePaths(page))[0]
   expect(Math.abs(after.x - before.x)).toBeLessThan(2)
 
-  await page.getByRole('button', { name: 'Delete shape' }).click()
+  await page.getByRole('button', { name: 'Vorm verwijderen' }).click()
   await expect.poll(async () => (await stored(page)).filter((shape) => shape.type === 'mark').length).toBe(0)
 })
 
 test('without the option, the highlighter over words is plain ink', async ({ page }) => {
   const start = await wordRect(page, 'then')
   const end = await wordRect(page, 'window')
-  await pick(page, 'Highlighter', null)
+  await pick(page, 'Markeerstift', null)
   await dragWords(page, start, end)
 
   await expect.poll(async () => (await stored(page)).at(-1)?.type).toBe('stroke')
@@ -170,7 +170,7 @@ test('without the option, the highlighter over words is plain ink', async ({ pag
 test('a highlight outlives the host wrapping its markup, and still follows its words', async ({ page }) => {
   const start = await wordRect(page, 'then')
   const end = await wordRect(page, 'until')
-  await pick(page, 'Highlighter', 'Snap to words')
+  await pick(page, 'Markeerstift', 'Woorden markeren')
   await dragWords(page, start, end)
   await expect.poll(async () => (await stored(page)).at(-1)?.type).toBe('mark')
 

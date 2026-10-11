@@ -1,0 +1,192 @@
+{
+  "common": {
+    "close": "Sluiten",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "start": "Start"
+  },
+  "toolbar": {
+    "switch": "Digibord",
+    "widgets": "Hulpmiddelen",
+    "history": "Geschiedenis",
+    "undo": "Ongedaan maken",
+    "redo": "Opnieuw doen",
+    "clearAll": "Alles wissen",
+    "shape": "Vorm",
+    "bringToFront": "Naar voren halen",
+    "sendToBack": "Naar achteren sturen",
+    "deleteShape": "Vorm verwijderen"
+  },
+  "tools": {
+    "select": "Selecteren",
+    "pen": "Pen",
+    "highlighter": "Markeerstift",
+    "eraser": "Gum",
+    "text": "Tekst",
+    "line": "Lijn",
+    "timer": "Timer",
+    "note": "Plakbriefje"
+  },
+  "settings": {
+    "colour": "Kleur",
+    "words": "Woorden",
+    "shapes": "Vormen",
+    "fill": "Vulling",
+    "heads": "Pijlpunten",
+    "border": "Rand",
+    "weight": "Dikte",
+    "size": "Grootte"
+  },
+  "style": {
+    "colour": {
+      "red": "Rood",
+      "orange": "Oranje",
+      "amber": "Amber",
+      "green": "Groen",
+      "teal": "Blauwgroen",
+      "cyan": "Cyaan",
+      "blue": "Blauw",
+      "indigo": "Indigo",
+      "violet": "Paars",
+      "pink": "Roze",
+      "brown": "Bruin",
+      "slate": "Grijs"
+    },
+    "weight": {
+      "thin": "Dun",
+      "medium": "Middeldik",
+      "thick": "Dik",
+      "extraThick": "Extra dik"
+    },
+    "textSize": {
+      "small": "Kleine tekst",
+      "medium": "Middelgrote tekst",
+      "large": "Grote tekst",
+      "extraLarge": "Extra grote tekst"
+    },
+    "border": {
+      "solid": "Doorgetrokken",
+      "dashed": "Gestreept",
+      "dotted": "Gestippeld"
+    },
+    "heads": {
+      "none": "Geen pijlpunten",
+      "end": "Pijlpunt aan het eind",
+      "both": "Pijlpunten aan beide kanten"
+    },
+    "fill": {
+      "none": "Geen vulling",
+      "tinted": "Lichte vulling",
+      "solid": "Volle vulling"
+    },
+    "free": "Vrij",
+    "snapToWords": "Woorden markeren",
+    "tidyShapes": "Vormen rechttrekken",
+    "underline": "Onderstrepen",
+    "strikethrough": "Doorstrepen"
+  },
+  "note": {
+    "placeholder": "Typ hier"
+  },
+  "timer": {
+    "lessTime": "Minder tijd",
+    "moreTime": "Meer tijd",
+    "pause": "Pauze"
+  },
+  "text": {
+    "input": "Tekst van de aantekening"
+  },
+  "lesson": {
+    "openDiagram": "Diagram openen",
+    "fullscreen": "Volledig scherm"
+  },
+  "slides": {
+    "count": "Dia {{current}} van {{total}}. Alle dia's tonen",
+    "title": "Dia's",
+    "channel": "Kanaal",
+    "channelNumber": "Kanaal {{number}}",
+    "close": "Dia's sluiten",
+    "previous": "Vorige: {{title}}",
+    "previousSlide": "Vorige dia",
+    "next": "Volgende: {{title}}",
+    "nextSlide": "Volgende dia"
+  },
+  "boardbook": {
+    "focusAreas": "Focusgebieden",
+    "focusArea": "Focusgebied {{order}}",
+    "previousArea": "Vorig focusgebied",
+    "nextArea": "Volgend focusgebied",
+    "view": "Weergave",
+    "overview": "Overzicht",
+    "showAreas": "Focusgebieden tonen",
+    "showMinimap": "Overzichtskaartje tonen",
+    "zoomOut": "Uitzoomen",
+    "zoomIn": "Inzoomen",
+    "fullscreen": "Volledig scherm",
+    "exitFullscreen": "Volledig scherm sluiten",
+    "item": "Pop-up",
+    "marker": "Markering {{icon}}"
+  },
+  "interactive": {
+    "title": "Interactieve afbeelding",
+    "page": "Pagina",
+    "edit": "Bewerken",
+    "uploadImage": "Afbeelding uploaden",
+    "changeImage": "Afbeelding wijzigen",
+    "removeImage": "Afbeelding verwijderen",
+    "dropzone": "Upload afbeelding",
+    "dropzoneHint": "Sleep een afbeelding hierheen of klik om te kiezen",
+    "addPopup": "Pop-up toevoegen",
+    "emptyWithImage": "Klik op een pop-up om hem te bewerken, of voeg er een toe met de knop Pop-up.",
+    "emptyWithoutImage": "Upload eerst een afbeelding. Daarna kun je er pop-ups op plaatsen.",
+    "popup": "Pop-up",
+    "popupNumber": "Pop-up {{number}}",
+    "removePopup": "Verwijder pop-up",
+    "popupButton": "Pop-up knop",
+    "textButton": "Tekst knop",
+    "colour": "Kleur",
+    "light": "Licht",
+    "dark": "Donker",
+    "icon": "Icoon",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "De titel van je pop-up",
+    "paragraph": "Paragraaf",
+    "audio": "Audio",
+    "addAudio": "Audio toevoegen",
+    "changeAudio": "Audiobestand wijzigen",
+    "removeAudio": "Audio verwijderen",
+    "formatting": "Opmaak",
+    "bold": "Vet",
+    "italic": "Cursief",
+    "underline": "Onderstreept"
+  },
+  "icons": {
+    "plus": "Plus",
+    "minus": "Min",
+    "check": "Vinkje",
+    "cross": "Kruis",
+    "info": "Info",
+    "play": "Afspelen",
+    "pause": "Pauze",
+    "search": "Zoeken",
+    "zoomOut": "Uitzoomen",
+    "zoomIn": "Inzoomen",
+    "book": "Boek",
+    "openBook": "Open boek",
+    "attachment": "Bijlage",
+    "link": "Link",
+    "externalLink": "Externe link",
+    "calendar": "Kalender",
+    "arrowLeft": "Pijl links",
+    "arrowUp": "Pijl omhoog",
+    "arrowDown": "Pijl omlaag",
+    "arrowRight": "Pijl rechts",
+    "image": "Afbeelding",
+    "video": "Video",
+    "file": "Bestand",
+    "sound": "Geluid",
+    "youtube": "YouTube",
+    "exclamation": "Uitroepteken",
+    "question": "Vraagteken"
+  }
+}
