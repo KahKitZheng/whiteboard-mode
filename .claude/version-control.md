@@ -133,6 +133,20 @@ Keep a PR to one scoped change: related changes grouped together.
 - Stack PRs only when one depends on another. Independent changes each branch off `development`, so they merge in any order and don't block each other.
 - In a stacked PR, name the base PR in `Notes`: "Based on #1234. Merge that one first, then retarget this PR to `development`."
 
+### Merging
+
+The commits on a branch are for review; the commits on `development` are one per PR.
+
+- **Feature PR → `development`: squash.** The squash commit takes the PR title plus its number, `Title (#123)`, which the release workflows read. The atomic commits stay visible on the PR page.
+- **Promotions (`development` → `staging` → `main`): merge commit, never squash.** A squashed promotion gives the target branch a commit the source doesn't have, so the branches diverge and the next promotion conflicts. As merge commits, a promotion PR lists exactly one commit per feature PR.
+- **Stacked PRs: rebase after each merge.** Once the base PR is squash-merged, the next branch still carries the base's original commits. Replay only its own onto `development`, then retarget its PR:
+
+```bash
+git fetch origin
+git rebase --onto origin/development <merged-branch> <next-branch>
+git push --force-with-lease
+```
+
 ### Body
 
 One template for every PR. Only the depth of `How to test` changes with risk.
