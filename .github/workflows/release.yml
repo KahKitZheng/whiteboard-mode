@@ -1,7 +1,7 @@
 name: Release
-# On every merge into `main`, tag the merge commit with the next semver version and create a
-# GitHub Release. Any PR labelled `feature` since the last tag bumps the minor version;
-# otherwise the patch. Major bumps are manual. The first release is 0.1.0.
+# On every merge into `main`, publish the draft release that the staging workflow kept up to
+# date, tagged on the merge commit. Without a draft (staging was skipped), create the release
+# from scratch. The version comes from .github/scripts/next-version.sh.
 
 on:
   push:
@@ -24,30 +24,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Tag and release
+      - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          last=$(git describe --tags --abbrev=0 --match '[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || true)
-          if [ -z "$last" ]; then
-            next=0.1.0
+          next=$(.github/scripts/next-version.sh)
+          draft=$(gh release list --json tagName,isDraft -q '[.[] | select(.isDraft)][0].tagName // ""')
+          if [ -n "$draft" ]; then
+            gh release edit "$draft" --tag "$next" --title "$next" --target "$GITHUB_SHA" --draft=false
           else
-            # PR numbers from merge commits (`Merge pull request #12`) and squash commits (`Title (#12)`)
-            numbers=$(git log --format=%s "$last..HEAD" \
-              | grep -oE '^Merge pull request #[0-9]+|\(#[0-9]+\)$' \
-              | grep -oE '[0-9]+' | sort -u)
-            bump=patch
-            for n in $numbers; do
-              if gh pr view "$n" --json labels -q '.labels[].name' | grep -qx feature; then
-                bump=minor
-                break
-              fi
-            done
-            IFS=. read -r major minor patch <<< "$last"
-            if [ "$bump" = minor ]; then
-              next="$major.$((minor + 1)).0"
-            else
-              next="$major.$minor.$((patch + 1))"
-            fi
+            gh release create "$next" --target "$GITHUB_SHA" --title "$next" --generate-notes
           fi
-          gh release create "$next" --target "$GITHUB_SHA" --title "$next" --generate-notes
