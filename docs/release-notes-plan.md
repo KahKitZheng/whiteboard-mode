@@ -14,23 +14,26 @@ Releases are announced in Slack today. That's the bare minimum: quality depends 
 source repos (read only)                          release-notes (Astro, Vercel)
 ──────────────────────────────────────────────    ─────────────────────────────────────
 feature branch ─PR─> development
-development ─> staging ───────────────────────>  dev runs /release-notes <product>
+development ─> staging, draft GitHub Release ──>  dispatch: Actions runs /release-notes <product>
                                                    -> drafts / updates the release PR
                                                    -> Vercel preview, dev adds media
                                                    -> Dutch proofread
-staging ─> main/master, tag + GitHub Release ──>  dev comments /publish = publication
+staging ─> main/master, release published ─────>  dev comments /publish = publication
                                                    -> workflow: learn, stamp, merge, live
 ```
 
-Git (tags, GitHub Releases) is the dev-facing changelog. The release-notes app is the non-dev-facing one. Runs are manual: releases are infrequent, so a schedule would mostly run for nothing.
+Git (tags, GitHub Releases) is the dev-facing changelog. The release-notes app is the non-dev-facing one. A staging drop triggers the draft through a `repository_dispatch` (no schedule: releases are infrequent); Faqta, which doesn't dispatch yet, uses the draft workflow's manual button or `/release-notes faqta` locally. Release notes never block a deploy: the source repo only sends the dispatch, in a step that's allowed to fail.
 
 ## whiteboard-mode
 
 - Branches: `development` → `staging` → `main`. Feature branches come off `development`.
 - PR template with app-react's headings: `What changes for users`, `Where`, `Impact`. The skill reads `What changes for users`.
 - Labels: only `feature` and `bug`.
-- On a merge into `main`, an Action tags the merge commit and creates a GitHub Release (`gh release create --generate-notes`). Any `feature` PR since the last tag → minor bump, otherwise patch. Major bumps are manual. The first release is `0.1.0`.
+- Mirrors Faqta's release process. On every push to `staging`, an Action keeps a draft GitHub Release for the next version up to date (a generated PR list between markers, with room for your own words around it) and dispatches to release-notes. On a merge into `main`, the draft is published, tagged on the merge commit.
+- Versions: any `feature` PR since the latest tag → minor bump, otherwise patch; major bumps are manual (`.github/scripts/next-version.sh`).
+- Merging: feature PRs are squashed into `development`; promotions are merge commits, never squashed (`.claude/version-control.md`).
 - No promotion PR workflow: the skill reads commit ranges, so it isn't needed.
+- Secrets, least privilege: `RELEASE_NOTES_TOKEN` here may only dispatch to release-notes; release-notes has a read-only `SOURCES_READ_TOKEN` for this repo and `CLAUDE_CODE_OAUTH_TOKEN`.
 
 ## release-notes app
 
@@ -105,7 +108,8 @@ Per run:
 - The Vercel preview shows the draft. Devs edit `en.md` and add media there.
 - PR checklist: a Dutch speaker proofreads `nl.md` for language and readability before merging (required).
 - A `/publish` comment publishes the notes, done by hand once prod is out, so last-minute changes stay possible. There's no draft/live status field.
-- The workflow then learns from the review (renamed names become glossary rows, the one step that needs Claude), `scripts/publish.mjs` stamps versions and the date and renames the folder, and it merges. The release lands on `main` complete. A PR merged by hand gets stamped afterwards, without learning.
+- The workflow then learns from the review (renamed names become glossary rows, the one step that needs Claude, and never blocking), `scripts/publish.mjs` stamps versions and the date and renames the folder, and it merges. The release lands on `main` complete. A PR merged by hand gets stamped afterwards, without learning.
+- Release notes are incremental per day: one note per product per publish date. A second release published on a day that already has a note (api and client released apart, a quick extra deploy) is added to that note: `/publish` merges it in on the PR branch, pauses for a check on the preview, and publishes on the next `/publish`. The note then shows when it was updated (`updatedAt`); a typo fix doesn't count as an update.
 - Announcing in Slack stays manual.
 
 ## Later, not now
@@ -114,7 +118,7 @@ Per run:
   - Company view of Faqta: a "Begrippen" page from the terms file, and a badge on bullets customers can see, so sales reads one page.
   - Customer view: a separate deployment, Faqta only, teacher tone (benefit first, grouped by teacher task), maybe monthly. Support owns the tone. Unlike the internal page, it selects: only what a teacher would miss gets in.
   - Dev view: only if devs miss it. Its value is grouping FE and BE PRs per ticket plus a "let op" section, not a copy of the PR list.
-- api adopting the `What changes for users` PR format (to propose to the team).
+- Faqta through the same flow: what app-react and api would need to change is in `release-notes/docs/team-proposals.md`.
 - A post-edit layer for demo videos (captions, spotlights, trims).
 - GCS for media.
 - A Slack announcement step.
