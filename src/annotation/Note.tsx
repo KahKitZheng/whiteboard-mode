@@ -1,4 +1,5 @@
 import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useWhiteboardMode } from './WhiteboardMode'
 import './widget.scss'
 
@@ -18,6 +19,7 @@ type Props = {
  * to take hold of it — a tap on the paper itself is a tap on the textarea.
  */
 export function Note({ text, color, fontSize, onText }: Props) {
+  const { t } = useTranslation()
   const { active } = useWhiteboardMode()
   const [draft, setDraft] = useState(text)
 
@@ -38,8 +40,8 @@ export function Note({ text, color, fontSize, onText }: Props) {
         <textarea
           className="note-text"
           value={draft}
-          placeholder="Type here"
-          aria-label="Sticky note"
+          placeholder={t('note.placeholder')}
+          aria-label={t('tools.note')}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
           onBlur={() => draft !== text && onText(draft)}

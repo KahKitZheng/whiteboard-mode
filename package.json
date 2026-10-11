@@ -18,11 +18,13 @@
     "@tiptap/pm": "^3.31.4",
     "@tiptap/react": "^3.31.4",
     "@tiptap/starter-kit": "^3.31.4",
+    "i18next": "^26.4.3",
     "lucide-react": "^1.28.0",
     "openseadragon": "^6.1.1",
     "perfect-freehand": "^1.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-i18next": "^17.0.16",
     "react-router-dom": "^5.3.4"
   },
   "devDependencies": {

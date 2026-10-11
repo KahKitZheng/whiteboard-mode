@@ -25,7 +25,7 @@ test('a marker shows a card on hover and its content on press', async ({ page })
   await markers(page).first().click()
   const dialog = page.getByRole('dialog', { name: 'Noord-Amerika' })
   await expect(dialog).toContainText('Grand Canyon')
-  await dialog.getByRole('button', { name: 'Close' }).click()
+  await dialog.getByRole('button', { name: 'Sluiten' }).click()
   await expect(dialog).toBeHidden()
 })
 

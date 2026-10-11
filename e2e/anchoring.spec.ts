@@ -48,7 +48,7 @@ async function lastStrokeRect(page: Page): Promise<Rect> {
 }
 
 async function arm(page: Page) {
-  await page.getByRole('button', { name: 'Whiteboard' }).click()
+  await page.getByRole('button', { name: 'Digibord' }).click()
 }
 
 /** A loop around a box — what circling a word looks like. */

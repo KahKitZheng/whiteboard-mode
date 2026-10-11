@@ -17,9 +17,9 @@ import {
   Trash2,
   Type,
   Undo2,
-  type LucideIcon,
 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ICON_SIZE, settingsFor } from './toolbar'
 import { ToolGroup, type ToolChoice } from './ToolGroup'
 import { ToolSettings } from './ToolSettings'
@@ -30,23 +30,23 @@ import './toolbar.scss'
  * A glyph rather than a word, because a teacher picks a tool from across the
  * room — the tool's name is the accessible one, on the button.
  */
-const TOOLS: { name: Tool; label: string; Icon: LucideIcon }[] = [
-  { name: 'select', label: 'Select', Icon: MousePointer2 },
-  { name: 'pen', label: 'Pen', Icon: Pen },
+const TOOLS: ToolChoice[] = [
+  { name: 'select', labelKey: 'tools.select', Icon: MousePointer2 },
+  { name: 'pen', labelKey: 'tools.pen', Icon: Pen },
   // Next to the pen, because it is one: the same gesture, laid over the words
   // rather than beside them.
-  { name: 'highlighter', label: 'Highlighter', Icon: Highlighter },
-  { name: 'eraser', label: 'Eraser', Icon: Eraser },
-  { name: 'text', label: 'Text', Icon: Type },
+  { name: 'highlighter', labelKey: 'tools.highlighter', Icon: Highlighter },
+  { name: 'eraser', labelKey: 'tools.eraser', Icon: Eraser },
+  { name: 'text', labelKey: 'tools.text', Icon: Type },
   // Straight, bent, arrowed — reached for as often as the pen, to point at
   // things. Boxes and circles have no tool: the pen's Tidy setting makes them.
-  { name: 'line', label: 'Line', Icon: Slash },
+  { name: 'line', labelKey: 'tools.line', Icon: Slash },
 ]
 
 /** Not drawing tools; they share the bar behind one button. */
 const WIDGETS: ToolChoice[] = [
-  { name: 'timer', label: 'Timer', Icon: Timer },
-  { name: 'note', label: 'Sticky note', Icon: StickyNote },
+  { name: 'timer', labelKey: 'tools.timer', Icon: Timer },
+  { name: 'note', labelKey: 'tools.note', Icon: StickyNote },
 ]
 
 /**
@@ -61,6 +61,7 @@ type Props = {
 }
 
 export function WhiteboardToolbar({ trailing }: Props) {
+  const { t } = useTranslation()
   const { active, setActive, tool, setTool, actions } = useWhiteboardMode()
   const buttons = useRef<Partial<Record<Tool, HTMLButtonElement | null>>>({})
   const [open, setOpen] = useState(false)
@@ -103,17 +104,17 @@ export function WhiteboardToolbar({ trailing }: Props) {
     <Toolbar.Root className="whiteboard-toolbar">
       <Toolbar.Button className="whiteboard-switch" render={<Toggle pressed={active} onPressedChange={setActive} />}>
         <Presentation size={ICON_SIZE} />
-        <span className="switch-label">Whiteboard</span>
+        <span className="switch-label">{t('toolbar.switch')}</span>
       </Toolbar.Button>
 
       {/* Every tool, always: off, none is in hand, and a press on one arms the whiteboard. */}
       <ToggleGroup value={active && !WIDGETS.some((widget) => widget.name === tool) ? [tool] : []} onValueChange={([next]) => next && pick(next as Tool)} className="tools">
-        {TOOLS.map(({ name, label, Icon }) => (
+        {TOOLS.map(({ name, labelKey, Icon }) => (
           <Toolbar.Button
             key={name}
             className="icon-button"
-            aria-label={label}
-            title={label}
+            aria-label={t(labelKey)}
+            title={t(labelKey)}
             ref={(element) => {
               buttons.current[name] = element
             }}
@@ -128,7 +129,7 @@ export function WhiteboardToolbar({ trailing }: Props) {
       </ToggleGroup>
 
       <ToolGroup
-        label="Widgets"
+        label={t('toolbar.widgets')}
         choices={WIDGETS}
         onPick={pick}
         buttonRef={(element) => {
@@ -137,14 +138,14 @@ export function WhiteboardToolbar({ trailing }: Props) {
       />
 
       {/* They undo work rather than make it, so they keep apart from the tools. */}
-      <div className="history" role="group" aria-label="History">
-        <Toolbar.Button className="icon-button" aria-label="Undo" title="Undo" disabled={!actions?.canUndo} onClick={() => actions?.undo()}>
+      <div className="history" role="group" aria-label={t('toolbar.history')}>
+        <Toolbar.Button className="icon-button" aria-label={t('toolbar.undo')} title={t('toolbar.undo')} disabled={!actions?.canUndo} onClick={() => actions?.undo()}>
           <Undo2 size={ICON_SIZE} />
         </Toolbar.Button>
-        <Toolbar.Button className="icon-button" aria-label="Redo" title="Redo" disabled={!actions?.canRedo} onClick={() => actions?.redo()}>
+        <Toolbar.Button className="icon-button" aria-label={t('toolbar.redo')} title={t('toolbar.redo')} disabled={!actions?.canRedo} onClick={() => actions?.redo()}>
           <Redo2 size={ICON_SIZE} />
         </Toolbar.Button>
-        <Toolbar.Button className="icon-button clear-button" aria-label="Clear all" title="Clear all" disabled={!actions} onClick={() => actions?.clear()}>
+        <Toolbar.Button className="icon-button clear-button" aria-label={t('toolbar.clearAll')} title={t('toolbar.clearAll')} disabled={!actions} onClick={() => actions?.clear()}>
           <Trash2 size={ICON_SIZE} />
         </Toolbar.Button>
       </div>
@@ -163,16 +164,16 @@ export function WhiteboardToolbar({ trailing }: Props) {
               <Toolbar.Root className="bubble-controls">
                 <ToolSettings />
                 {hasSelection && actions && (
-                  <div className="setting" role="group" aria-label="Shape">
-                    <span className="setting-label">Shape</span>
+                  <div className="setting" role="group" aria-label={t('toolbar.shape')}>
+                    <span className="setting-label">{t('toolbar.shape')}</span>
                     <div className="choices">
-                      <Toolbar.Button className="icon-button" aria-label="Bring to front" title="Bring to front" onClick={() => actions.bringToFront()}>
+                      <Toolbar.Button className="icon-button" aria-label={t('toolbar.bringToFront')} title={t('toolbar.bringToFront')} onClick={() => actions.bringToFront()}>
                         <BringToFront size={ICON_SIZE} />
                       </Toolbar.Button>
-                      <Toolbar.Button className="icon-button" aria-label="Send to back" title="Send to back" onClick={() => actions.sendToBack()}>
+                      <Toolbar.Button className="icon-button" aria-label={t('toolbar.sendToBack')} title={t('toolbar.sendToBack')} onClick={() => actions.sendToBack()}>
                         <SendToBack size={ICON_SIZE} />
                       </Toolbar.Button>
-                      <Toolbar.Button className="icon-button clear-button" aria-label="Delete shape" title="Delete shape" onClick={() => actions.removeSelected()}>
+                      <Toolbar.Button className="icon-button clear-button" aria-label={t('toolbar.deleteShape')} title={t('toolbar.deleteShape')} onClick={() => actions.removeSelected()}>
                         <Trash2 size={ICON_SIZE} />
                       </Toolbar.Button>
                     </div>

@@ -2,10 +2,12 @@ import { Popover } from '@base-ui-components/react/popover'
 import { Toolbar } from '@base-ui-components/react/toolbar'
 import { ChevronDown, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ICON_SIZE } from './toolbar'
 import { useWhiteboardMode, type Tool } from './WhiteboardMode'
 
-export type ToolChoice = { name: Tool; label: string; Icon: LucideIcon }
+/** `labelKey` is a key in the whiteboard locale files. */
+export type ToolChoice = { name: Tool; labelKey: string; Icon: LucideIcon }
 
 type Props = {
   label: string
@@ -22,6 +24,7 @@ type Props = {
  * tool there and then, as well as offering the others.
  */
 export function ToolGroup({ label, choices, onPick, buttonRef }: Props) {
+  const { t } = useTranslation()
   const { tool } = useWhiteboardMode()
   const [open, setOpen] = useState(false)
   const [last, setLast] = useState<Tool>(choices[0].name)
@@ -53,13 +56,13 @@ export function ToolGroup({ label, choices, onPick, buttonRef }: Props) {
       <Popover.Portal>
         <Popover.Positioner side="top" sideOffset={22}>
           <Popover.Popup className="tool-menu">
-            {choices.map(({ name, label: choiceLabel, Icon }) => (
+            {choices.map(({ name, labelKey, Icon }) => (
               <button
                 key={name}
                 type="button"
                 className="icon-button"
-                aria-label={choiceLabel}
-                title={choiceLabel}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 data-pressed={tool === name ? '' : undefined}
                 onClick={() => choose(name)}
               >
