@@ -4,6 +4,9 @@ name: Draft release
 #
 # The draft's body has a generated part between markers, refreshed on every push, and room for
 # your own words outside them, which are kept.
+#
+# Nothing here may block a deploy: Vercel deploys from its own Git integration regardless, and
+# every step is allowed to fail, so a problem on the release-notes side stays a warning here.
 
 on:
   push:
@@ -21,12 +24,14 @@ concurrency:
 jobs:
   draft:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Draft the next release
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -53,6 +58,8 @@ jobs:
           fi
 
       - name: Ask release-notes to draft the release note
+        continue-on-error: true
+        timeout-minutes: 1
         env:
           GH_TOKEN: ${{ secrets.RELEASE_NOTES_TOKEN }}
         run: |
