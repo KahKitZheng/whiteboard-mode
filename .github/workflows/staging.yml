@@ -1,0 +1,71 @@
+name: Draft release
+# On every push to `staging`, keep a draft GitHub Release for the next version up to date, the
+# way Faqta's devs keep theirs, and ask release-notes to draft the release note.
+#
+# The draft's body has a generated part between markers, refreshed on every push, and room for
+# your own words outside them, which are kept.
+#
+# Nothing here may block a deploy: Vercel deploys from its own Git integration regardless, and
+# every step is allowed to fail, so a problem on the release-notes side stays a warning here.
+
+on:
+  push:
+    branches:
+      - staging
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: draft-release
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Draft the next release
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          next=$(.github/scripts/next-version.sh)
+          last=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+          generated=$(gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            -f tag_name="$next" -f target_commitish="$GITHUB_SHA" ${last:+-f previous_tag_name="$last"} -q .body)
+          draft=$(gh release list --json tagName,isDraft -q '[.[] | select(.isDraft)][0].tagName // ""')
+
+          start='<!-- generated:start -->'
+          end='<!-- generated:end -->'
+          block=$(printf '%s\n%s\n%s' "$start" "$generated" "$end")
+          if [ -n "$draft" ]; then
+            body=$(gh release view "$draft" --json body -q .body)
+            # Replace only the generated block; anything written around it stays.
+            notes=$(START="$start" END="$end" BLOCK="$block" BODY="$body" node -e '
+              const { START, END, BLOCK, BODY } = process.env;
+              const from = BODY.indexOf(START), to = BODY.indexOf(END);
+              console.log(from === -1 || to === -1 ? `${BODY}\n\n${BLOCK}` : BODY.slice(0, from) + BLOCK + BODY.slice(to + END.length));
+            ')
+            gh release edit "$draft" --tag "$next" --title "$next" --target "$GITHUB_SHA" --notes "$notes" --draft
+          else
+            gh release create "$next" --draft --title "$next" --target "$GITHUB_SHA" --notes "$block"
+          fi
+
+      - name: Ask release-notes to draft the release note
+        continue-on-error: true
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_NOTES_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "No RELEASE_NOTES_TOKEN; run /release-notes whiteboard by hand."
+            exit 0
+          fi
+          gh api repos/KahKitZheng/release-notes/dispatches \
+            -f event_type=staging-drop -f 'client_payload[product]=whiteboard'
