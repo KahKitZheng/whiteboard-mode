@@ -19,5 +19,6 @@ Single-context: `CONTEXT.md` and `docs/adr/` at the repo root (created lazily, a
 - Branch off `origin/development` with `--no-track`; never commit to `development`/`staging`/`main`. PRs are drafts targeting `development`
 - PR bodies follow `.github/pull_request_template.md`; `What changes for users` feeds the release notes
 - Label `feature` or `bug`: it decides the version bump on release
+- Squash feature PRs into `development`; promotions are merge commits, never squashed
 
 > Before committing or creating a PR, READ `.claude/version-control.md`
