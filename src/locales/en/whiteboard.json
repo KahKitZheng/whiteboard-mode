@@ -1,0 +1,192 @@
+{
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "start": "Start"
+  },
+  "toolbar": {
+    "switch": "Whiteboard",
+    "widgets": "Widgets",
+    "history": "History",
+    "undo": "Undo",
+    "redo": "Redo",
+    "clearAll": "Clear all",
+    "shape": "Shape",
+    "bringToFront": "Bring to front",
+    "sendToBack": "Send to back",
+    "deleteShape": "Delete shape"
+  },
+  "tools": {
+    "select": "Select",
+    "pen": "Pen",
+    "highlighter": "Highlighter",
+    "eraser": "Eraser",
+    "text": "Text",
+    "line": "Line",
+    "timer": "Timer",
+    "note": "Sticky note"
+  },
+  "settings": {
+    "colour": "Colour",
+    "words": "Words",
+    "shapes": "Shapes",
+    "fill": "Fill",
+    "heads": "Heads",
+    "border": "Border",
+    "weight": "Weight",
+    "size": "Size"
+  },
+  "style": {
+    "colour": {
+      "red": "Red",
+      "orange": "Orange",
+      "amber": "Amber",
+      "green": "Green",
+      "teal": "Teal",
+      "cyan": "Cyan",
+      "blue": "Blue",
+      "indigo": "Indigo",
+      "violet": "Violet",
+      "pink": "Pink",
+      "brown": "Brown",
+      "slate": "Slate"
+    },
+    "weight": {
+      "thin": "Thin weight",
+      "medium": "Medium weight",
+      "thick": "Thick weight",
+      "extraThick": "Extra thick weight"
+    },
+    "textSize": {
+      "small": "Small text",
+      "medium": "Medium text",
+      "large": "Large text",
+      "extraLarge": "Extra large text"
+    },
+    "border": {
+      "solid": "Solid",
+      "dashed": "Dashed",
+      "dotted": "Dotted"
+    },
+    "heads": {
+      "none": "No heads",
+      "end": "Arrow at end",
+      "both": "Arrows at both ends"
+    },
+    "fill": {
+      "none": "No fill",
+      "tinted": "Tinted",
+      "solid": "Solid fill"
+    },
+    "free": "Free",
+    "snapToWords": "Snap to words",
+    "tidyShapes": "Tidy shapes",
+    "underline": "Underline",
+    "strikethrough": "Strikethrough"
+  },
+  "note": {
+    "placeholder": "Type here"
+  },
+  "timer": {
+    "lessTime": "Less time",
+    "moreTime": "More time",
+    "pause": "Pause"
+  },
+  "text": {
+    "input": "Annotation text"
+  },
+  "lesson": {
+    "openDiagram": "Open the diagram",
+    "fullscreen": "Go fullscreen"
+  },
+  "slides": {
+    "count": "Slide {{current}} of {{total}}. Show all slides",
+    "title": "Slides",
+    "channel": "Channel",
+    "channelNumber": "Channel {{number}}",
+    "close": "Close slides",
+    "previous": "Previous: {{title}}",
+    "previousSlide": "Previous slide",
+    "next": "Next: {{title}}",
+    "nextSlide": "Next slide"
+  },
+  "boardbook": {
+    "focusAreas": "Focus areas",
+    "focusArea": "Focus area {{order}}",
+    "previousArea": "Previous focus area",
+    "nextArea": "Next focus area",
+    "view": "View",
+    "overview": "Overview",
+    "showAreas": "Show focus areas",
+    "showMinimap": "Show minimap",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "item": "Item",
+    "marker": "Item {{icon}}"
+  },
+  "interactive": {
+    "title": "Interactive image",
+    "page": "Page",
+    "edit": "Edit",
+    "uploadImage": "Upload image",
+    "changeImage": "Change image",
+    "removeImage": "Remove image",
+    "dropzone": "Upload image",
+    "dropzoneHint": "Drag an image here or click to choose one",
+    "addPopup": "Add pop-up",
+    "emptyWithImage": "Click a pop-up to edit it, or add one with the Pop-up button.",
+    "emptyWithoutImage": "Upload an image first. Then you can place pop-ups on it.",
+    "popup": "Pop-up",
+    "popupNumber": "Pop-up {{number}}",
+    "removePopup": "Delete pop-up",
+    "popupButton": "Pop-up button",
+    "textButton": "Text button",
+    "colour": "Colour",
+    "light": "Light",
+    "dark": "Dark",
+    "icon": "Icon",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Your pop-up's title",
+    "paragraph": "Paragraph",
+    "audio": "Audio",
+    "addAudio": "Add audio",
+    "changeAudio": "Change audio file",
+    "removeAudio": "Remove audio",
+    "formatting": "Formatting",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline"
+  },
+  "icons": {
+    "plus": "Plus",
+    "minus": "Minus",
+    "check": "Check mark",
+    "cross": "Cross",
+    "info": "Info",
+    "play": "Play",
+    "pause": "Pause",
+    "search": "Search",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "book": "Book",
+    "openBook": "Open book",
+    "attachment": "Attachment",
+    "link": "Link",
+    "externalLink": "External link",
+    "calendar": "Calendar",
+    "arrowLeft": "Arrow left",
+    "arrowUp": "Arrow up",
+    "arrowDown": "Arrow down",
+    "arrowRight": "Arrow right",
+    "image": "Image",
+    "video": "Video",
+    "file": "File",
+    "sound": "Sound",
+    "youtube": "YouTube",
+    "exclamation": "Exclamation mark",
+    "question": "Question mark"
+  }
+}
