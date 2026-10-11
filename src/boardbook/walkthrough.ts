@@ -1,3 +1,4 @@
+import i18next from 'i18next'
 import type { BoardBookFocusAreaEntity } from './types'
 
 /**
@@ -6,7 +7,7 @@ import type { BoardBookFocusAreaEntity } from './types'
  * badge on the area doesn't.
  */
 export function areaLabel(area: BoardBookFocusAreaEntity): string {
-  return area.name && area.name !== String(area.order) ? area.name : `Focus area ${area.order}`
+  return area.name && area.name !== String(area.order) ? area.name : i18next.t('boardbook.focusArea', { order: area.order })
 }
 
 /** The walkthrough's order, whatever order the editor happened to save them in. */
