@@ -1,0 +1,128 @@
+# Release notes plan (PoC)
+
+Release notes for non-devs, drafted by AI from merged PRs and proofread by a human before publishing. Sources: whiteboard-mode, and Faqta (app-react + api). This is a proof of concept: if it proves worth it, whiteboard-mode lands in app-react and the release-notes app moves to the `faqta` org.
+
+The source repos are only read. Everything is written in release-notes, plus the release setup in whiteboard-mode; app-react and api get no commits or PRs.
+
+## Why
+
+Releases are announced in Slack today. That's the bare minimum: quality depends on who writes it, there's no archive, and there's no way to show different notes to different audiences. The goal is consistent, human-readable notes on their own URL, with deep dives and video for the changes that matter.
+
+## Overview
+
+```
+source repos (read only)                          release-notes (Astro, Vercel)
+──────────────────────────────────────────────    ─────────────────────────────────────
+feature branch ─PR─> development
+development ─> staging, draft GitHub Release ──>  dispatch: Actions runs /release-notes <product>
+                                                   -> drafts / updates the release PR
+                                                   -> Vercel preview, dev adds media
+                                                   -> Dutch proofread
+staging ─> main/master, release published ─────>  dev comments /publish = publication
+                                                   -> workflow: learn, stamp, merge, live
+```
+
+Git (tags, GitHub Releases) is the dev-facing changelog. The release-notes app is the non-dev-facing one. A staging drop triggers the draft through a `repository_dispatch` (no schedule: releases are infrequent); Faqta, which doesn't dispatch yet, uses the draft workflow's manual button or `/release-notes faqta` locally. Release notes never block a deploy: the source repo only sends the dispatch, in a step that's allowed to fail.
+
+## whiteboard-mode
+
+- Branches: `development` → `staging` → `main`. Feature branches come off `development`.
+- PR template with app-react's headings: `What changes for users`, `Where`, `Impact`. The skill reads `What changes for users`.
+- Labels: only `feature` and `bug`.
+- Mirrors Faqta's release process. On every push to `staging`, an Action keeps a draft GitHub Release for the next version up to date (a generated PR list between markers, with room for your own words around it) and dispatches to release-notes. On a merge into `main`, the draft is published, tagged on the merge commit.
+- Versions: any `feature` PR since the latest tag → minor bump, otherwise patch; major bumps are manual (`.github/scripts/next-version.sh`).
+- Merging: feature PRs are squashed into `development`; promotions are merge commits, never squashed (`.claude/version-control.md`).
+- No promotion PR workflow: the skill reads commit ranges, so it isn't needed.
+- Secrets, least privilege: `RELEASE_NOTES_TOKEN` here may only dispatch to release-notes; release-notes has a read-only `SOURCES_READ_TOKEN` for this repo and `CLAUDE_CODE_OAUTH_TOKEN`.
+
+## release-notes app
+
+- Astro, plain `.md` content collections, hosted on Vercel. Badges and deep-dive cards come from two small rehype plugins.
+- Separate repo: a release spans more than one source repo, and no app-react components are needed.
+- URLs: `/<lang>/<product name slug>/<date>/`. Only the internal audience exists for now.
+
+### Content layout
+
+```
+releases/<product>/<date>/
+  en.md        # source of truth, edited by devs
+  nl.md        # derived from en.md by the skill
+  media/       # screenshots, demo videos
+```
+
+The folder is named after the date the draft started. Publishing renames it to the publish date, so the URL carries that date; media paths are relative, so they move along.
+
+Frontmatter:
+
+```yaml
+product: faqta
+versions:               # each repo's release tag, for devs; not shown to readers
+  app-react: 3.20.31
+  api: 3.24.5
+publishedAt: 2026-10-06 # set on publish
+prs:
+  - { repo: app-react, number: 3482, audience: customer, area: Platform }
+  - { repo: api, number: 1557, audience: skip }
+```
+
+### Page shape
+
+1. A list of changes, grouped by `area`. Everything a reader can notice gets in, since support searches the page. One bullet per topic, not per PR: related PRs (also across repos) share one, and a topic with several effects gets its details nested under one headline. Each line describes the effect, with a badge: new / improved / fixed, in that order. Positive or neutral; no caveats, no triggers, no jargon. Infrastructure, measurement and feature-flag plumbing are skipped.
+2. Deep dives below the list, as cards. `feature` PRs get one by default, and their bullet links to it. A dev can promote any other item in the release PR.
+
+### Media
+
+- Stored locally in the release folder. The skill warns above ~5 MB per file. Move to GCS once that limit becomes a problem.
+- Video: a raw Playwright recording from a demo spec in the source repo (`e2e/demos/<slug>.demo.ts`, `video: 'on'`). The dev runs it and drops the `.webm` into `media/`. Captions and spotlights are a later post-edit layer.
+
+## The skill
+
+Lives in the release-notes repo (`.claude/skills/`), because it changes together with the content schema. Three modes:
+
+- `/release-notes <product>`: draft the upcoming release, after a drop on staging.
+- `/release-notes <product> learn <folder> <pr>`: turn the names reviewers replaced into glossary rows. The publish workflow runs it on `/publish`.
+- `/release-notes <product> <YYYY-MM-DD>`: backfill a past release, together with the user, straight on `main`.
+
+Config (`sources.json`): a product has a name, a closed list of `areas` (anything unclear goes to `Overig`) and one or more repos, each with its branches and optional locales.
+
+There is one glossary: `glossary.md` in release-notes, with per concept the English and Dutch name and the words that are wrong (a **Never** column, enforced by `scripts/check-terms.mjs`). The source repos' own glossaries describe code, not what readers call things, so they aren't read; their locales stay the source for literal UI labels.
+
+Per run:
+
+1. `scripts/collect.mjs` reads each repo's commit range: `<prod>...staging` for the upcoming release, or the previous tag up to that day's tag for a past one. PR numbers come from merge and squash commit titles, with GitHub's "PRs for this commit" as a fallback; promotion PRs are left out. It also reads the GitHub Release text (the draft one for an upcoming release), which is the devs' own summary and the best context for technical PRs like api's.
+2. Skip PRs already in the entry's `prs`, so text a dev already edited stays as it is.
+3. Classify each new PR:
+   - Dependabot PRs: always `skip` (filtered by author).
+   - Refactors, tests, CI, tooling: `skip`. Fixes to something new in the same release: `skip`.
+   - Feature flags, analytics, permission changes: at least `internal`. api changes count only when users notice them.
+   - Security fixes: never `customer` automatically.
+   - Everything else: `customer`. The levels are nested, so the internal page shows internal + customer.
+4. Pick an `area` from the product's list.
+5. Write `en.md`, then derive `nl.md`. Pages go by their navigation label in sentence case.
+6. Trace every name and claim. Names come from, in order: `glossary.md`, the team's own words (release text, PR titles), the locales, then the code. The skill never coins a name: without a source it describes what the reader sees, and lists the term for the proofreader. Claims about scope and history need a source too, or go on a "Claims to check" list. Then the term check runs.
+7. Open the release PR, or push to it if it exists. The PR body lists every skipped PR with a one-line reason, so the reviewer can catch a wrong classification.
+
+## Release PR
+
+- One PR per release. Later staging drops push to the same PR.
+- The Vercel preview shows the draft. Devs edit `en.md` and add media there.
+- PR checklist: a Dutch speaker proofreads `nl.md` for language and readability before merging (required).
+- A `/publish` comment publishes the notes, done by hand once prod is out, so last-minute changes stay possible. There's no draft/live status field.
+- The workflow then learns from the review (renamed names become glossary rows, the one step that needs Claude, and never blocking), `scripts/publish.mjs` stamps versions and the date and renames the folder, and it merges. The release lands on `main` complete. A PR merged by hand gets stamped afterwards, without learning.
+- Release notes are incremental per day: one note per product per publish date. A second release published on a day that already has a note (api and client released apart, a quick extra deploy) is added to that note: `/publish` merges it in on the PR branch, pauses for a check on the preview, and publishes on the next `/publish`. The note then shows when it was updated (`updatedAt`); a typo fix doesn't count as an update.
+- Announcing in Slack stays manual.
+
+## Later, not now
+
+- Three views from the same releases:
+  - Company view of Faqta: a "Begrippen" page from the terms file, and a badge on bullets customers can see, so sales reads one page.
+  - Customer view: a separate deployment, Faqta only, teacher tone (benefit first, grouped by teacher task), maybe monthly. Support owns the tone. Unlike the internal page, it selects: only what a teacher would miss gets in.
+  - Dev view: only if devs miss it. Its value is grouping FE and BE PRs per ticket plus a "let op" section, not a copy of the PR list.
+- Faqta through the same flow: what app-react and api would need to change is in `release-notes/docs/team-proposals.md`.
+- A post-edit layer for demo videos (captions, spotlights, trims).
+- GCS for media.
+- A Slack announcement step.
+- A dev-side override label for the audience classification, if the skill's classification turns out unreliable.
+- Links to support articles from bullets and deep dives, once support articles exist for the features.
+- Announcements: a project going live (or a feature flag switched on for everyone) is a release too, but it happens outside the code, so the skill never sees it. It'd be an announcement with an introduction to how the thing works. Whether it's written once or grows with the releases behind it is still open.
+- Emoji reactions per release, to see what lands. Low priority, but useful, especially once releases go public to customers. Needs somewhere to store the counts, since the site is static.
