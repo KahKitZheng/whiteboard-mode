@@ -1,6 +1,7 @@
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Bold, Italic, Underline, type LucideIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { RichTextDocument } from '../boardbook/richText'
 
 type Props = {
@@ -9,10 +10,10 @@ type Props = {
 }
 
 /** The marks the viewer's renderer draws; a toggle each. */
-const MARKS: { name: 'bold' | 'italic' | 'underline'; label: string; Icon: LucideIcon }[] = [
-  { name: 'bold', label: 'Vet', Icon: Bold },
-  { name: 'italic', label: 'Cursief', Icon: Italic },
-  { name: 'underline', label: 'Onderstreept', Icon: Underline },
+const MARKS: { name: 'bold' | 'italic' | 'underline'; labelKey: string; Icon: LucideIcon }[] = [
+  { name: 'bold', labelKey: 'interactive.bold', Icon: Bold },
+  { name: 'italic', labelKey: 'interactive.italic', Icon: Italic },
+  { name: 'underline', labelKey: 'interactive.underline', Icon: Underline },
 ]
 
 /**
@@ -20,6 +21,7 @@ const MARKS: { name: 'bold' | 'italic' | 'underline'; label: string; Icon: Lucid
  * document the viewer already renders — no HTML in between.
  */
 export function RichTextEditor({ content, onChange }: Props) {
+  const { t } = useTranslation()
   const editor = useEditor({
     extensions: [StarterKit],
     content: content ?? '',
@@ -32,13 +34,13 @@ export function RichTextEditor({ content, onChange }: Props) {
 
   return (
     <div className="rich-text">
-      <div className="rich-text-toolbar" role="toolbar" aria-label="Opmaak">
-        {MARKS.map(({ name, label, Icon }) => (
+      <div className="rich-text-toolbar" role="toolbar" aria-label={t('interactive.formatting')}>
+        {MARKS.map(({ name, labelKey, Icon }) => (
           <button
             key={name}
             type="button"
-            aria-label={label}
-            title={label}
+            aria-label={t(labelKey)}
+            title={t(labelKey)}
             aria-pressed={active?.[name] ?? false}
             // A press must not take the focus — and the selection — away from the text.
             onMouseDown={(event) => event.preventDefault()}

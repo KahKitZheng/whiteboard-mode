@@ -1,7 +1,8 @@
 import { Check, ChevronDown, ChevronUp, Image, MessageSquareText, Plus, Trash2, Volume2, X } from 'lucide-react'
 import { useState, type DragEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MarkerFace } from '../boardbook/BoardBookItem'
-import { ITEM_ICONS, itemIcon } from '../boardbook/icons'
+import { ITEM_ICONS, itemIcon, type ItemIconChoice } from '../boardbook/icons'
 import type { BoardBookItemEntity } from '../boardbook/types'
 import { snapshot } from './popup'
 import { RichTextEditor } from './RichTextEditor'
@@ -25,6 +26,7 @@ type Props = {
  * other pop-ups' edits.
  */
 export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove, onSave, onCancel }: Props) {
+  const { t } = useTranslation()
   const [pickerOpen, setPickerOpen] = useState(false)
   // The text editor is remounted to take a cancel: TipTap holds its own document.
   const [reverts, setReverts] = useState(0)
@@ -34,7 +36,7 @@ export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove,
     return (
       <div className="interactive-panel" data-empty="">
         <MessageSquareText size={28} aria-hidden="true" />
-        <p>{hasImage ? 'Klik op een pop-up om hem te bewerken, of voeg er een toe met de knop Pop-up.' : 'Upload eerst een afbeelding. Daarna kun je er pop-ups op plaatsen.'}</p>
+        <p>{hasImage ? t('interactive.emptyWithImage') : t('interactive.emptyWithoutImage')}</p>
       </div>
     )
   }
@@ -42,6 +44,10 @@ export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove,
   const dirty = snapshot(item) !== savedAs
   const hasLabel = Boolean(item.itemText?.trim())
   const choice = ITEM_ICONS.find((candidate) => candidate.key === item.itemIcon)
+
+  function iconName({ name }: ItemIconChoice) {
+    return 'labelKey' in name ? t(name.labelKey) : name.text
+  }
 
   function dropImage(event: DragEvent) {
     event.preventDefault()
@@ -62,8 +68,8 @@ export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove,
   return (
     <div className="interactive-panel">
       <div className="interactive-panel-head">
-        <h3>Pop-up {number}</h3>
-        <button type="button" className="interactive-tool" data-danger="" aria-label="Verwijder pop-up" title="Verwijder pop-up" onClick={onRemove}>
+        <h3>{t('interactive.popupNumber', { number })}</h3>
+        <button type="button" className="interactive-tool" data-danger="" aria-label={t('interactive.removePopup')} title={t('interactive.removePopup')} onClick={onRemove}>
           <Trash2 size={16} aria-hidden="true" />
         </button>
       </div>
@@ -73,12 +79,12 @@ export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove,
           <div className="interactive-panel-image">
             <img src={item.img} alt="" />
             <div className="interactive-panel-image-tools">
-              <label className="interactive-tool" title="Afbeelding wijzigen">
+              <label className="interactive-tool" title={t('interactive.changeImage')}>
                 <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && onPatch({ img: URL.createObjectURL(event.target.files[0]) })} />
                 <Image size={14} aria-hidden="true" />
-                <span className="visually-hidden">Afbeelding wijzigen</span>
+                <span className="visually-hidden">{t('interactive.changeImage')}</span>
               </label>
-              <button type="button" className="interactive-tool" data-danger="" aria-label="Afbeelding verwijderen" title="Afbeelding verwijderen" onClick={() => onPatch({ img: undefined })}>
+              <button type="button" className="interactive-tool" data-danger="" aria-label={t('interactive.removeImage')} title={t('interactive.removeImage')} onClick={() => onPatch({ img: undefined })}>
                 <Trash2 size={14} aria-hidden="true" />
               </button>
             </div>
@@ -87,38 +93,38 @@ export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove,
           <label className="interactive-dropzone" data-small="" onDragOver={(event) => event.preventDefault()} onDrop={dropImage}>
             <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && onPatch({ img: URL.createObjectURL(event.target.files[0]) })} />
             <Plus size={26} aria-hidden="true" />
-            <strong>Upload afbeelding</strong>
+            <strong>{t('interactive.dropzone')}</strong>
           </label>
         )}
 
         <div className="interactive-field">
-          <span className="interactive-field-label">Pop-up knop</span>
+          <span className="interactive-field-label">{t('interactive.popupButton')}</span>
           <button type="button" className="interactive-picker-button" aria-expanded={pickerOpen} onClick={() => setPickerOpen((open) => !open)}>
             <span className="boardbook-marker interactive-picker-preview" data-kind={hasLabel ? 'text' : 'icon'} data-theme={item.theme}>
               <MarkerFace item={item} />
             </span>
-            <span>{hasLabel ? 'Tekst knop' : (choice?.name ?? 'Plus')}</span>
+            <span>{hasLabel ? t('interactive.textButton') : choice ? iconName(choice) : t('icons.plus')}</span>
             {pickerOpen ? <ChevronUp size={12} aria-hidden="true" /> : <ChevronDown size={12} aria-hidden="true" />}
           </button>
           {pickerOpen && (
             <div className="interactive-picker">
-              <div className="interactive-tabs" role="group" aria-label="Kleur">
+              <div className="interactive-tabs" role="group" aria-label={t('interactive.colour')}>
                 <button type="button" aria-pressed={item.theme === 'light'} onClick={() => onPatch({ theme: 'light' })}>
-                  Licht
+                  {t('interactive.light')}
                 </button>
                 <button type="button" aria-pressed={item.theme !== 'light'} onClick={() => onPatch({ theme: 'dark' })}>
-                  Dark
+                  {t('interactive.dark')}
                 </button>
               </div>
-              <div className="interactive-glyphs" role="group" aria-label="Icoon">
+              <div className="interactive-glyphs" role="group" aria-label={t('interactive.icon')}>
                 {ITEM_ICONS.map((candidate) => {
                   const icon = itemIcon(candidate.key)
                   return (
                     <button
                       key={candidate.key}
                       type="button"
-                      aria-label={candidate.name}
-                      title={candidate.name}
+                      aria-label={iconName(candidate)}
+                      title={iconName(candidate)}
                       aria-pressed={!hasLabel && candidate.key === item.itemIcon}
                       onClick={() => onPatch({ itemIcon: candidate.key, itemText: undefined })}
                     >
@@ -130,8 +136,8 @@ export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove,
               <input
                 className="interactive-input"
                 value={item.itemText ?? ''}
-                placeholder="Tekst knop"
-                aria-label="Tekst knop"
+                placeholder={t('interactive.textButton')}
+                aria-label={t('interactive.textButton')}
                 onChange={(event) => onPatch({ itemText: event.target.value || undefined })}
               />
             </div>
@@ -139,34 +145,34 @@ export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove,
         </div>
 
         <label className="interactive-field">
-          <span className="interactive-field-label">Titel</span>
+          <span className="interactive-field-label">{t('interactive.titleLabel')}</span>
           <input
             className="interactive-input"
             data-size="title"
             value={item.title ?? ''}
-            placeholder="De titel van je pop-up"
+            placeholder={t('interactive.titlePlaceholder')}
             onChange={(event) => onPatch({ title: event.target.value || undefined })}
           />
         </label>
 
         <div className="interactive-field">
-          <span className="interactive-field-label">Paragraaf</span>
+          <span className="interactive-field-label">{t('interactive.paragraph')}</span>
           <RichTextEditor key={`${item.id}:${reverts}`} content={item.text} onChange={(text) => onPatch({ text })} />
         </div>
 
         <div className="interactive-field">
-          <span className="interactive-field-label">Audio</span>
+          <span className="interactive-field-label">{t('interactive.audio')}</span>
           <div className="interactive-audio">
-            <label className="interactive-tool" data-grey="" title={item.audio ? 'Audiobestand wijzigen' : 'Audio toevoegen'}>
+            <label className="interactive-tool" data-grey="" title={item.audio ? t('interactive.changeAudio') : t('interactive.addAudio')}>
               <input type="file" accept="audio/*" hidden onChange={(event) => event.target.files?.[0] && setAudio(event.target.files[0])} />
               <Volume2 size={16} aria-hidden="true" />
               {item.audio ? <Check size={10} aria-hidden="true" /> : <Plus size={10} aria-hidden="true" />}
-              <span className="visually-hidden">{item.audio ? 'Audiobestand wijzigen' : 'Audio toevoegen'}</span>
+              <span className="visually-hidden">{item.audio ? t('interactive.changeAudio') : t('interactive.addAudio')}</span>
             </label>
             {item.audio && (
               <>
                 <span className="interactive-audio-name">{audioName[item.id] ?? item.audio.split('/').pop()}</span>
-                <button type="button" className="interactive-tool" data-plain="" aria-label="Audio verwijderen" title="Audio verwijderen" onClick={() => onPatch({ audio: undefined })}>
+                <button type="button" className="interactive-tool" data-plain="" aria-label={t('interactive.removeAudio')} title={t('interactive.removeAudio')} onClick={() => onPatch({ audio: undefined })}>
                   <X size={14} aria-hidden="true" />
                 </button>
               </>
@@ -175,12 +181,12 @@ export function PopupPanel({ item, number, hasImage, savedAs, onPatch, onRemove,
         </div>
       </div>
 
-      <div className="interactive-panel-foot" role="group" aria-label="Pop-up">
+      <div className="interactive-panel-foot" role="group" aria-label={t('interactive.popup')}>
         <button type="button" className="interactive-secondary" onClick={cancel}>
-          Annuleren
+          {t('common.cancel')}
         </button>
         <button type="button" className="interactive-primary" data-tone="dark" disabled={!dirty} onClick={onSave}>
-          Opslaan
+          {t('common.save')}
         </button>
       </div>
     </div>
