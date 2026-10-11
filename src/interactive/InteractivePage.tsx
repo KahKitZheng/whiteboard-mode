@@ -1,5 +1,6 @@
 import { Ban, Pen, Save } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AnnotationSurface } from '../annotation/AnnotationSurface'
 import { useWhiteboardMode } from '../annotation/WhiteboardMode'
 import type { AssignmentBoardBookEntity } from '../boardbook/types'
@@ -20,6 +21,7 @@ export function InteractivePage({ page }: { page: Page }) {
   // Non-null while editing. The page's cancel is dropping it.
   const [draft, setDraft] = useState<AssignmentBoardBookEntity | null>(null)
   const { setActive } = useWhiteboardMode()
+  const { t } = useTranslation()
 
   function edit() {
     setActive(false)
@@ -34,22 +36,22 @@ export function InteractivePage({ page }: { page: Page }) {
   const head = (
     <div className="interactive-head">
       <h1>{page.title}</h1>
-      <div className="interactive-head-actions" role="group" aria-label="Pagina">
+      <div className="interactive-head-actions" role="group" aria-label={t('interactive.page')}>
         {draft ? (
           <>
             <button type="button" className="interactive-outline" onClick={save}>
               <Save size={19} aria-hidden="true" />
-              Opslaan
+              {t('common.save')}
             </button>
             <button type="button" className="interactive-outline" onClick={() => setDraft(null)}>
               <Ban size={19} aria-hidden="true" />
-              Annuleren
+              {t('common.cancel')}
             </button>
           </>
         ) : (
           <button type="button" className="interactive-outline" onClick={edit}>
             <Pen size={19} aria-hidden="true" />
-            Bewerken
+            {t('interactive.edit')}
           </button>
         )}
       </div>

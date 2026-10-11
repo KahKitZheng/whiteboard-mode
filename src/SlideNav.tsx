@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useHistory, useLocation } from 'react-router-dom'
 import { SLIDES } from './slides'
 
@@ -13,6 +14,7 @@ function isTyping(target: EventTarget | null): boolean {
  * for a clicker. The deck is the routes; a slide is whatever the route shows.
  */
 export function SlideNav() {
+  const { t } = useTranslation()
   const history = useHistory()
   const { pathname } = useLocation()
   const index = SLIDES.findIndex((slide) => slide.path === pathname)
@@ -35,7 +37,7 @@ export function SlideNav() {
         type="button"
         className="slide-step"
         data-side="left"
-        aria-label={previous ? `Previous: ${previous.title}` : 'Previous slide'}
+        aria-label={previous ? t('slides.previous', { title: previous.title }) : t('slides.previousSlide')}
         disabled={!previous}
         onClick={() => previous && history.push(previous.path)}
       >
@@ -45,7 +47,7 @@ export function SlideNav() {
         type="button"
         className="slide-step"
         data-side="right"
-        aria-label={next ? `Next: ${next.title}` : 'Next slide'}
+        aria-label={next ? t('slides.next', { title: next.title }) : t('slides.nextSlide')}
         disabled={!next}
         onClick={() => next && history.push(next.path)}
       >

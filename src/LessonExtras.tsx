@@ -1,5 +1,6 @@
 import { Dialog } from '@base-ui-components/react/dialog'
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AnnotationSurface } from './annotation/AnnotationSurface'
 
 /**
@@ -17,6 +18,7 @@ export function LessonExtras({ slug }: { slug: string }) {
 }
 
 function DiagramPopup({ slug }: { slug: string }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   return (
@@ -42,7 +44,7 @@ function DiagramPopup({ slug }: { slug: string }) {
         setOpen(next)
       }}
     >
-      <Dialog.Trigger className="extra-button">Open the diagram</Dialog.Trigger>
+      <Dialog.Trigger className="extra-button">{t('lesson.openDiagram')}</Dialog.Trigger>
       <Dialog.Portal>
         {/*
           The popup's surface spans the whole viewport, so with whiteboard mode
@@ -65,7 +67,7 @@ function DiagramPopup({ slug }: { slug: string }) {
                 <circle cx="115" cy="50" r="34" />
               </svg>
             </div>
-            <Dialog.Close className="extra-button">Close</Dialog.Close>
+            <Dialog.Close className="extra-button">{t('common.close')}</Dialog.Close>
           </Dialog.Popup>
         </AnnotationSurface>
       </Dialog.Portal>
@@ -74,6 +76,7 @@ function DiagramPopup({ slug }: { slug: string }) {
 }
 
 function FullscreenStage({ slug }: { slug: string }) {
+  const { t } = useTranslation()
   const stage = useRef<HTMLDivElement>(null)
 
   // The element that goes fullscreen must contain the annotation layer:
@@ -94,7 +97,7 @@ function FullscreenStage({ slug }: { slug: string }) {
         </div>
       </AnnotationSurface>
       <button type="button" className="extra-button" onClick={enterFullscreen}>
-        Go fullscreen
+        {t('lesson.fullscreen')}
       </button>
     </div>
   )

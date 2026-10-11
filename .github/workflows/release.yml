@@ -1,0 +1,37 @@
+name: Release
+# On every merge into `main`, publish the draft release that the staging workflow kept up to
+# date, tagged on the merge commit. Without a draft (staging was skipped), create the release
+# from scratch. The version comes from .github/scripts/next-version.sh.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          next=$(.github/scripts/next-version.sh)
+          draft=$(gh release list --json tagName,isDraft -q '[.[] | select(.isDraft)][0].tagName // ""')
+          if [ -n "$draft" ]; then
+            gh release edit "$draft" --tag "$next" --title "$next" --target "$GITHUB_SHA" --draft=false
+          else
+            gh release create "$next" --target "$GITHUB_SHA" --title "$next" --generate-notes
+          fi

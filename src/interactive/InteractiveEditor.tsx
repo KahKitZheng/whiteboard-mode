@@ -1,5 +1,6 @@
 import { GripVertical, Image, Plus } from 'lucide-react'
 import { useRef, useState, type DragEvent, type PointerEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Point } from '../annotation/coords'
 import { Marker } from '../boardbook/BoardBookItem'
 import type { AssignmentBoardBookEntity, BoardBookItemEntity } from '../boardbook/types'
@@ -24,6 +25,7 @@ type Props = {
  * saved; this only edits it. See docs/interactive-image-plan.md.
  */
 export function InteractiveEditor({ value, onChange }: Props) {
+  const { t } = useTranslation()
   const { ref, onLoad, image, width, stage } = useStage()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   // Each pop-up as last saved from its panel, for the panel's own cancel and
@@ -98,11 +100,11 @@ export function InteractiveEditor({ value, onChange }: Props) {
       <GripVertical className="interactive-editor-grip" size={20} aria-hidden="true" />
       <div className="interactive-editor-main">
         <div className="interactive-editor-head">
-          <h2>Interactieve afbeelding</h2>
-          <label className="interactive-tool" title={hasImage ? 'Afbeelding wijzigen' : 'Afbeelding uploaden'}>
+          <h2>{t('interactive.title')}</h2>
+          <label className="interactive-tool" title={hasImage ? t('interactive.changeImage') : t('interactive.uploadImage')}>
             <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && setBackground(event.target.files[0])} />
             <Image size={16} aria-hidden="true" />
-            <span className="visually-hidden">{hasImage ? 'Afbeelding wijzigen' : 'Afbeelding uploaden'}</span>
+            <span className="visually-hidden">{hasImage ? t('interactive.changeImage') : t('interactive.uploadImage')}</span>
           </label>
         </div>
 
@@ -135,13 +137,13 @@ export function InteractiveEditor({ value, onChange }: Props) {
               <label className="interactive-dropzone" onDragOver={(event) => event.preventDefault()} onDrop={dropImage}>
                 <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && setBackground(event.target.files[0])} />
                 <Plus size={40} aria-hidden="true" />
-                <strong>Upload afbeelding</strong>
-                <span>Sleep een afbeelding hierheen of klik om te kiezen</span>
+                <strong>{t('interactive.dropzone')}</strong>
+                <span>{t('interactive.dropzoneHint')}</span>
               </label>
             )}
             <div className="interactive-editor-add">
               <button type="button" className="interactive-primary" disabled={!hasImage} onClick={addPopup}>
-                Pop-up toevoegen
+                {t('interactive.addPopup')}
                 <Plus size={14} aria-hidden="true" />
               </button>
             </div>

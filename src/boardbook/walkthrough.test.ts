@@ -39,8 +39,8 @@ describe('walkthrough', () => {
     const area = AREAS[1]
 
     expect(areaLabel({ ...area, name: 'De kringloop' })).toBe('De kringloop')
-    expect(areaLabel({ ...area, name: '1' })).toBe('Focus area 1')
-    expect(areaLabel({ ...area, name: '' })).toBe('Focus area 1')
-    expect(areaLabel(area)).toBe('Focus area 1')
+    expect(areaLabel({ ...area, name: '1' })).toBe('Focusgebied 1')
+    expect(areaLabel({ ...area, name: '' })).toBe('Focusgebied 1')
+    expect(areaLabel(area)).toBe('Focusgebied 1')
   })
 })

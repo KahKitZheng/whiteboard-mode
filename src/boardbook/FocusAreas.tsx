@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, Eye, EyeOff, Map, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { BoardBookFocusAreaEntity } from './types'
 import { areaLabel } from './walkthrough'
 
@@ -68,44 +69,45 @@ export function Walkthrough({
   minimapShown,
   onToggleMinimap,
 }: WalkthroughProps) {
+  const { t } = useTranslation()
   return (
     <div className="boardbook-bar">
-      <div className="boardbook-bar-group" role="group" aria-label="Focus areas">
+      <div className="boardbook-bar-group" role="group" aria-label={t('boardbook.focusAreas')}>
         {current ? (
           <>
-            <button type="button" onClick={() => onStep('previous')} disabled={!canStep.previous} aria-label="Previous focus area">
+            <button type="button" onClick={() => onStep('previous')} disabled={!canStep.previous} aria-label={t('boardbook.previousArea')}>
               <ChevronLeft size={20} aria-hidden="true" />
             </button>
             <span className="boardbook-bar-name" title={areaLabel(current)}>
               {ordered.indexOf(current) + 1}/{ordered.length} · {areaLabel(current)}
             </span>
-            <button type="button" onClick={() => onStep('next')} disabled={!canStep.next} aria-label="Next focus area">
+            <button type="button" onClick={() => onStep('next')} disabled={!canStep.next} aria-label={t('boardbook.nextArea')}>
               <ChevronRight size={20} aria-hidden="true" />
             </button>
           </>
         ) : (
           <button type="button" onClick={() => onStep('next')} disabled={!canStep.next}>
-            Start
+            {t('common.start')}
           </button>
         )}
       </div>
-      <div className="boardbook-bar-group" role="group" aria-label="View">
+      <div className="boardbook-bar-group" role="group" aria-label={t('boardbook.view')}>
         <button type="button" onClick={onOverview} disabled={current === null}>
-          Overview
+          {t('boardbook.overview')}
         </button>
-        <button type="button" onClick={onToggleAreas} aria-pressed={areasShown} aria-label="Show focus areas" title="Show focus areas">
+        <button type="button" onClick={onToggleAreas} aria-pressed={areasShown} aria-label={t('boardbook.showAreas')} title={t('boardbook.showAreas')}>
           {areasShown ? <Eye size={20} aria-hidden="true" /> : <EyeOff size={20} aria-hidden="true" />}
         </button>
-        <button type="button" onClick={onToggleMinimap} aria-pressed={minimapShown} aria-label="Show minimap" title="Show minimap">
+        <button type="button" onClick={onToggleMinimap} aria-pressed={minimapShown} aria-label={t('boardbook.showMinimap')} title={t('boardbook.showMinimap')}>
           <Map size={20} aria-hidden="true" />
         </button>
-        <button type="button" onClick={() => onZoom('out')} aria-label="Zoom out">
+        <button type="button" onClick={() => onZoom('out')} aria-label={t('boardbook.zoomOut')}>
           <ZoomOut size={20} aria-hidden="true" />
         </button>
-        <button type="button" onClick={() => onZoom('in')} aria-label="Zoom in">
+        <button type="button" onClick={() => onZoom('in')} aria-label={t('boardbook.zoomIn')}>
           <ZoomIn size={20} aria-hidden="true" />
         </button>
-        <button type="button" onClick={onFullscreen} aria-label={fullscreen ? 'Exit full screen' : 'Full screen'}>
+        <button type="button" onClick={onFullscreen} aria-label={fullscreen ? t('boardbook.exitFullscreen') : t('boardbook.fullscreen')}>
           {fullscreen ? <Minimize size={20} aria-hidden="true" /> : <Maximize size={20} aria-hidden="true" />}
         </button>
       </div>

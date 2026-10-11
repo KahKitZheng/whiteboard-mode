@@ -1,6 +1,7 @@
 import { Dialog } from '@base-ui-components/react/dialog'
 import { BookOpen, ChevronDown, ChevronUp, FileText, Image } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useHistory, useLocation } from 'react-router-dom'
 import { PALETTES, type Palette } from './palettes'
 import { SLIDES, type Slide } from './slides'
@@ -18,6 +19,7 @@ type Props = {
 }
 
 export function SlideOverview({ palette, onPalette }: Props) {
+  const { t } = useTranslation()
   const history = useHistory()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -36,7 +38,7 @@ export function SlideOverview({ palette, onPalette }: Props) {
       is up. Nothing here needs the lock; a press outside still closes it.
     */
     <Dialog.Root open={open} onOpenChange={setOpen} modal={false}>
-      <Dialog.Trigger className="slide-count" aria-label={`Slide ${index + 1} of ${SLIDES.length}. Show all slides`}>
+      <Dialog.Trigger className="slide-count" aria-label={t('slides.count', { current: index + 1, total: SLIDES.length })}>
         {index + 1}/{SLIDES.length}
         <ChevronUp size={16} aria-hidden="true" />
       </Dialog.Trigger>
@@ -44,22 +46,22 @@ export function SlideOverview({ palette, onPalette }: Props) {
         <Dialog.Backdrop className="drawer-backdrop" />
         <Dialog.Popup className="slide-drawer">
           <div className="slide-drawer-head">
-            <Dialog.Title className="slide-drawer-title">Slides</Dialog.Title>
-            <div className="channel-swatches" role="group" aria-label="Channel">
+            <Dialog.Title className="slide-drawer-title">{t('slides.title')}</Dialog.Title>
+            <div className="channel-swatches" role="group" aria-label={t('slides.channel')}>
               {PALETTES.map((choice, at) => (
                 <button
                   key={choice.primary}
                   type="button"
                   className="channel-swatch"
                   style={{ '--channel': choice.primary } as React.CSSProperties}
-                  aria-label={`Channel ${at + 1}`}
-                  title={`Channel ${at + 1}`}
+                  aria-label={t('slides.channelNumber', { number: at + 1 })}
+                  title={t('slides.channelNumber', { number: at + 1 })}
                   aria-pressed={choice === palette}
                   onClick={() => onPalette(choice)}
                 />
               ))}
             </div>
-            <Dialog.Close className="slide-drawer-close" aria-label="Close slides">
+            <Dialog.Close className="slide-drawer-close" aria-label={t('slides.close')}>
               <ChevronDown size={22} aria-hidden="true" />
             </Dialog.Close>
           </div>

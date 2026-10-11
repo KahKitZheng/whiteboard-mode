@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { scaleFor } from './coords'
 import { TEXT_LINE, textLines, textMetrics } from './geometry'
 import type { Text } from './types'
@@ -24,6 +25,7 @@ type Props = {
  * mechanism the widgets already use.
  */
 export function TextEditor({ shape, width, onChange, onCommit, onCancel }: Props) {
+  const { t } = useTranslation()
   const input = useRef<HTMLTextAreaElement>(null)
   const scale = scaleFor(width)
   const { ascent, descent } = textMetrics(shape.text, shape.size)
@@ -83,7 +85,7 @@ export function TextEditor({ shape, width, onChange, onCommit, onCancel }: Props
         onChange={(event) => onChange({ ...shape, text: event.target.value })}
         onKeyDown={onKeyDown}
         onBlur={onCommit}
-        aria-label="Annotation text"
+        aria-label={t('text.input')}
       />
     </foreignObject>
   )

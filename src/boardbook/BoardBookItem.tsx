@@ -1,6 +1,7 @@
 import { Dialog } from '@base-ui-components/react/dialog'
 import { ChevronRight } from 'lucide-react'
 import { useRef, type PointerEvent, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AnnotationSurface } from '../annotation/AnnotationSurface'
 import type { Size } from './coords'
 import { itemIcon } from './icons'
@@ -80,6 +81,7 @@ export function ItemDialog({ pageId, item, onClose }: DialogProps) {
   // ends. Pulling the popup out of the tree the moment `item` goes null leaves
   // the backdrop waiting for an end that never comes, so the last item stays
   // rendered until Base UI is done with it.
+  const { t } = useTranslation()
   const last = useRef(item)
   if (item) last.current = item
   const shown = item ?? last.current
@@ -101,7 +103,7 @@ export function ItemDialog({ pageId, item, onClose }: DialogProps) {
             <Dialog.Popup
               className="dialog-popup boardbook-popup"
               data-layout={shown.img ? 'two-column' : 'one-column'}
-              aria-label={shown.title ?? shown.itemText ?? 'Item'}
+              aria-label={shown.title ?? shown.itemText ?? t('boardbook.item')}
             >
               {shown.img && <img className="boardbook-popup-image" src={shown.img} alt="" />}
               <div className="boardbook-popup-body">
@@ -113,7 +115,7 @@ export function ItemDialog({ pageId, item, onClose }: DialogProps) {
                   </a>
                 )}
                 {shown.audio && <audio controls src={shown.audio} className="boardbook-popup-audio" />}
-                <Dialog.Close className="extra-button">Close</Dialog.Close>
+                <Dialog.Close className="extra-button">{t('common.close')}</Dialog.Close>
               </div>
             </Dialog.Popup>
           </AnnotationSurface>
