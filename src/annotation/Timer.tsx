@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import './widget.scss'
 
 // ponytail: the duration lives in component state, not on the shape. Persisting
@@ -17,6 +18,7 @@ function clock(seconds: number): string {
  * outside this component knows it is one.
  */
 export function Timer({ fontSize }: { fontSize: number }) {
+  const { t } = useTranslation()
   const [total, setTotal] = useState(DEFAULT_SECONDS)
   const [remaining, setRemaining] = useState(DEFAULT_SECONDS)
   const [running, setRunning] = useState(false)
@@ -47,13 +49,13 @@ export function Timer({ fontSize }: { fontSize: number }) {
         {clock(remaining)}
       </output>
       <div className="timer-controls">
-        <button type="button" onClick={() => adjust(-STEP)} aria-label="Less time">
+        <button type="button" onClick={() => adjust(-STEP)} aria-label={t('timer.lessTime')}>
           −
         </button>
         <button type="button" onClick={() => setRunning((on) => !on)}>
-          {running ? 'Pause' : 'Start'}
+          {running ? t('timer.pause') : t('common.start')}
         </button>
-        <button type="button" onClick={() => adjust(STEP)} aria-label="More time">
+        <button type="button" onClick={() => adjust(STEP)} aria-label={t('timer.moreTime')}>
           +
         </button>
       </div>

@@ -2,6 +2,7 @@ import { Toggle } from '@base-ui-components/react/toggle'
 import { ToggleGroup } from '@base-ui-components/react/toggle-group'
 import { Toolbar } from '@base-ui-components/react/toolbar'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   BORDERS,
   COLORS,
@@ -48,6 +49,7 @@ function Setting({ label, children }: { label: string; children: ReactNode }) {
  * having to set the colour twice to keep drawing in it.
  */
 export function ToolSettings() {
+  const { t } = useTranslation()
   const { tool, style, setStyle, actions } = useWhiteboardMode()
   const selected = actions?.selectedStyle ?? null
   const shown = settingsFor(tool, selected)
@@ -73,18 +75,18 @@ export function ToolSettings() {
   return (
     <>
       {shown.color && (
-        <Setting label="Colour">
+        <Setting label={t('settings.colour')}>
           <ToggleGroup
             value={[color]}
             onValueChange={([next]) => next && apply({ color: next })}
             className="choices swatches"
           >
-            {COLORS.map(({ name, value }) => (
+            {COLORS.map(({ labelKey, value }) => (
               <Toolbar.Button
                 key={value}
                 className="swatch"
-                aria-label={name}
-                title={name}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 style={{ '--swatch': value } as React.CSSProperties}
                 render={<Toggle value={value} />}
               >
@@ -96,18 +98,18 @@ export function ToolSettings() {
       )}
 
       {shown.snap && (
-        <Setting label="Words">
+        <Setting label={t('settings.words')}>
           <ToggleGroup
             value={[snap ? 'snap' : 'free']}
             onValueChange={([next]) => next && apply({ snap: next === 'snap' })}
             className="choices"
           >
-            {SNAP_MODES.map(({ name, value }) => (
+            {SNAP_MODES.map(({ labelKey, value }) => (
               <Toolbar.Button
-                key={name}
+                key={labelKey}
                 className="icon-button"
-                aria-label={name}
-                title={name}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={value ? 'snap' : 'free'} />}
               >
                 <WordsIcon color={color} mode={value ? 'highlight' : 'free'} />
@@ -118,18 +120,18 @@ export function ToolSettings() {
       )}
 
       {shown.penMark && (
-        <Setting label="Words">
+        <Setting label={t('settings.words')}>
           <ToggleGroup
             value={[penMark]}
             onValueChange={([next]) => next && apply({ penMark: next as Style['penMark'] })}
             className="choices"
           >
-            {PEN_MARKS.map(({ name, value }) => (
+            {PEN_MARKS.map(({ labelKey, value }) => (
               <Toolbar.Button
                 key={value}
                 className="icon-button"
-                aria-label={name}
-                title={name}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={value} />}
               >
                 <WordsIcon color={color} mode={value === 'none' ? 'free' : value} />
@@ -140,18 +142,18 @@ export function ToolSettings() {
       )}
 
       {shown.tidy && (
-        <Setting label="Shapes">
+        <Setting label={t('settings.shapes')}>
           <ToggleGroup
             value={[tidy ? 'tidy' : 'free']}
             onValueChange={([next]) => next && apply({ tidy: next === 'tidy' })}
             className="choices"
           >
-            {SHAPE_MODES.map(({ name, value }) => (
+            {SHAPE_MODES.map(({ labelKey, value }) => (
               <Toolbar.Button
-                key={name}
+                key={labelKey}
                 className="icon-button"
-                aria-label={name}
-                title={name}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={value ? 'tidy' : 'free'} />}
               >
                 <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
@@ -174,18 +176,18 @@ export function ToolSettings() {
       )}
 
       {shown.fill && (
-        <Setting label="Fill">
+        <Setting label={t('settings.fill')}>
           <ToggleGroup
             value={[fill]}
             onValueChange={([next]) => next && apply({ fill: next as Style['fill'] })}
             className="choices"
           >
-            {FILLS.map(({ name, value }) => (
+            {FILLS.map(({ labelKey, value }) => (
               <Toolbar.Button
                 key={value}
                 className="icon-button"
-                aria-label={name}
-                title={name}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={value} />}
               >
                 <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
@@ -208,18 +210,18 @@ export function ToolSettings() {
       )}
 
       {shown.heads && (
-        <Setting label="Heads">
+        <Setting label={t('settings.heads')}>
           <ToggleGroup
             value={[heads]}
             onValueChange={([next]) => next && apply({ heads: next as Style['heads'] })}
             className="choices"
           >
-            {HEADS.map(({ name, value }) => (
+            {HEADS.map(({ labelKey, value }) => (
               <Toolbar.Button
                 key={value}
                 className="icon-button"
-                aria-label={name}
-                title={name}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={value} />}
               >
                 <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true" stroke={color} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -234,18 +236,18 @@ export function ToolSettings() {
       )}
 
       {shown.border && (
-        <Setting label="Border">
+        <Setting label={t('settings.border')}>
           <ToggleGroup
             value={[border]}
             onValueChange={([next]) => next && apply({ border: next as Style['border'] })}
             className="choices"
           >
-            {BORDERS.map(({ name, value }) => (
+            {BORDERS.map(({ labelKey, value }) => (
               <Toolbar.Button
                 key={value}
                 className="icon-button"
-                aria-label={name}
-                title={name}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={value} />}
               >
                 <svg viewBox="0 0 20 20" className="setting-icon" aria-hidden="true">
@@ -269,18 +271,18 @@ export function ToolSettings() {
       )}
 
       {shown.weight && (
-        <Setting label="Weight">
+        <Setting label={t('settings.weight')}>
           <ToggleGroup
             value={[String(weight)]}
             onValueChange={([next]) => next && apply({ weight: Number(next) })}
             className="choices"
           >
-            {WEIGHTS.map(({ name, value }, index) => (
+            {WEIGHTS.map(({ labelKey, value }, index) => (
               <Toolbar.Button
                 key={value}
                 className="icon-button"
-                aria-label={`${name} weight`}
-                title={`${name} weight`}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={String(value)} />}
               >
                 {/* The control shows the thickness rather than naming it. */}
@@ -295,18 +297,18 @@ export function ToolSettings() {
       )}
 
       {shown.highlightWeight && (
-        <Setting label="Weight">
+        <Setting label={t('settings.weight')}>
           <ToggleGroup
             value={[String(highlightWeight)]}
             onValueChange={([next]) => next && apply({ highlightWeight: Number(next) })}
             className="choices"
           >
-            {HIGHLIGHT_WEIGHTS.map(({ name, value }, index) => (
+            {HIGHLIGHT_WEIGHTS.map(({ labelKey, value }, index) => (
               <Toolbar.Button
                 key={value}
                 className="icon-button"
-                aria-label={`${name} weight`}
-                title={`${name} weight`}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={String(value)} />}
               >
                 <span className="weight-dot" style={{ width: dotSize(index), height: dotSize(index) }} />
@@ -317,18 +319,18 @@ export function ToolSettings() {
       )}
 
       {shown.textSize && (
-        <Setting label="Size">
+        <Setting label={t('settings.size')}>
           <ToggleGroup
             value={[String(textSize)]}
             onValueChange={([next]) => next && apply({ textSize: Number(next) })}
             className="choices"
           >
-            {TEXT_SIZES.map(({ name, value }, index) => (
+            {TEXT_SIZES.map(({ labelKey, value }, index) => (
               <Toolbar.Button
                 key={value}
                 className="icon-button"
-                aria-label={`${name} text`}
-                title={`${name} text`}
+                aria-label={t(labelKey)}
+                title={t(labelKey)}
                 render={<Toggle value={String(value)} />}
               >
                 <span className="size-letter" style={{ fontSize: 11 + index * 4 }}>
